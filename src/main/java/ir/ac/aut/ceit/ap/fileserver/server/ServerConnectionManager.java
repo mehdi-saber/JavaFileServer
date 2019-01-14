@@ -1,8 +1,6 @@
 package ir.ac.aut.ceit.ap.fileserver.server;
 
 
-import ir.ac.aut.ceit.ap.fileserver.network.Request;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -12,8 +10,8 @@ public class ServerConnectionManager {
     private boolean listenForConnection = false;
     private ConnectionRouter router;
 
-    ServerConnectionManager(int port) throws IOException {
-        router = new ConnectionRouter();
+    ServerConnectionManager(Server server, int port) throws IOException {
+        router = new ConnectionRouter(server);
         serverSocket = new ServerSocket(port);
         new Thread(() -> {
             try {
@@ -30,8 +28,7 @@ public class ServerConnectionManager {
             Socket socket = serverSocket.accept();
             Thread t = new Thread(() -> {
                 try {
-                    Request request = new Request(socket.getInputStream());
-                    router.route(request);
+                    router.route(socket);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

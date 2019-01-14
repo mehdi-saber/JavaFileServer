@@ -1,6 +1,7 @@
 package ir.ac.aut.ceit.ap.fileserver.client;
 
-import ir.ac.aut.ceit.ap.fileserver.network.Request;
+import ir.ac.aut.ceit.ap.fileserver.network.DataTransfer;
+import ir.ac.aut.ceit.ap.fileserver.network.ExchangeData;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -17,8 +18,10 @@ public class ClientConnectionManager {
         this.address = InetAddress.getByName(address);
     }
 
-    public void sendRequest(Request request) throws IOException {
+    ExchangeData request(ExchangeData requestData) throws IOException {
         Socket socket = new Socket(address, port);
-        request.send(socket.getOutputStream());
+        DataTransfer transfer = new DataTransfer(socket);
+        transfer.send(requestData);
+        return transfer.receive();
     }
 }

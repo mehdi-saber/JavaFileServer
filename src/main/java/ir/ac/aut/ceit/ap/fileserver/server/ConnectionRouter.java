@@ -1,37 +1,41 @@
 package ir.ac.aut.ceit.ap.fileserver.server;
 
-import ir.ac.aut.ceit.ap.fileserver.network.C2SCommand;
-import ir.ac.aut.ceit.ap.fileserver.network.Request;
+import ir.ac.aut.ceit.ap.fileserver.network.DataTransfer;
+import ir.ac.aut.ceit.ap.fileserver.network.ExchangeData;
+
+import java.io.IOException;
+import java.net.Socket;
 
 public class ConnectionRouter {
     private Server server;
-    private SecurityManager securityManager;
 
-    public ConnectionRouter() {
-        securityManager = new SecurityManager();
+    public ConnectionRouter(Server server) {
+        this.server = server;
+        SecurityManager securityManager = new SecurityManager();
     }
 
-    void route(Request request) {
+    void route(Socket socket) throws IOException {
+        DataTransfer dataTransfer = new DataTransfer(socket);
+        ExchangeData requestData = dataTransfer.receive();
 //        if (securityManager.haveAccess()) ;
 //        todo:send 403
-        switch ((C2SCommand) request.getCommand()) {
-            case MOVE:
+        ExchangeData responseData = null;
+        switch (requestData.getTitle()) {
+            case REGISTER_USER:
+                responseData = server.registerUser(requestData);
                 break;
-            case REGISTER:
-                server.registerUser(request);
+            case LOGIN_USER:
                 break;
-            case LOGIN:
-                server.authUser(request);
+            case REMOVE_FILE:
                 break;
-            case REMOVE:
+            case MOVE_FILE:
                 break;
-            case RENAME:
+            case RENAME_FILE:
                 break;
-            case UPLOAD:
-                break;
-            default:
-                //todo:exception
+            case UPLOAD_FILE:
                 break;
         }
+        dataTransfer.send(responseData);
+        socket.close();
     }
 }

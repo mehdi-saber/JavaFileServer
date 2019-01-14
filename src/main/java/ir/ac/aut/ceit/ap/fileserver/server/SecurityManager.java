@@ -1,29 +1,19 @@
 package ir.ac.aut.ceit.ap.fileserver.server;
 
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import ir.ac.aut.ceit.ap.fileserver.network.Request;
+import io.jsonwebtoken.security.Keys;
 
-import java.io.UnsupportedEncodingException;
+import javax.crypto.SecretKey;
 
 public class SecurityManager {
-    Request request;
-    static final String secret = "3RtvA{E8=lNx$<(P(5n}5D<HH&^#Su";
+    static final String JWT_SECRET = "3RtvA{E8=n}5D<HH&^#SlNx$<(P(5n}5D<HH&^#Su";
 
-    public static void main(String[] args) throws UnsupportedEncodingException {
-        System.out.println(generateToken("admin"));
-    }
-
-    static String generateToken(String username) throws UnsupportedEncodingException {
-        String token = Jwts.builder()
+    static public String generateToken(String username) {
+        SecretKey key = Keys.hmacShaKeyFor(JWT_SECRET.getBytes());
+        return Jwts.builder()
                 .setSubject("users/TzMUocMF4p")
                 .claim("username", username)
-                .signWith(
-                        SignatureAlgorithm.HS256,
-                        secret.getBytes("UTF-8")
-                )
+                .signWith(key)
                 .compact();
-
-        return token;
     }
 }

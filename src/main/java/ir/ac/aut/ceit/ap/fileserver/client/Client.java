@@ -1,7 +1,7 @@
 package ir.ac.aut.ceit.ap.fileserver.client;
 
-import ir.ac.aut.ceit.ap.fileserver.network.C2SCommand;
-import ir.ac.aut.ceit.ap.fileserver.network.Request;
+import ir.ac.aut.ceit.ap.fileserver.network.ExchangeData;
+import ir.ac.aut.ceit.ap.fileserver.network.ExchangeTitle;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,11 +17,18 @@ public class Client {
         connectionManager = new ClientConnectionManager("localhost", 5000);
     }
 
-    public void Login(String username, String password) throws IOException {
-        Request request = new Request(C2SCommand.LOGIN);
-        request.addParameter("username", username);
-        request.addParameter("password", password);
-        connectionManager.sendRequest(request);
+    public void login(String username, String password) throws IOException {
+        ExchangeData requestData = new ExchangeData(ExchangeTitle.LOGIN_USER);
+        requestData.addParameter("username", username);
+        requestData.addParameter("password", password);
+        ExchangeData response = connectionManager.request(requestData);
     }
 
+    public void register(String username, String password) throws IOException {
+        ExchangeData requestData = new ExchangeData(ExchangeTitle.REGISTER_USER);
+        requestData.addParameter("username", username);
+        requestData.addParameter("password", password);
+        ExchangeData response = connectionManager.request(requestData);
+        System.out.println(response.getObject("token"));
+    }
 }

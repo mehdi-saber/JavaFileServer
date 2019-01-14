@@ -15,7 +15,7 @@ public class FileServerApplication {
         }
         try {
             Client client = new Client();
-            client.Login("admin", "admin");
+            client.register("admin", "admin");
         } catch (Exception e) {
             e.printStackTrace();
         }
