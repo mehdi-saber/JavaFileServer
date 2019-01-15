@@ -8,4 +8,7 @@ public class DirectoryInfo extends AddressInfo {
     private Timestamp createdDate;
     private Timestamp lastAccessDate;
 
+    public DirectoryInfo(String address) {
+        super(address);
+    }
 }

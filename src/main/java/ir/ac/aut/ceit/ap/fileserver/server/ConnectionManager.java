@@ -5,12 +5,12 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class ServerConnectionManager {
+ class ConnectionManager {
     private ServerSocket serverSocket;
     private boolean listenForConnection = false;
     private ConnectionRouter router;
 
-    ServerConnectionManager(Server server, int port) throws IOException {
+    ConnectionManager(Server server, int port) throws IOException {
         router = new ConnectionRouter(server);
         serverSocket = new ServerSocket(port);
         new Thread(() -> {

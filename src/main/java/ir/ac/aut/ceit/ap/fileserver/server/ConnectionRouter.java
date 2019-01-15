@@ -1,6 +1,6 @@
 package ir.ac.aut.ceit.ap.fileserver.server;
 
-import ir.ac.aut.ceit.ap.fileserver.network.DataTransfer;
+import ir.ac.aut.ceit.ap.fileserver.network.Exchange;
 import ir.ac.aut.ceit.ap.fileserver.network.ExchangeData;
 
 import java.io.IOException;
@@ -15,10 +15,12 @@ public class ConnectionRouter {
     }
 
     void route(Socket socket) throws IOException {
-        DataTransfer dataTransfer = new DataTransfer(socket);
-        ExchangeData requestData = dataTransfer.receive();
+        Exchange exchange = new Exchange(socket);
+        ExchangeData requestData = exchange.receive();
+
 //        if (securityManager.haveAccess()) ;
 //        todo:send 403
+
         ExchangeData responseData = null;
         switch (requestData.getTitle()) {
             case REGISTER_USER:
@@ -35,7 +37,7 @@ public class ConnectionRouter {
             case UPLOAD_FILE:
                 break;
         }
-        dataTransfer.send(responseData);
+        exchange.send(responseData);
         socket.close();
     }
 }

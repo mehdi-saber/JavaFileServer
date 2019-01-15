@@ -1,20 +1,20 @@
 package ir.ac.aut.ceit.ap.fileserver.filesys;
 
 
-import ir.ac.aut.ceit.ap.fileserver.client.FilePartitionInfo;
+public class FileInfo extends AddressInfo {
+//    private List<FilePartitionInfo> partList;
+//    private Integer fileSize;
+//    private String ownerUsername;
+//    private Timestamp createdDate;
+//    private Timestamp lastAccessDate;
+//    private String hashString;
 
-import java.sql.Timestamp;
-import java.util.List;
 
-abstract public class FileInfo extends AddressInfo {
-    private List<FilePartitionInfo> partList;
-    private Integer fileSize;
-    private String ownerUsername;
-    private Timestamp createdDate;
-    private Timestamp lastAccessDate;
-    private String hashString;
+    public FileInfo(String address) {
+        super(address);
+    }
 
-    public String getExtention() {
+    public String getExtension() {
         if (address.contains("."))
             return address.substring(address.lastIndexOf("."), address.length() - 1);
         else

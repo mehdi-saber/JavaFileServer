@@ -11,11 +11,15 @@ import java.util.List;
 public class Server {
     List<ClientInfo> clientList;
     FileSystem fileSystem;
-    ServerConnectionManager connectionManager;
+    ConnectionManager connectionManager;
     SecurityManager securityManager;
 
-    public Server() throws IOException {
-        connectionManager = new ServerConnectionManager(this, 5000);
+    public Server()  {
+        try {
+            connectionManager = new ConnectionManager(this, 5000);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         securityManager = new SecurityManager();
         clientList = new ArrayList<>();
     }

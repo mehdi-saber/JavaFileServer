@@ -7,11 +7,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 
-public class DataTransfer {
+public class Exchange {
     private Gson gson;
     private Socket socket;
 
-    public DataTransfer(Socket socket) {
+    public Exchange(Socket socket) {
         this.gson = new Gson();
         this.socket = socket;
     }

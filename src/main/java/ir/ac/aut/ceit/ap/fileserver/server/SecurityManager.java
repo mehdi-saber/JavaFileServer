@@ -11,7 +11,6 @@ public class SecurityManager {
     static public String generateToken(String username) {
         SecretKey key = Keys.hmacShaKeyFor(JWT_SECRET.getBytes());
         return Jwts.builder()
-                .setSubject("users/TzMUocMF4p")
                 .claim("username", username)
                 .signWith(key)
                 .compact();
