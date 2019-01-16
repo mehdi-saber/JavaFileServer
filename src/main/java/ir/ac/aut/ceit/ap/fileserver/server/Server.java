@@ -1,64 +1,60 @@
 package ir.ac.aut.ceit.ap.fileserver.server;
 
-import ir.ac.aut.ceit.ap.fileserver.filesys.FileInfo;
+import ir.ac.aut.ceit.ap.fileserver.filesys.FSDirectory;
+import ir.ac.aut.ceit.ap.fileserver.filesys.FSFile;
+import ir.ac.aut.ceit.ap.fileserver.filesys.FileSystem;
 import ir.ac.aut.ceit.ap.fileserver.network.ExchangeData;
 import ir.ac.aut.ceit.ap.fileserver.network.ExchangeTitle;
+import ir.ac.aut.ceit.ap.fileserver.server.security.SecurityManager;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
+
 
 public class Server {
-    List<ClientInfo> clientList;
-    FileSystem fileSystem;
-    ConnectionManager connectionManager;
-    SecurityManager securityManager;
+    private FileSystem fileSystem;
+    private ConnectionManager connectionManager;
+    private SecurityManager securityManager;
 
     public Server()  {
-        try {
-            connectionManager = new ConnectionManager(this, 5000);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+        connectionManager = new ConnectionManager(this, 5000);
+        fileSystem = new FileSystem();
         securityManager = new SecurityManager();
-        clientList = new ArrayList<>();
+
+        FSDirectory directory = fileSystem.addDirectory(fileSystem.ROOT, "dawd");
+        for (int i = 0; i < 100; i++)
+            fileSystem.addFile(directory, "dawd.dwad");
     }
 
-    ExchangeData registerUser(ExchangeData requestData) {
-        String username = (String) requestData.getObject("username");
-        String password = (String) requestData.getObject("password");
-
-        if (username.matches("/^[a-z][^\\W_]{3,14}$/i") &&
-                password.matches("/^(?=[^a-z]*[a-z])(?=\\D*\\d)[^:&.~\\s]{5,20}$/"))
-            return new ExchangeData(ExchangeTitle.REGISTER_USER_PASS_NOT_ACCEPTED);
-
-        for (ClientInfo client : clientList)
-            if (client.username.equals(username))
-                return new ExchangeData(ExchangeTitle.REGISTER_USER_REPEATED_USERNAME);
-
-        ExchangeData tokenData = new ExchangeData(ExchangeTitle.REGISTER_USER_ACCEPTED);
-        String token = SecurityManager.generateToken(username);
-        tokenData.addParameter("token", token);
-        return tokenData;
+    ExchangeData registerUser(ExchangeData request) {
+        return securityManager.registerUser(request);
     }
 
-    public void authUser(ExchangeData requestData) {
+    ExchangeData fetchDirectory(ExchangeData request) {
+        FSDirectory directory =(FSDirectory) request.getObject("directory");
+        ExchangeData response = new ExchangeData(ExchangeTitle.FETCH_DIRECTORY_OK);
+        response.addParameter("list", fileSystem.listSubPaths(directory));
+        return response;
     }
 
-    public void addFile(FileInfo info, byte[] data) {
+    public ExchangeData authUser(ExchangeData request) {
+        return securityManager.registerUser(request);
+    }
+
+    public void addFile(FSFile info, byte[] data) {
 
     }
 
-    public void removeFile(FileInfo info) {
+    public void removeFile(FSFile info) {
 
     }
 
-    public void fetchFile(FileInfo info) {
+    public void fetchFile(FSFile info) {
 
     }
 
 
-    public void renameFile(FileInfo info, byte[] data) {
+    public void renameFile(FSFile info, byte[] data) {
 
     }
 }

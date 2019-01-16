@@ -13,15 +13,25 @@ import java.net.UnknownHostException;
     InetAddress address;
     Socket socket;
 
-    public ConnectionManager(String address, int port) throws UnknownHostException {
+    public ConnectionManager(String address, int port)  {
         this.port = port;
-        this.address = InetAddress.getByName(address);
+        try {
+            this.address = InetAddress.getByName(address);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
     }
 
-    ExchangeData request(ExchangeData requestData) throws IOException {
-        Socket socket = new Socket(address, port);
-        Exchange transfer = new Exchange(socket);
-        transfer.send(requestData);
-        return transfer.receive();
+     ExchangeData request(ExchangeData request) {
+         ExchangeData response = null;
+         try {
+             Socket socket = new Socket(address, port);
+             Exchange exchange = new Exchange(socket);
+             exchange.send(request);
+             response = exchange.receive();
+         } catch (IOException | ClassNotFoundException e) {
+             e.printStackTrace();
+         }
+         return response;
     }
 }

@@ -10,9 +10,13 @@ import java.net.Socket;
     private boolean listenForConnection = false;
     private ConnectionRouter router;
 
-    ConnectionManager(Server server, int port) throws IOException {
+    ConnectionManager(Server server, int port)  {
         router = new ConnectionRouter(server);
-        serverSocket = new ServerSocket(port);
+        try {
+            serverSocket = new ServerSocket(port);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         new Thread(() -> {
             try {
                 waitForConnection();

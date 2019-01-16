@@ -1,60 +1,67 @@
 package ir.ac.aut.ceit.ap.fileserver.client;
 
-import ir.ac.aut.ceit.ap.fileserver.client.view.MainJFrameController;
-import ir.ac.aut.ceit.ap.fileserver.filesys.DirectoryInfo;
-import ir.ac.aut.ceit.ap.fileserver.filesys.FileInfo;
-import ir.ac.aut.ceit.ap.fileserver.filesys.PathInfo;
+import ir.ac.aut.ceit.ap.fileserver.client.view.MainWindowController;
+import ir.ac.aut.ceit.ap.fileserver.filesys.FSDirectory;
+import ir.ac.aut.ceit.ap.fileserver.filesys.FSFile;
+import ir.ac.aut.ceit.ap.fileserver.filesys.FSPath;
+import ir.ac.aut.ceit.ap.fileserver.filesys.FileSystem;
 import ir.ac.aut.ceit.ap.fileserver.network.ExchangeData;
 import ir.ac.aut.ceit.ap.fileserver.network.ExchangeTitle;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.UnknownHostException;
+import java.util.List;
 
 public class Client {
     private ConnectionManager connectionManager;
-
+    private MainWindowController mainWindowController;
     public Client()  {
-        MainJFrameController mainJFrameController = new MainJFrameController(this);
-        try {
-            connectionManager = new ConnectionManager("localhost", 5000);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
+        mainWindowController = new MainWindowController(this);
+        connectionManager = new ConnectionManager("localhost", 5000);
+
+        fetchDirectory(FileSystem.ROOT);
     }
 
     public void login(String username, String password) throws IOException {
-        ExchangeData requestData = new ExchangeData(ExchangeTitle.LOGIN_USER);
-        requestData.addParameter("username", username);
-        requestData.addParameter("password", password);
-        ExchangeData response = connectionManager.request(requestData);
+        ExchangeData request = new ExchangeData(ExchangeTitle.LOGIN_USER);
+        request.addParameter("username", username);
+        request.addParameter("password", password);
+        ExchangeData response = connectionManager.request(request);
     }
 
     public void register(String username, String password) throws IOException {
-        ExchangeData requestData = new ExchangeData(ExchangeTitle.REGISTER_USER);
-        requestData.addParameter("username", username);
-        requestData.addParameter("password", password);
-        ExchangeData response = connectionManager.request(requestData);
+        ExchangeData request = new ExchangeData(ExchangeTitle.REGISTER_USER);
+        request.addParameter("username", username);
+        request.addParameter("password", password);
+        ExchangeData response = connectionManager.request(request);
         System.out.println(response.getObject("token"));
     }
 
-    public void download(FileInfo fileInfo) {
+    public void fetchDirectory(FSDirectory directory) {
+        ExchangeData request = new ExchangeData(ExchangeTitle.FETCH_DIRECTORY);
+        request.addParameter("directory", directory);
+        ExchangeData response = connectionManager.request(request);
+        List<FSPath> list = (List<FSPath>) response.getObject("list");
+        changeDirectory(directory, list);
+    }
+
+    public void download(FSFile file) {
 //        todo:implement
     }
 
-    public void copy(PathInfo pathInfo) {
+    public void copy(FSPath path) {
 //        todo:implement
     }
 
-    public void cut(PathInfo pathInfo) {
+    public void cut(FSPath path) {
         //        todo:implement
     }
 
-    public void rename(PathInfo pathInfo, String newName) {
+    public void rename(FSPath path, String newName) {
         //        todo:implement
     }
 
-    public void delete(PathInfo pathInfo) {
+    public void delete(FSPath path) {
         //        todo:implement
     }
 
@@ -62,11 +69,15 @@ public class Client {
         //        todo:implement
     }
 
-    public void paste(DirectoryInfo directoryInfo) {
+    public void paste(FSDirectory directory) {
         //        todo:implement
     }
 
-    public void search(DirectoryInfo directoryInfo) {
+    public void search(FSDirectory directory) {
         //        todo:implement
+    }
+
+    public void changeDirectory(FSDirectory directory, List<FSPath> pathList) {
+        mainWindowController.showFileList(directory, pathList);
     }
 }

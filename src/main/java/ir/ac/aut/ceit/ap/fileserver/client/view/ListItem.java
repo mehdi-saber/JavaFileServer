@@ -1,28 +1,31 @@
 package ir.ac.aut.ceit.ap.fileserver.client.view;
 
 import ir.ac.aut.ceit.ap.fileserver.filesys.FileCategory;
-import ir.ac.aut.ceit.ap.fileserver.filesys.FileInfo;
-import ir.ac.aut.ceit.ap.fileserver.filesys.PathInfo;
+import ir.ac.aut.ceit.ap.fileserver.filesys.FSFile;
+import ir.ac.aut.ceit.ap.fileserver.filesys.FSPath;
+import ir.ac.aut.ceit.ap.fileserver.util.icon.IconUtil;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 
 class ListItem extends JPanel {
-    private PathInfo info;
+    private FSPath info;
 
-    ListItem(PathInfo info) {
+    ListItem(FSPath info) {
         super();
         this.info = info;
         JLabel label = new JLabel(info.getName());
-        JLabel image = new JLabel(getImageIcon());
+        JLabel image = new JLabel();
+        try {
+            image.setIcon(IconUtil.getImageIcon(32, 32, getIconPath()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         image.setAlignmentX(CENTER_ALIGNMENT);
         label.setAlignmentX(CENTER_ALIGNMENT);
         add(image);
@@ -31,19 +34,19 @@ class ListItem extends JPanel {
         switchToNormal();
     }
 
-    PathInfo getInfo() {
+    FSPath getInfo() {
         return info;
     }
 
     private String getIconPath() {
-        if (info instanceof FileInfo) {
+        if (info instanceof FSFile) {
             for (FileCategory cat : FileCategory.values())
                 for (String ext : cat.getExtensions())
-                    if (((FileInfo) info).getExtension().equals(ext))
+                    if (((FSFile) info).getExtension().equals(ext))
                         return cat.getIconPath();
         } else
-            return "src/main/resources/folder.png";
-        return "src/main/resources/files.png";
+            return "folder.png";
+        return "files.png";
     }
 
     void switchToHighLight() {
@@ -65,25 +68,5 @@ class ListItem extends JPanel {
         Dimension d = super.getMaximumSize();
         d.width = Integer.MAX_VALUE;
         return d;
-    }
-
-    private ImageIcon getImageIcon() {
-        int w, h;
-        w = h = 32;
-        BufferedImage srcImg = null;
-        try {
-            srcImg = ImageIO.read(new File(getIconPath()));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        BufferedImage resizedImg = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2 = resizedImg.createGraphics();
-
-        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        g2.drawImage(srcImg, 0, 0, w, h, null);
-        g2.dispose();
-
-        return new ImageIcon(resizedImg);
     }
 }

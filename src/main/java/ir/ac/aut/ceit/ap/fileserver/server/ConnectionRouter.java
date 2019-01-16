@@ -14,19 +14,22 @@ public class ConnectionRouter {
         SecurityManager securityManager = new SecurityManager();
     }
 
-    void route(Socket socket) throws IOException {
+    void route(Socket socket) throws IOException, ClassNotFoundException {
         Exchange exchange = new Exchange(socket);
-        ExchangeData requestData = exchange.receive();
+        ExchangeData request = exchange.receive();
 
 //        if (securityManager.haveAccess()) ;
 //        todo:send 403
 
-        ExchangeData responseData = null;
-        switch (requestData.getTitle()) {
+        ExchangeData response = null;
+        switch (request.getTitle()) {
             case REGISTER_USER:
-                responseData = server.registerUser(requestData);
+                response = server.registerUser(request);
                 break;
             case LOGIN_USER:
+                break;
+            case FETCH_DIRECTORY:
+                response=server.fetchDirectory(request);
                 break;
             case REMOVE_FILE:
                 break;
@@ -37,7 +40,7 @@ public class ConnectionRouter {
             case UPLOAD_FILE:
                 break;
         }
-        exchange.send(responseData);
+        exchange.send(response);
         socket.close();
     }
 }
