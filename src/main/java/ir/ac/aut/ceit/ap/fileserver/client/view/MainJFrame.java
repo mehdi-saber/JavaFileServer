@@ -4,24 +4,41 @@ import ir.ac.aut.ceit.ap.fileserver.util.WrapLayout;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
 
 class MainJFrame extends JFrame {
     JMenuBar menuBar;
     JPanel listPanel;
 
-    JMenuItem previewMI;
-    JMenuItem downloadMI;
-    JMenuItem copyMI;
-    JMenuItem cutMI;
-    JMenuItem renameMI;
-    JMenuItem deleteMI;
-    JMenuItem propertiesMI;
+    JMenuItem previewMIP;
+    JMenuItem downloadMIP;
+    JMenuItem copyMIP;
+    JMenuItem cutMIP;
+    JMenuItem renameMIP;
+    JMenuItem deleteMIP;
+    JMenuItem propertiesMIP;
+
+    JMenuItem uploadMIC;
+    JMenuItem cutMIC;
+    JMenuItem copyMIC;
+    JMenuItem pasteMIC;
+    JMenuItem renameMIC;
+    JMenuItem deleteMIC;
+    JMenuItem propertiesMIC;
+
+    JMenuItem uploadMIB;
+    JMenuItem pasteMIB;
+    JMenuItem exitMIB;
+
+    JMenuItem searchMIB;
+    JMenuItem copyMIB;
+    JMenuItem cutMIB;
+    JMenuItem renameMIB;
+    JMenuItem deleteMIB;
 
     JPopupMenu pathPopupMenu;
     JPopupMenu curDirPopupMenu;
 
-    public MainJFrame() throws HeadlessException {
+    public MainJFrame() {
         super("File System Client");
         setupJFrame();
         setupMenuBar();
@@ -43,21 +60,38 @@ class MainJFrame extends JFrame {
         listScrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
         pathPopupMenu = new JPopupMenu();
-        previewMI = new JMenuItem("Preview");
-        downloadMI = new JMenuItem("Download");
-        copyMI = new JMenuItem("Copy");
-        cutMI = new JMenuItem("Cut");
-        renameMI = new JMenuItem("Rename");
-        deleteMI = new JMenuItem("Delete");
-        propertiesMI = new JMenuItem("Properties");
+        previewMIP = new JMenuItem("Preview");
+        downloadMIP = new JMenuItem("Download");
+        copyMIP = new JMenuItem("Copy");
+        cutMIP = new JMenuItem("Cut");
+        renameMIP = new JMenuItem("Rename");
+        deleteMIP = new JMenuItem("Delete");
+        propertiesMIP = new JMenuItem("Properties");
 
-        pathPopupMenu.add(previewMI);
-        pathPopupMenu.add(downloadMI);
-        pathPopupMenu.add(copyMI);
-        pathPopupMenu.add(cutMI);
-        pathPopupMenu.add(renameMI);
-        pathPopupMenu.add(deleteMI);
-        pathPopupMenu.add(propertiesMI);
+        pathPopupMenu.add(previewMIP);
+        pathPopupMenu.add(downloadMIP);
+        pathPopupMenu.add(copyMIP);
+        pathPopupMenu.add(cutMIP);
+        pathPopupMenu.add(renameMIP);
+        pathPopupMenu.add(deleteMIP);
+        pathPopupMenu.add(propertiesMIP);
+
+        curDirPopupMenu = new JPopupMenu();
+        uploadMIC = new JMenuItem("Upload");
+        cutMIC = new JMenuItem("Cut");
+        copyMIC = new JMenuItem("Copy");
+        pasteMIC = new JMenuItem("paste");
+        renameMIC = new JMenuItem("Rename");
+        deleteMIC = new JMenuItem("Delete");
+        propertiesMIC = new JMenuItem("Properties");
+
+        curDirPopupMenu.add(uploadMIC);
+        curDirPopupMenu.add(cutMIC);
+        curDirPopupMenu.add(copyMIC);
+        curDirPopupMenu.add(pasteMIC);
+        curDirPopupMenu.add(renameMIC);
+        curDirPopupMenu.add(deleteMIC);
+        curDirPopupMenu.add(propertiesMIC);
 
         listPanel.setLayout(new WrapLayout(FlowLayout.LEFT, 5, 5));
         add(listScrollPane);
@@ -68,15 +102,31 @@ class MainJFrame extends JFrame {
         menuBar = new JMenuBar();
 
         JMenu fileMenu = new JMenu("File");
-        fileMenu.setMnemonic(KeyEvent.VK_F);
+        JMenu editMenu = new JMenu("Edit");
+        JMenu helpMenu = new JMenu("Help");
 
-        JMenuItem eMenuItem = new JMenuItem("Exit");
-        eMenuItem.setMnemonic(KeyEvent.VK_E);
-        eMenuItem.setToolTipText("Exit application");
-        eMenuItem.addActionListener((event) -> System.exit(0));
+        uploadMIB = new JMenuItem("Upload");
+        exitMIB = new JMenuItem("Exit");
+        fileMenu.add(uploadMIB);
+        fileMenu.add(exitMIB);
 
-        fileMenu.add(eMenuItem);
+
+        searchMIB = new JMenuItem("Search");
+        cutMIB = new JMenuItem("Cut");
+        copyMIB = new JMenuItem("Copy");
+        pasteMIB = new JMenuItem("Paste");
+        renameMIB = new JMenuItem("Rename");
+        deleteMIB = new JMenuItem("Delete");
+        editMenu.add(searchMIB);
+        editMenu.add(copyMIB);
+        editMenu.add(cutMIB);
+        fileMenu.add(pasteMIB);
+        editMenu.add(renameMIB);
+        editMenu.add(deleteMIB);
+
         menuBar.add(fileMenu);
+        menuBar.add(editMenu);
+        menuBar.add(helpMenu);
 
         setJMenuBar(menuBar);
     }

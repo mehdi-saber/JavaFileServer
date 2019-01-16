@@ -1,21 +1,21 @@
 package ir.ac.aut.ceit.ap.fileserver.client;
 
 import ir.ac.aut.ceit.ap.fileserver.client.view.MainJFrameController;
+import ir.ac.aut.ceit.ap.fileserver.filesys.DirectoryInfo;
+import ir.ac.aut.ceit.ap.fileserver.filesys.FileInfo;
+import ir.ac.aut.ceit.ap.fileserver.filesys.PathInfo;
 import ir.ac.aut.ceit.ap.fileserver.network.ExchangeData;
 import ir.ac.aut.ceit.ap.fileserver.network.ExchangeTitle;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.util.Map;
 
 public class Client {
-//    private Map<FilePartitionInfo, File> partitionsMap;
-    private MainJFrameController MainJFrameController;
     private ConnectionManager connectionManager;
 
     public Client()  {
-        MainJFrameController = new MainJFrameController(this);
+        MainJFrameController mainJFrameController = new MainJFrameController(this);
         try {
             connectionManager = new ConnectionManager("localhost", 5000);
         } catch (UnknownHostException e) {
@@ -36,5 +36,37 @@ public class Client {
         requestData.addParameter("password", password);
         ExchangeData response = connectionManager.request(requestData);
         System.out.println(response.getObject("token"));
+    }
+
+    public void download(FileInfo fileInfo) {
+//        todo:implement
+    }
+
+    public void copy(PathInfo pathInfo) {
+//        todo:implement
+    }
+
+    public void cut(PathInfo pathInfo) {
+        //        todo:implement
+    }
+
+    public void rename(PathInfo pathInfo, String newName) {
+        //        todo:implement
+    }
+
+    public void delete(PathInfo pathInfo) {
+        //        todo:implement
+    }
+
+    public void upload(File file) {
+        //        todo:implement
+    }
+
+    public void paste(DirectoryInfo directoryInfo) {
+        //        todo:implement
+    }
+
+    public void search(DirectoryInfo directoryInfo) {
+        //        todo:implement
     }
 }

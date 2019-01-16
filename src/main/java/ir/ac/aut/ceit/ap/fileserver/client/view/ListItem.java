@@ -15,17 +15,24 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-public class FileListItem extends JButton {
+class ListItem extends JPanel {
     private PathInfo info;
 
-    public FileListItem(PathInfo info) {
-        super(info.getName());
+    ListItem(PathInfo info) {
+        super();
         this.info = info;
+        JLabel label = new JLabel(info.getName());
+        JLabel image = new JLabel(getImageIcon());
+        image.setAlignmentX(CENTER_ALIGNMENT);
+        label.setAlignmentX(CENTER_ALIGNMENT);
+        add(image);
+        add(label);
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         switchToNormal();
+    }
 
-        setHorizontalAlignment(SwingConstants.LEFT);
-        setIconTextGap(10);
-        setIcon(getImageIcon());
+    PathInfo getInfo() {
+        return info;
     }
 
     private String getIconPath() {
@@ -50,7 +57,7 @@ public class FileListItem extends JButton {
     @Override
     public void setBorder(Border border) {
         Border margin = new EmptyBorder(10, 10, 5, 5);
-        super.setBorder(new CompoundBorder(margin, new CompoundBorder(border, margin)));
+        super.setBorder(new CompoundBorder(border, margin));
     }
 
     @Override
