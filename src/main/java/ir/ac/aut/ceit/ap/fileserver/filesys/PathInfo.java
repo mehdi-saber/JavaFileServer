@@ -1,9 +1,9 @@
 package ir.ac.aut.ceit.ap.fileserver.filesys;
 
-public class AddressInfo {
+abstract public class PathInfo {
     protected String address;
 
-    public AddressInfo(String address) {
+    public PathInfo(String address) {
         this.address = address;
     }
 

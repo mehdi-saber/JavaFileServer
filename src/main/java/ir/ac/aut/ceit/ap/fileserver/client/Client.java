@@ -1,6 +1,6 @@
 package ir.ac.aut.ceit.ap.fileserver.client;
 
-import ir.ac.aut.ceit.ap.fileserver.client.view.Controller;
+import ir.ac.aut.ceit.ap.fileserver.client.view.MainJFrameController;
 import ir.ac.aut.ceit.ap.fileserver.network.ExchangeData;
 import ir.ac.aut.ceit.ap.fileserver.network.ExchangeTitle;
 
@@ -10,12 +10,12 @@ import java.net.UnknownHostException;
 import java.util.Map;
 
 public class Client {
-    private Map<FilePartitionInfo, File> partitionsMap;
-    private Controller controller;
+//    private Map<FilePartitionInfo, File> partitionsMap;
+    private MainJFrameController MainJFrameController;
     private ConnectionManager connectionManager;
 
     public Client()  {
-        controller = new Controller(this);
+        MainJFrameController = new MainJFrameController(this);
         try {
             connectionManager = new ConnectionManager("localhost", 5000);
         } catch (UnknownHostException e) {

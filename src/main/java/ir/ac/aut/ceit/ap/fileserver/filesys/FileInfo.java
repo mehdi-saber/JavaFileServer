@@ -1,7 +1,7 @@
 package ir.ac.aut.ceit.ap.fileserver.filesys;
 
 
-public class FileInfo extends AddressInfo {
+public class FileInfo extends PathInfo {
 //    private List<FilePartitionInfo> partList;
 //    private Integer fileSize;
 //    private String ownerUsername;
