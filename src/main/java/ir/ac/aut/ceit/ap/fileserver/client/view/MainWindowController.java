@@ -5,6 +5,7 @@ import ir.ac.aut.ceit.ap.fileserver.filesys.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.filesys.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.filesys.FSPath;
 
+import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -27,8 +28,9 @@ public class MainWindowController {
 
 
     private File chooseNewFile() {
-        //todo:implement
-        return null;
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.showOpenDialog(view);
+        return fileChooser.getSelectedFile();
     }
 
     private String getNewName() {
@@ -65,6 +67,7 @@ public class MainWindowController {
                 deleteAL = e -> client.delete(selectedItem.getInfo()),
                 propertiesAL = e -> new PropertiesJFrame(),
                 uploadAL = e -> client.upload(chooseNewFile()),
+                newFolderAL = e -> client.search(curDir),
                 pasteAL = e -> client.paste(curDir),
                 searchAL = e -> client.search(curDir),
                 exitAL = e -> System.exit(0);
@@ -78,12 +81,8 @@ public class MainWindowController {
         view.pathPopupMenu.propertiesMI.addActionListener(propertiesAL);
 
         view.dirPopupMenu.uploadMI.addActionListener(uploadAL);
-        view.dirPopupMenu.copyMI.addActionListener(copyAL);
-        view.dirPopupMenu.cutMI.addActionListener(cutAL);
         view.dirPopupMenu.pasteMI.addActionListener(pasteAL);
-        view.dirPopupMenu.renameMI.addActionListener(renameAL);
-        view.dirPopupMenu.deleteMI.addActionListener(deleteAL);
-        view.dirPopupMenu.propertiesMI.addActionListener(propertiesAL);
+        view.dirPopupMenu.pasteMI.addActionListener(newFolderAL);
 
         view.menuBar.uploadMI.addActionListener(uploadAL);
         view.menuBar.exitMI.addActionListener(exitAL);

@@ -4,28 +4,16 @@ import javax.swing.*;
 
 public class DirPopupMenu extends JPopupMenu {
     JMenuItem uploadMI;
-    JMenuItem cutMI;
-    JMenuItem copyMI;
+    JMenuItem newFolderMI;
     JMenuItem pasteMI;
-    JMenuItem renameMI;
-    JMenuItem deleteMI;
-    JMenuItem propertiesMI;
 
     public DirPopupMenu() {
         uploadMI = new JMenuItem("Upload");
-        cutMI = new JMenuItem("Cut");
-        copyMI = new JMenuItem("Copy");
-        pasteMI = new JMenuItem("paste");
-        renameMI = new JMenuItem("Rename");
-        deleteMI = new JMenuItem("Delete");
-        propertiesMI = new JMenuItem("Properties");
+        newFolderMI = new JMenuItem("New Folder");
+        pasteMI = new JMenuItem("Paste");
 
         add(uploadMI);
-        add(cutMI);
-        add(copyMI);
+        add(newFolderMI);
         add(pasteMI);
-        add(renameMI);
-        add(deleteMI);
-        add(propertiesMI);
     }
 }

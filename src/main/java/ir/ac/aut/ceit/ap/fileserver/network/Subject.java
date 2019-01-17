@@ -1,6 +1,6 @@
 package ir.ac.aut.ceit.ap.fileserver.network;
 
-public enum ExchangeTitle {
+public enum Subject {
     //    C->S Requests
     REGISTER_USER,
     LOGIN_USER,
@@ -17,8 +17,9 @@ public enum ExchangeTitle {
     REGISTER_USER_REPEATED_USERNAME,
     REGISTER_USER_ACCEPTED,
 
-    FETCH_DIRECTORY_OK
+    FETCH_DIRECTORY_OK,
+
+    UPLOAD_FILE_OK
 
 
-
-}
+    }
