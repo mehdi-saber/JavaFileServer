@@ -1,4 +1,8 @@
-package ir.ac.aut.ceit.ap.fileserver.filesys;
+package ir.ac.aut.ceit.ap.fileserver.file;
+
+import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
+import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
+import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +10,6 @@ import java.util.stream.Collectors;
 
 public class FileSystem {
     private List<FSPath> pathList;
-    public static final FSDirectory ROOT = new FSDirectory(null, "");
 
     public FileSystem() {
         this.pathList = new ArrayList<>();

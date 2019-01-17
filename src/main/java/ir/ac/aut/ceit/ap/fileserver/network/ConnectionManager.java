@@ -51,7 +51,7 @@ public class ConnectionManager {
                 Message request = null;
                 try {
                     request = readMessage(socket.getInputStream());
-                    Message response = router.route(request);
+                    Message response = router.route(request,socket);
                     writeMessage(response, socket.getOutputStream());
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();

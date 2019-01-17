@@ -1,8 +1,8 @@
 package ir.ac.aut.ceit.ap.fileserver.client.view;
 
-import ir.ac.aut.ceit.ap.fileserver.filesys.FileCategory;
-import ir.ac.aut.ceit.ap.fileserver.filesys.FSFile;
-import ir.ac.aut.ceit.ap.fileserver.filesys.FSPath;
+import ir.ac.aut.ceit.ap.fileserver.file.FileCategory;
+import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
+import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
 import ir.ac.aut.ceit.ap.fileserver.util.icon.IconUtil;
 
 import javax.swing.*;

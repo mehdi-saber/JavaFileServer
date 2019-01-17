@@ -1,6 +1,6 @@
 package ir.ac.aut.ceit.ap.fileserver.server.security;
 
-import ir.ac.aut.ceit.ap.fileserver.filesys.FSPath;
+import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
 
 import java.util.Map;
 

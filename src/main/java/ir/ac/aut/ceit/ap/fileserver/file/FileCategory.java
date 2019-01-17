@@ -1,4 +1,4 @@
-package ir.ac.aut.ceit.ap.fileserver.filesys;
+package ir.ac.aut.ceit.ap.fileserver.file;
 
 public enum FileCategory {
     AUDIO("files.png",

@@ -2,10 +2,9 @@ package ir.ac.aut.ceit.ap.fileserver.client;
 
 import ir.ac.aut.ceit.ap.fileserver.client.view.ConnectWindowController;
 import ir.ac.aut.ceit.ap.fileserver.client.view.MainWindowController;
-import ir.ac.aut.ceit.ap.fileserver.filesys.FSDirectory;
-import ir.ac.aut.ceit.ap.fileserver.filesys.FSFile;
-import ir.ac.aut.ceit.ap.fileserver.filesys.FSPath;
-import ir.ac.aut.ceit.ap.fileserver.filesys.FileSystem;
+import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
+import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
+import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
 import ir.ac.aut.ceit.ap.fileserver.network.Message;
 import ir.ac.aut.ceit.ap.fileserver.network.Subject;
 import org.apache.commons.io.FileUtils;
@@ -18,15 +17,17 @@ import java.util.Random;
 public class Client {
     private ClientConnectionManager connectionManager;
     private MainWindowController mainWindowController;
+    private FilePartManager partManager;
     private int listenPort;
 
     public Client()  {
+        partManager = new FilePartManager();
         new ConnectWindowController(this);
     }
 
     public void openMainWindow() {
         mainWindowController = new MainWindowController(this);
-        fetchDirectory(FileSystem.ROOT);
+        fetchDirectory(FSDirectory.ROOT);
     }
 
     public boolean connectToServer(String serverAddress, int serverPort, String username, String password) {
@@ -38,6 +39,8 @@ public class Client {
         Message request = new Message(Subject.LOGIN);
         request.addParameter("username", username);
         request.addParameter("password", password);
+        request.addParameter("listenPort", listenPort);
+        request.addParameter("partList", partManager.listPartHashes());
         Message response = connectionManager.sendRequest(request);
         if (response.getTitle().equals(Subject.LOGIN_OK)) {
             connectionManager.token = (String) response.getObject("token");

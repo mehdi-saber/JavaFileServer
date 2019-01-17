@@ -3,6 +3,8 @@ package ir.ac.aut.ceit.ap.fileserver.server;
 import ir.ac.aut.ceit.ap.fileserver.network.Message;
 import ir.ac.aut.ceit.ap.fileserver.network.Router;
 
+import java.net.Socket;
+
 
 public class ServerRouter implements Router {
     private Server server;
@@ -11,10 +13,10 @@ public class ServerRouter implements Router {
         this.server = server;
     }
 
-    public Message route(Message request) {
+    public Message route(Message request, Socket socket) {
         switch (request.getTitle()) {
             case LOGIN:
-                return server.registerUser(request);
+                return server.loginUser(request,socket.getInetAddress().getHostAddress());
             case FETCH_DIRECTORY:
                 return server.fetchDirectory(request);
             case REMOVE_FILE:

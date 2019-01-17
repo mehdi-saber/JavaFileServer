@@ -2,7 +2,8 @@ package ir.ac.aut.ceit.ap.fileserver.client;
 
 import ir.ac.aut.ceit.ap.fileserver.network.Message;
 import ir.ac.aut.ceit.ap.fileserver.network.Router;
-import ir.ac.aut.ceit.ap.fileserver.server.Server;
+
+import java.net.Socket;
 
 
 public class ClientRouter implements Router {
@@ -12,7 +13,7 @@ public class ClientRouter implements Router {
         this.client = client;
     }
 
-    public Message route(Message request) {
+    public Message route(Message request, Socket socket) {
         switch (request.getTitle()) {
             case UPLOAD_FILE:
                 return client.fetchFile(request);

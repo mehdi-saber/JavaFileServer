@@ -1,9 +1,9 @@
 package ir.ac.aut.ceit.ap.fileserver.client.view;
 
 import ir.ac.aut.ceit.ap.fileserver.client.Client;
-import ir.ac.aut.ceit.ap.fileserver.filesys.FSDirectory;
-import ir.ac.aut.ceit.ap.fileserver.filesys.FSFile;
-import ir.ac.aut.ceit.ap.fileserver.filesys.FSPath;
+import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
+import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
+import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
 
 import javax.swing.*;
 import java.awt.event.ActionListener;
