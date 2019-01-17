@@ -13,23 +13,22 @@ import java.io.File;
 import java.util.List;
 
 public class MainWindowController {
-    private MainWindowView view;
+    private ConnectWindow connectWindow;
+    private MainWindowView window;
     private Client client;
     private ListItem selectedItem;
     private FSDirectory curDir;
 
     public MainWindowController(Client client) {
         this.client = client;
-        view = new MainWindowView();
+        connectWindow = new ConnectWindow();
+        window = new MainWindowView();
         setMouseListeners();
-
-
     }
-
 
     private File chooseNewFile() {
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.showOpenDialog(view);
+        fileChooser.showOpenDialog(window);
         return fileChooser.getSelectedFile();
     }
 
@@ -39,17 +38,17 @@ public class MainWindowController {
     }
 
     private void setMouseListeners() {
-        view.listPanel.addMouseListener(new MouseAdapter() {
+        window.listPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 super.mouseClicked(e);
                 if (e.isPopupTrigger())
-                    view.dirPopupMenu.show(e.getComponent(), e.getX(), e.getY());
+                    window.dirPopupMenu.show(e.getComponent(), e.getX(), e.getY());
                 deselectFile();
             }
         });
 
-        view.navPanel.parentBtn.addMouseListener(new MouseAdapter() {
+        window.navPanel.parentBtn.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
@@ -72,38 +71,38 @@ public class MainWindowController {
                 searchAL = e -> client.search(curDir),
                 exitAL = e -> System.exit(0);
 
-        view.pathPopupMenu.previewMI.addActionListener(previewAL);
-        view.pathPopupMenu.downloadMI.addActionListener(downloadAL);
-        view.pathPopupMenu.copyMI.addActionListener(copyAL);
-        view.pathPopupMenu.cutMI.addActionListener(cutAL);
-        view.pathPopupMenu.renameMI.addActionListener(renameAL);
-        view.pathPopupMenu.deleteMI.addActionListener(deleteAL);
-        view.pathPopupMenu.propertiesMI.addActionListener(propertiesAL);
+        window.pathPopupMenu.previewMI.addActionListener(previewAL);
+        window.pathPopupMenu.downloadMI.addActionListener(downloadAL);
+        window.pathPopupMenu.copyMI.addActionListener(copyAL);
+        window.pathPopupMenu.cutMI.addActionListener(cutAL);
+        window.pathPopupMenu.renameMI.addActionListener(renameAL);
+        window.pathPopupMenu.deleteMI.addActionListener(deleteAL);
+        window.pathPopupMenu.propertiesMI.addActionListener(propertiesAL);
 
-        view.dirPopupMenu.uploadMI.addActionListener(uploadAL);
-        view.dirPopupMenu.pasteMI.addActionListener(pasteAL);
-        view.dirPopupMenu.pasteMI.addActionListener(newFolderAL);
+        window.dirPopupMenu.uploadMI.addActionListener(uploadAL);
+        window.dirPopupMenu.pasteMI.addActionListener(pasteAL);
+        window.dirPopupMenu.pasteMI.addActionListener(newFolderAL);
 
-        view.menuBar.uploadMI.addActionListener(uploadAL);
-        view.menuBar.exitMI.addActionListener(exitAL);
-        view.menuBar.searchMI.addActionListener(searchAL);
-        view.menuBar.cutMI.addActionListener(cutAL);
-        view.menuBar.copyMI.addActionListener(copyAL);
-        view.menuBar.pasteMI.addActionListener(pasteAL);
-        view.menuBar.renameMI.addActionListener(renameAL);
-        view.menuBar.deleteMI.addActionListener(deleteAL);
+        window.menuBar.uploadMI.addActionListener(uploadAL);
+        window.menuBar.exitMI.addActionListener(exitAL);
+        window.menuBar.searchMI.addActionListener(searchAL);
+        window.menuBar.cutMI.addActionListener(cutAL);
+        window.menuBar.copyMI.addActionListener(copyAL);
+        window.menuBar.pasteMI.addActionListener(pasteAL);
+        window.menuBar.renameMI.addActionListener(renameAL);
+        window.menuBar.deleteMI.addActionListener(deleteAL);
     }
 
 
     public void showFileList(FSDirectory curDir, List<FSPath> infoList) {
-        view.listPanel.removeAll();
-        view.navPanel.urlField.setText(curDir.getAbsolutePath());
+        window.listPanel.removeAll();
+        window.navPanel.urlField.setText(curDir.getAbsolutePath());
         this.curDir = curDir;
 
         if (curDir.getParent() == null)
-            view.navPanel.disableParentBtn();
+            window.navPanel.disableParentBtn();
         else
-            view.navPanel.enableParentBtn();
+            window.navPanel.enableParentBtn();
 
         for (FSPath path : infoList) {
             ListItem item = new ListItem(path);
@@ -112,7 +111,7 @@ public class MainWindowController {
                 public void mousePressed(MouseEvent e) {
                     super.mousePressed(e);
                     if (e.isPopupTrigger())
-                        view.pathPopupMenu.show(e.getComponent(), e.getX(), e.getY());
+                        window.pathPopupMenu.show(e.getComponent(), e.getX(), e.getY());
                     selectAFile(item);
                 }
 
@@ -124,10 +123,10 @@ public class MainWindowController {
                             client.fetchDirectory((FSDirectory) path);
                 }
             });
-            view.listPanel.add(item);
+            window.listPanel.add(item);
         }
-        view.revalidate();
-        view.repaint();
+        window.revalidate();
+        window.repaint();
     }
 
     private void selectAFile(ListItem item) {

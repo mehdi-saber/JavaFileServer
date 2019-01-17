@@ -3,7 +3,7 @@ package ir.ac.aut.ceit.ap.fileserver.network;
 public enum Subject {
     //    C->S Requests
     REGISTER_USER,
-    LOGIN_USER,
+    LOGIN,
     RENAME_USER,
     RENAME_FILE,
     UPLOAD_FILE,
@@ -13,9 +13,8 @@ public enum Subject {
 
 
     //    S->C Response
-    REGISTER_USER_PASS_NOT_ACCEPTED,
-    REGISTER_USER_REPEATED_USERNAME,
-    REGISTER_USER_ACCEPTED,
+    LOGIN_OK,
+    LOGIN_FAILED,
 
     FETCH_DIRECTORY_OK,
 

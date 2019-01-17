@@ -7,6 +7,7 @@ public class Controller {
     private Server server;
 
     public Controller() {
+
         view = new PanelView();
     }
 }

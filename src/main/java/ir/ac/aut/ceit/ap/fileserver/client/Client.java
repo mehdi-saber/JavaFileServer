@@ -1,5 +1,6 @@
 package ir.ac.aut.ceit.ap.fileserver.client;
 
+import ir.ac.aut.ceit.ap.fileserver.client.view.ConnectWindowController;
 import ir.ac.aut.ceit.ap.fileserver.client.view.MainWindowController;
 import ir.ac.aut.ceit.ap.fileserver.filesys.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.filesys.FSFile;
@@ -12,32 +13,38 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Random;
 
 public class Client {
     private ClientConnectionManager connectionManager;
     private MainWindowController mainWindowController;
-    int serverPort = 5252;
-    String serverAddress = "localhost";
-    public Client()  {
-        mainWindowController = new MainWindowController(this);
-        connectionManager = new ClientConnectionManager(5151, new ClientRouter(this), serverAddress, serverPort);
+    private int listenPort;
 
+    public Client()  {
+        new ConnectWindowController(this);
+    }
+
+    public void openMainWindow() {
+        mainWindowController = new MainWindowController(this);
         fetchDirectory(FileSystem.ROOT);
     }
 
-    public void login(String username, String password) {
-        Message request = new Message(Subject.LOGIN_USER);
+    public boolean connectToServer(String serverAddress, int serverPort, String username, String password) {
+        this.listenPort = new Random().nextInt(10000);
+        connectionManager = new ClientConnectionManager(
+                listenPort,
+                new ClientRouter(this),
+                serverAddress, serverPort);
+        Message request = new Message(Subject.LOGIN);
         request.addParameter("username", username);
         request.addParameter("password", password);
         Message response = connectionManager.sendRequest(request);
-    }
-
-    public void register(String username, String password) {
-        Message request = new Message(Subject.REGISTER_USER);
-        request.addParameter("username", username);
-        request.addParameter("password", password);
-        Message response = connectionManager.sendRequest(request);
-        System.out.println(response.getObject("token"));
+        if (response.getTitle().equals(Subject.LOGIN_OK)) {
+            connectionManager.token = (String) response.getObject("token");
+            return true;
+        } else if (response.getTitle().equals(Subject.LOGIN_FAILED))
+            return false;
+        return false;
     }
 
     public void fetchDirectory(FSDirectory directory) {

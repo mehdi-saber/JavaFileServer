@@ -13,9 +13,10 @@ public class Server {
     private FileSystem fileSystem;
     private ConnectionManager connectionManager;
     private SecurityManager securityManager;
+    private int port = 5050;
 
     public Server()  {
-        connectionManager = new ConnectionManager(5252,new ServerRouter(this));
+        connectionManager = new ConnectionManager(port, new ServerRouter(this));
         fileSystem = new FileSystem();
         securityManager = new SecurityManager();
 
@@ -25,7 +26,7 @@ public class Server {
     }
 
     Message registerUser(Message request) {
-        return securityManager.registerUser(request);
+        return securityManager.loginUser(request);
     }
 
     Message fetchDirectory(Message request) {
@@ -41,7 +42,7 @@ public class Server {
     }
 
     public Message authUser(Message request) {
-        return securityManager.registerUser(request);
+        return securityManager.loginUser(request);
     }
 
     public void addFile(FSFile info, byte[] data) {

@@ -13,9 +13,8 @@ public class ServerRouter implements Router {
 
     public Message route(Message request) {
         switch (request.getTitle()) {
-            case REGISTER_USER:
+            case LOGIN:
                 return server.registerUser(request);
-            case LOGIN_USER:
             case FETCH_DIRECTORY:
                 return server.fetchDirectory(request);
             case REMOVE_FILE:

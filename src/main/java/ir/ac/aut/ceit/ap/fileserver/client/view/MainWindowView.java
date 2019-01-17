@@ -11,6 +11,7 @@ class MainWindowView extends JFrame {
     PathPopupMenu pathPopupMenu;
     DirPopupMenu dirPopupMenu;
     NavigationPanel navPanel;
+    ConnectWindow connectWindow;
 
     public MainWindowView() {
         super("File System Client");

@@ -7,6 +7,7 @@ import ir.ac.aut.ceit.ap.fileserver.network.Router;
 public class ClientConnectionManager extends ConnectionManager {
     private final int serverPort;
     private final String serverAddress;
+    String token;
 
     public ClientConnectionManager(int listenPort, Router router, String serverAddress, int port) {
         super(listenPort, router);
@@ -15,6 +16,7 @@ public class ClientConnectionManager extends ConnectionManager {
     }
 
     public Message sendRequest(Message request) {
+        request.addParameter("token", token);
         return super.sendRequest(request, serverAddress, serverPort);
     }
 }
