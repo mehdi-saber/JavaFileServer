@@ -77,7 +77,6 @@ public class ConnectionManager {
                 try {
                     request = readMessage(socket);
                     Message response = router.route(request);
-
                     writeMessage(response, socket.getOutputStream());
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
