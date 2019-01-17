@@ -3,6 +3,7 @@ package ir.ac.aut.ceit.ap.fileserver.client;
 import ir.ac.aut.ceit.ap.fileserver.network.ConnectionManager;
 import ir.ac.aut.ceit.ap.fileserver.network.Message;
 import ir.ac.aut.ceit.ap.fileserver.network.Router;
+import ir.ac.aut.ceit.ap.fileserver.network.SendingMessage;
 
 public class ClientConnectionManager extends ConnectionManager {
     private final int serverPort;
@@ -15,7 +16,7 @@ public class ClientConnectionManager extends ConnectionManager {
         this.serverAddress = serverAddress;
     }
 
-    public Message sendRequest(Message request) {
+    public Message sendRequest(SendingMessage request) {
         request.addParameter("token", token);
         return super.sendRequest(request, serverAddress, serverPort);
     }

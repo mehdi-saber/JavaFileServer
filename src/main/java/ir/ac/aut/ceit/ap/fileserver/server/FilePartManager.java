@@ -1,12 +1,7 @@
 package ir.ac.aut.ceit.ap.fileserver.server;
 
-import ir.ac.aut.ceit.ap.fileserver.util.HashUtil;
-import javafx.util.Pair;
-
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 class FilePartManager {
     private List<ClientInfo> clientList;
@@ -18,19 +13,13 @@ class FilePartManager {
 
     }
 
-    Map<ClientInfo, Pair<String, byte[]>> splitFile(byte[] file) {
-        Map<ClientInfo, Pair<String, byte[]>> map = new HashMap<>();
+    List<ClientInfo> splitFile(int fileSize) {
+        List<ClientInfo> receivingClients = new ArrayList<>();
         int cIndex = 0;
-        for (int i = 0; true; i++) {
-            int from = i * splitSize;
-            int to = Math.min(from + splitSize, file.length);
-            if (from > file.length)
-                break;
-            byte[] subArray = Arrays.copyOfRange(file, from, to);
-            String hash = HashUtil.md5Hash(subArray);
+        for (int i = 0; i < (fileSize / splitSize) + 1; i++) {
             cIndex = clientList.size() < cIndex + 1 ? 0 : cIndex + 1;
-            map.put(clientList.get(cIndex), new Pair<>(hash, subArray));
+            receivingClients.add(clientList.get(cIndex));
         }
-        return map;
+        return receivingClients;
     }
 }

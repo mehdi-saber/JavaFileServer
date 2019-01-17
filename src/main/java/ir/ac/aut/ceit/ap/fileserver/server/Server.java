@@ -3,11 +3,10 @@ package ir.ac.aut.ceit.ap.fileserver.server;
 import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FileSystem;
-import ir.ac.aut.ceit.ap.fileserver.network.ConnectionManager;
-import ir.ac.aut.ceit.ap.fileserver.network.Message;
-import ir.ac.aut.ceit.ap.fileserver.network.Subject;
+import ir.ac.aut.ceit.ap.fileserver.network.*;
 import ir.ac.aut.ceit.ap.fileserver.server.security.SecurityManager;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,15 +43,16 @@ public class Server {
 
     Message fetchDirectory(Message request) {
         FSDirectory directory =(FSDirectory) request.getObject("directory");
-        Message response = new Message(Subject.FETCH_DIRECTORY_OK);
+        Message response = new SendingMessage(Subject.FETCH_DIRECTORY_OK);
         response.addParameter("list", fileSystem.listSubPaths(directory));
         return response;
     }
 
-    Message upload(Message request)  {
-        byte[] file = request.getBytes("file");
-        partManager.splitFile(file);
-        return new Message(Subject.UPLOAD_FILE_OK);
+    Message upload(ReceivingMessage request) {
+        InputStream inputStream = request.getStream("file");
+        int fileSize = (int) request.getObject("fileSize");
+        partManager.splitFile(fileSize);
+        return new SendingMessage(Subject.UPLOAD_FILE_OK);
     }
 
     public Message authUser(Message request) {

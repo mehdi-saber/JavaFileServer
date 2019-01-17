@@ -3,6 +3,7 @@ package ir.ac.aut.ceit.ap.fileserver.server.security;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import ir.ac.aut.ceit.ap.fileserver.network.Message;
+import ir.ac.aut.ceit.ap.fileserver.network.SendingMessage;
 import ir.ac.aut.ceit.ap.fileserver.network.Subject;
 import ir.ac.aut.ceit.ap.fileserver.server.ClientInfo;
 import org.mindrot.jbcrypt.BCrypt;
@@ -28,7 +29,7 @@ public class SecurityManager {
         for (User user : userList)
             if (user.getUsername().equals(username))
                 if (BCrypt.checkpw(password, user.getPassHash())) {
-                    Message tokenData = new Message(Subject.LOGIN_OK);
+                    Message tokenData = new SendingMessage(Subject.LOGIN_OK);
                     String token = Jwts.builder()
                             .claim("username", username)
                             .signWith(key)
@@ -36,7 +37,7 @@ public class SecurityManager {
                     tokenData.addParameter("token", token);
                     return tokenData;
                 }
-        return new Message(Subject.LOGIN_FAILED);
+        return new SendingMessage(Subject.LOGIN_FAILED);
     }
 
     private boolean checkUserPassValidation(String username, String password) {

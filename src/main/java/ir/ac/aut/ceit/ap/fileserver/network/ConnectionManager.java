@@ -4,6 +4,8 @@ package ir.ac.aut.ceit.ap.fileserver.network;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.NoSuchElementException;
+import java.util.Scanner;
 
 public class ConnectionManager {
     private ServerSocket serverSocket;
@@ -17,15 +19,35 @@ public class ConnectionManager {
         startListener();
     }
 
-    public Message sendRequest(Message request, String address, int port) {
+    public ReceivingMessage sendRequest(SendingMessage request, String address, int port) {
         try {
             Socket socket = new Socket(address, port);
             writeMessage(request, socket.getOutputStream());
-            return readMessage(socket.getInputStream());
+            ReceivingMessage response = readMessage(socket);
+            new Thread(() -> waitForStreamRequest(request, socket)).start();
+            return response;
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    static void waitForStreamRequest(SendingMessage sendingMessage, Socket socket) {
+        try {
+            while (true) {
+                Scanner scanner = new Scanner(socket.getInputStream());
+                String key = scanner.nextLine();
+                InputStream inputStream = sendingMessage.getStream(key);
+                int b;
+                while ((b = inputStream.read()) != -1) {
+                    socket.getOutputStream().write(b);
+                }
+                socket.getOutputStream().write(-1);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (NoSuchElementException ignored) {
+        }
     }
 
     public void startListener() {
@@ -48,10 +70,10 @@ public class ConnectionManager {
         while (true) {
             Socket socket = serverSocket.accept();
             Thread requestThread = new Thread(() -> {
-                Message request = null;
+                ReceivingMessage request = null;
                 try {
-                    request = readMessage(socket.getInputStream());
-                    Message response = router.route(request,socket);
+                    request = readMessage(socket);
+                    Message response = router.route(request);
                     writeMessage(response, socket.getOutputStream());
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
@@ -66,10 +88,10 @@ public class ConnectionManager {
             listenerThread.interrupt();
     }
 
-    private Message readMessage(InputStream inputStream) throws IOException, ClassNotFoundException {
-        ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-        Message message = (Message) objectInputStream.readObject();
-        return message;
+    private ReceivingMessage readMessage(Socket socket) throws IOException, ClassNotFoundException {
+        ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+        SendingMessage sendingMessage = (SendingMessage) objectInputStream.readObject();
+        return new ReceivingMessage(sendingMessage, sendingMessage.streams.keySet(), socket);
     }
 
     private void writeMessage(Message message, OutputStream outputStream) throws IOException {

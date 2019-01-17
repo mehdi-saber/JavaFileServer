@@ -1,6 +1,5 @@
 package ir.ac.aut.ceit.ap.fileserver.file;
 
-import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -28,7 +27,6 @@ abstract public class FSPath implements Serializable {
         return parent;
     }
 
-    @SerializedName("path")
     public String getAbsolutePath() {
         if (parent != null)
             return parent.getAbsolutePath()  + name;

@@ -6,10 +6,12 @@ import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
 import ir.ac.aut.ceit.ap.fileserver.network.Message;
+import ir.ac.aut.ceit.ap.fileserver.network.ReceivingMessage;
+import ir.ac.aut.ceit.ap.fileserver.network.SendingMessage;
 import ir.ac.aut.ceit.ap.fileserver.network.Subject;
-import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Random;
@@ -36,7 +38,7 @@ public class Client {
                 listenPort,
                 new ClientRouter(this),
                 serverAddress, serverPort);
-        Message request = new Message(Subject.LOGIN);
+        SendingMessage request = new SendingMessage(Subject.LOGIN);
         request.addParameter("username", username);
         request.addParameter("password", password);
         request.addParameter("listenPort", listenPort);
@@ -51,7 +53,7 @@ public class Client {
     }
 
     public void fetchDirectory(FSDirectory directory) {
-        Message request = new Message(Subject.FETCH_DIRECTORY);
+        SendingMessage request = new SendingMessage(Subject.FETCH_DIRECTORY);
         request.addParameter("directory", directory);
         Message response = connectionManager.sendRequest(request);
         List<FSPath> list = (List<FSPath>) response.getObject("list");
@@ -82,17 +84,17 @@ public class Client {
         if (file == null)
             return;
         try {
-            Message request = new Message(Subject.UPLOAD_FILE);
-            byte[] bytes = FileUtils.readFileToByteArray(file);
-            request.addBytes("file", bytes);
+            SendingMessage request = new SendingMessage(Subject.UPLOAD_FILE);
+            FileInputStream fileInputStream = new FileInputStream(file);
+            request.addStream("file", fileInputStream);
             connectionManager.sendRequest(request);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public Message fetchFile(Message request) {
-        return new Message(null);
+    public Message fetchFile(ReceivingMessage request) {
+        return new SendingMessage(null);
     }
 
     Message getFilePart(Message request) {
