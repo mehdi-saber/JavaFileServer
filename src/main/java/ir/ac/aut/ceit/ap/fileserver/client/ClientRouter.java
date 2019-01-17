@@ -16,7 +16,7 @@ public class ClientRouter implements Router {
 
     public Message route(ReceivingMessage request) {
         switch (request.getTitle()) {
-            case UPLOAD_FILE:
+            case FETCH_PART:
                 return client.fetchFile(request);
         }
         return null;

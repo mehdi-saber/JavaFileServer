@@ -7,7 +7,7 @@ import java.util.Objects;
 abstract public class FSPath implements Serializable {
     protected final FSDirectory parent;
     protected final String name;
-    private static final String SEPARATOR = "/";
+    public static final String SEPARATOR = "/";
 
     FSPath(FSDirectory parent, String name) {
         this.parent = parent;

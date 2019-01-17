@@ -6,4 +6,8 @@ public class FilePartInfo {
     public FilePartInfo(String hash) {
         this.hash = hash;
     }
+
+    public String getHash() {
+        return hash;
+    }
 }

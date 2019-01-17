@@ -32,17 +32,18 @@ public class Server {
     }
 
     Message loginUser(Message request, String address) {
-        Message response = securityManager.loginUser(request);
-        if (response.getTitle().equals(Subject.LOGIN_OK)) {
-            List<String> partList = (List<String>) request.getObject("partList");
-            int listenPort = (int) request.getObject("listenPort");
-            clientList.add(new ClientInfo(partList, address, listenPort));
-        }
+        List<String> partList = (List<String>) request.getParameter("partList");
+        int listenPort = (int) request.getParameter("listenPort");
+        String username = (String) request.getParameter("username");
+        ClientInfo client = new ClientInfo(partList, address, listenPort, username);
+        Message response = securityManager.loginUser(request, client);
+        if (response.getTitle().equals(Subject.LOGIN_OK))
+            clientList.add(client);
         return response;
     }
 
     Message fetchDirectory(Message request) {
-        FSDirectory directory =(FSDirectory) request.getObject("directory");
+        FSDirectory directory = (FSDirectory) request.getParameter("directory");
         Message response = new SendingMessage(Subject.FETCH_DIRECTORY_OK);
         response.addParameter("list", fileSystem.listSubPaths(directory));
         return response;
@@ -50,15 +51,18 @@ public class Server {
 
     Message upload(ReceivingMessage request) {
         InputStream inputStream = request.getStream("file");
-        int fileSize = (int) request.getObject("fileSize");
-        partManager.splitFile(fileSize);
+        int fileSize = (int) request.getParameter("fileSize");
+        List<ClientInfo> destinations = partManager.partsDestinations(fileSize);
+        for (ClientInfo client : destinations) {
+            SendingMessage partRequest = new SendingMessage(Subject.FETCH_PART);
+            int limit = destinations.size() == 1 ? fileSize % partManager.splitSize : partManager.splitSize;
+            LimitedInputStream partInputStream = new LimitedInputStream(inputStream, limit);
+            partRequest.addStream("part", partInputStream);
+            ReceivingMessage response = connectionManager.sendRequest(partRequest, client.getAddress(), client.getListenPort());
+            destinations.remove(client);
+        }
         return new SendingMessage(Subject.UPLOAD_FILE_OK);
     }
-
-    public Message authUser(Message request) {
-        return securityManager.loginUser(request);
-    }
-
     public void addFile(FSFile info, byte[] data) {
 
     }

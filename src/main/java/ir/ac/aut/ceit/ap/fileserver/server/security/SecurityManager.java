@@ -23,21 +23,26 @@ public class SecurityManager {
         key = Keys.hmacShaKeyFor(JWT_SECRET.getBytes());
     }
 
-    public Message loginUser(Message request) {
-        String username = (String) request.getObject("username");
-        String password = (String) request.getObject("password");
+    public Message loginUser(Message request, ClientInfo client) {
+        String username = (String) request.getParameter("username");
+        String password = (String) request.getParameter("password");
         for (User user : userList)
             if (user.getUsername().equals(username))
                 if (BCrypt.checkpw(password, user.getPassHash())) {
                     Message tokenData = new SendingMessage(Subject.LOGIN_OK);
-                    String token = Jwts.builder()
-                            .claim("username", username)
-                            .signWith(key)
-                            .compact();
-                    tokenData.addParameter("token", token);
+                    tokenData.addParameter("token", getUserToken(client));
                     return tokenData;
                 }
         return new SendingMessage(Subject.LOGIN_FAILED);
+    }
+
+    private String getUserToken(ClientInfo client) {
+        return Jwts.builder()
+                .claim("username", client.getUsername())
+                .claim("address", client.getAddress())
+                .claim("port", client.getListenPort())
+                .signWith(key)
+                .compact();
     }
 
     private boolean checkUserPassValidation(String username, String password) {
@@ -46,8 +51,8 @@ public class SecurityManager {
     }
 
     public Message authUser(Message request, List<ClientInfo> clientList) {
-//        String username = (String) request.getObject("username");
-//        String password = (String) request.getObject("password");
+//        String username = (String) request.getParameter("username");
+//        String password = (String) request.getParameter("password");
 //
 //        for (ClientInfo client : clientList)
 //            if (client.username.equals(username))

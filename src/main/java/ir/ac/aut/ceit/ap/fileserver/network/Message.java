@@ -19,14 +19,14 @@ public abstract class Message implements Serializable {
     }
 
     public Subject getTitle() {
-        return (Subject) getObject(TITLE_MAP_KEY);
+        return (Subject) getParameter(TITLE_MAP_KEY);
     }
 
     public void addParameter(String key, Object value) {
         parameters.put(key, value);
     }
 
-    public Object getObject(String key) {
+    public Object getParameter(String key) {
         return parameters.get(key);
     }
 

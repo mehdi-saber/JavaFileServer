@@ -23,8 +23,9 @@ public class ConnectionManager {
         try {
             Socket socket = new Socket(address, port);
             writeMessage(request, socket.getOutputStream());
+            Thread waitForStreamRequest = new Thread(() -> waitForStreamRequest(request, socket));
             ReceivingMessage response = readMessage(socket);
-            new Thread(() -> waitForStreamRequest(request, socket)).start();
+            waitForStreamRequest.start();
             return response;
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -38,11 +39,13 @@ public class ConnectionManager {
                 Scanner scanner = new Scanner(socket.getInputStream());
                 String key = scanner.nextLine();
                 InputStream inputStream = sendingMessage.getStream(key);
-                int b;
-                while ((b = inputStream.read()) != -1) {
-                    socket.getOutputStream().write(b);
+                if (inputStream != null) {
+                    int b;
+                    while ((b = inputStream.read()) != -1) {
+                        socket.getOutputStream().write(b);
+                    }
+                    socket.getOutputStream().write(-1);
                 }
-                socket.getOutputStream().write(-1);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -70,10 +73,11 @@ public class ConnectionManager {
         while (true) {
             Socket socket = serverSocket.accept();
             Thread requestThread = new Thread(() -> {
-                ReceivingMessage request = null;
+                ReceivingMessage request;
                 try {
                     request = readMessage(socket);
                     Message response = router.route(request);
+
                     writeMessage(response, socket.getOutputStream());
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();

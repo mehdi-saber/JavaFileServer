@@ -5,14 +5,13 @@ import ir.ac.aut.ceit.ap.fileserver.client.view.MainWindowController;
 import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
+import ir.ac.aut.ceit.ap.fileserver.file.FilePartInfo;
 import ir.ac.aut.ceit.ap.fileserver.network.Message;
 import ir.ac.aut.ceit.ap.fileserver.network.ReceivingMessage;
 import ir.ac.aut.ceit.ap.fileserver.network.SendingMessage;
 import ir.ac.aut.ceit.ap.fileserver.network.Subject;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.List;
 import java.util.Random;
 
@@ -45,7 +44,8 @@ public class Client {
         request.addParameter("partList", partManager.listPartHashes());
         Message response = connectionManager.sendRequest(request);
         if (response.getTitle().equals(Subject.LOGIN_OK)) {
-            connectionManager.token = (String) response.getObject("token");
+            String token = (String) response.getParameter("token");
+            connectionManager.setToken(token);
             return true;
         } else if (response.getTitle().equals(Subject.LOGIN_FAILED))
             return false;
@@ -56,7 +56,7 @@ public class Client {
         SendingMessage request = new SendingMessage(Subject.FETCH_DIRECTORY);
         request.addParameter("directory", directory);
         Message response = connectionManager.sendRequest(request);
-        List<FSPath> list = (List<FSPath>) response.getObject("list");
+        List<FSPath> list = (List<FSPath>) response.getParameter("list");
         changeDirectory(directory, list);
     }
 
@@ -87,6 +87,7 @@ public class Client {
             SendingMessage request = new SendingMessage(Subject.UPLOAD_FILE);
             FileInputStream fileInputStream = new FileInputStream(file);
             request.addStream("file", fileInputStream);
+            request.addParameter("fileSize", file.length());
             connectionManager.sendRequest(request);
         } catch (IOException e) {
             e.printStackTrace();
@@ -94,7 +95,18 @@ public class Client {
     }
 
     public Message fetchFile(ReceivingMessage request) {
-        return new SendingMessage(null);
+        FilePartInfo partInfo = (FilePartInfo) request.getParameter("partInfo");
+        InputStream inputStream = request.getStream("part");
+        OutputStream outputStream = partManager.storePartOutputStream(partInfo);
+        try {
+            int b;
+            while ((b = inputStream.read()) != -1)
+                outputStream.write(b);
+            outputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new SendingMessage(Subject.FETCH_PART_OK);
     }
 
     Message getFilePart(Message request) {

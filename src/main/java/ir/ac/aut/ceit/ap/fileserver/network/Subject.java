@@ -18,7 +18,13 @@ public enum Subject {
 
     FETCH_DIRECTORY_OK,
 
-    UPLOAD_FILE_OK
+    UPLOAD_FILE_OK,
+
+    //    S->C requests
+    FETCH_PART,
+
+    //    C->S responses
+    FETCH_PART_OK,
 
 
-    }
+}

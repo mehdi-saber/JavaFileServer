@@ -5,7 +5,7 @@ import java.util.List;
 
 class FilePartManager {
     private List<ClientInfo> clientList;
-    private int splitSize;
+     int splitSize;
 
     FilePartManager(int splitSize, List<ClientInfo> clientList) {
         this.splitSize = splitSize;
@@ -13,7 +13,7 @@ class FilePartManager {
 
     }
 
-    List<ClientInfo> splitFile(int fileSize) {
+    List<ClientInfo> partsDestinations(int fileSize) {
         List<ClientInfo> receivingClients = new ArrayList<>();
         int cIndex = 0;
         for (int i = 0; i < (fileSize / splitSize) + 1; i++) {
