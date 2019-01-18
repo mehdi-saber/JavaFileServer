@@ -6,13 +6,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 
-public class NavigationPanel extends JPanel {
+ class NavigationPanel extends JPanel {
     CustomButton parentBtn;
     CustomButton searchBtn;
     JTextField urlField;
     JTextField searchField;
 
-    public NavigationPanel() {
+     NavigationPanel() {
         BoxLayout boxLayout = new BoxLayout(this, BoxLayout.X_AXIS);
         setLayout(boxLayout);
         parentBtn = new CustomButton(10);

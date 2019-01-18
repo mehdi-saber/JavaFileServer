@@ -4,6 +4,8 @@ import ir.ac.aut.ceit.ap.fileserver.network.ReceivingMessage;
 import ir.ac.aut.ceit.ap.fileserver.network.Router;
 import ir.ac.aut.ceit.ap.fileserver.network.SendingMessage;
 
+import java.io.IOException;
+
 
 public class ServerRouter implements Router {
     private Server server;
@@ -22,7 +24,11 @@ public class ServerRouter implements Router {
             case MOVE_FILE:
             case RENAME_FILE:
             case UPLOAD_FILE:
-                return server.upload(request);
+                try {
+                    return server.upload(request);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
         }
         return null;
     }

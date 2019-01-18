@@ -2,7 +2,7 @@ package ir.ac.aut.ceit.ap.fileserver.client.view;
 
 import javax.swing.*;
 
-public class MainMenuBar extends JMenuBar {
+ class MainMenuBar extends JMenuBar {
     JMenuItem uploadMI;
     JMenuItem pasteMI;
     JMenuItem exitMI;
@@ -13,7 +13,7 @@ public class MainMenuBar extends JMenuBar {
     JMenuItem renameMI;
     JMenuItem deleteMI;
 
-    public MainMenuBar() {
+     MainMenuBar() {
         JMenu fileMenu = new JMenu("File");
         JMenu editMenu = new JMenu("Edit");
         JMenu helpMenu = new JMenu("Help");

@@ -2,7 +2,7 @@ package ir.ac.aut.ceit.ap.fileserver.client.view;
 
 import javax.swing.*;
 
-public class PathPopupMenu extends JPopupMenu {
+ class PathPopupMenu extends JPopupMenu {
     JMenuItem previewMI;
     JMenuItem downloadMI;
     JMenuItem copyMI;
@@ -11,7 +11,7 @@ public class PathPopupMenu extends JPopupMenu {
     JMenuItem deleteMI;
     JMenuItem propertiesMI;
 
-    public PathPopupMenu() {
+     PathPopupMenu() {
         previewMI = new JMenuItem("Preview");
         downloadMI = new JMenuItem("Download");
         copyMI = new JMenuItem("Copy");

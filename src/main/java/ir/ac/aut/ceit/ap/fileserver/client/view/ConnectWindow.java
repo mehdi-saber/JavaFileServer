@@ -3,7 +3,7 @@ package ir.ac.aut.ceit.ap.fileserver.client.view;
 import javax.swing.*;
 import java.awt.*;
 
-public class ConnectWindow extends JFrame {
+ class ConnectWindow extends JFrame {
     JTextField addressTxt;
     JTextField portTxt;
     JTextField usernameTxt;

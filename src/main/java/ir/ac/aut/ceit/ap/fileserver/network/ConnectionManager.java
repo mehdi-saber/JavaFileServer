@@ -4,13 +4,13 @@ package ir.ac.aut.ceit.ap.fileserver.network;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashSet;
 
 public class ConnectionManager {
     public static final String END_OF_REQUEST_STREAM = "END_OF_REQUEST_STREAM";
     private ServerSocket serverSocket;
     private Thread listenerThread;
     private int listenPort;
+    private int bufferSize = 1024 * 1024;
     private Router router;
 
     public ConnectionManager(int listenPort, Router router) {
@@ -41,18 +41,22 @@ public class ConnectionManager {
                                       InputStream inputStream) {
         try {
             while (true) {
-                StringBuilder key = new StringBuilder();
+                StringBuilder keyBuilder = new StringBuilder();
                 int c;
                 while ((c = inputStream.read()) != -1 && c != '\n')
-                    key.append((char) c);
-                if (key.toString().equals(END_OF_REQUEST_STREAM))
+                    keyBuilder.append((char) c);
+                if (keyBuilder.toString().equals(END_OF_REQUEST_STREAM))
                     break;
-                InputStream theStream = request.getStream(key.toString());
-                if (theStream != null) {
-                    int b;
-                    while ((b = theStream.read()) != -1) {
-                        outputStream.write(b);
-                    }
+                String key = keyBuilder.toString();
+                ProgressCallback callback = request.getProgressCallback(key);
+                BufferedInputStream bufferedInputStream = new BufferedInputStream(request.getStream(key));
+                BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
+                byte[] buffer = new byte[bufferSize];
+                int numBytes;
+                while ((numBytes = bufferedInputStream.read(buffer)) != -1) {
+                    if (callback != null)
+                        callback.call(bufferSize);
+                    bufferedOutputStream.write(buffer, 0, numBytes);
                 }
             }
         } catch (IOException e) {
@@ -60,7 +64,7 @@ public class ConnectionManager {
         }
     }
 
-    public void startListener() {
+    private void startListener() {
         try {
             serverSocket = new ServerSocket(listenPort);
         } catch (IOException e) {
@@ -104,7 +108,7 @@ public class ConnectionManager {
             throws ClassNotFoundException, IOException {
         ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
         SendingMessage sendingMessage = (SendingMessage) objectInputStream.readObject();
-        return new ReceivingMessage(sendingMessage, new HashSet<>(sendingMessage.streamKey), socket);
+        return new ReceivingMessage(sendingMessage, socket);
     }
 
     private void writeMessage(SendingMessage sendingMessage, OutputStream outputStream) throws IOException {

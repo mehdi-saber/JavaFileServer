@@ -13,7 +13,6 @@ import java.io.File;
 import java.util.List;
 
 public class MainWindowController {
-    private ConnectWindow connectWindow;
     private MainWindowView window;
     private Client client;
     private ListItem selectedItem;
@@ -64,7 +63,7 @@ public class MainWindowController {
                 renameAL = e -> client.rename(selectedItem.getInfo(), getNewName()),
                 deleteAL = e -> client.delete(selectedItem.getInfo()),
                 propertiesAL = e -> new PropertiesJFrame(),
-                uploadAL = e -> client.upload(chooseNewFile()),
+                uploadAL = e -> upload(chooseNewFile()),
                 newFolderAL = e -> client.search(curDir),
                 pasteAL = e -> client.paste(curDir),
                 searchAL = e -> client.search(curDir),
@@ -92,6 +91,13 @@ public class MainWindowController {
         window.menuBar.deleteMI.addActionListener(deleteAL);
     }
 
+    public void upload(File file) {
+        if (file != null) {
+            long fileSize = file.length();
+             ProgressWindow progressWindow =new ProgressWindow(window, "Uploading", fileSize);
+            client.upload(file,fileSize, progressWindow.getCallback());
+        }
+    }
 
     public void showFileList(FSDirectory curDir, List<FSPath> infoList) {
         window.listPanel.removeAll();

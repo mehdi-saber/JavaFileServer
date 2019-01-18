@@ -7,6 +7,8 @@ import java.util.Map;
 
 public abstract class Message implements Serializable {
     protected Map<String, Object> parameters;
+    Map<String, Long> streamSize;
+
     private static final String TITLE_MAP_KEY = "TITLE_MAP_KEY";
 
     public Message(Subject title) {
@@ -16,6 +18,7 @@ public abstract class Message implements Serializable {
 
     Message(Message message) {
         this.parameters = message.parameters;
+        this.streamSize=message.streamSize;
     }
 
     public Subject getTitle() {
@@ -30,4 +33,7 @@ public abstract class Message implements Serializable {
         return parameters.get(key);
     }
 
+    public Long getStreamSize(String key){
+        return streamSize.get(key);
+    }
 }

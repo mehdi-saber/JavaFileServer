@@ -7,12 +7,14 @@ import ir.ac.aut.ceit.ap.fileserver.file.FilePartInfo;
 import ir.ac.aut.ceit.ap.fileserver.file.FileSystem;
 import ir.ac.aut.ceit.ap.fileserver.network.*;
 import ir.ac.aut.ceit.ap.fileserver.server.security.SecurityManager;
-import ir.ac.aut.ceit.ap.fileserver.util.HashUtil;
-import org.apache.commons.io.IOUtils;
 
+import javax.xml.bind.DatatypeConverter;
+import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -54,31 +56,29 @@ public class Server {
         return response;
     }
 
-    SendingMessage upload(ReceivingMessage request) {
-        InputStream inputStream = request.getStream("file");
-        long fileSize = (long) request.getParameter("fileSize");
+    SendingMessage upload(ReceivingMessage request) throws IOException, NoSuchAlgorithmException, InterruptedException {
+        BufferedInputStream bufferedInputStream = new BufferedInputStream(request.getStream("file"));
+        long fileSize = request.getStreamSize("file");
         List<ClientInfo> destinations = partManager.partsDestinations(fileSize);
-        for (ClientInfo client : destinations) {
-            long limit = destinations.size() == 1 ? fileSize % partManager.splitSize : partManager.splitSize;
-            LimitedInputStream limitedInputStream = new LimitedInputStream(inputStream, limit);
-            byte[] bytes = new byte[0];
-            try {
-                bytes = IOUtils.toByteArray(limitedInputStream);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            String hash = HashUtil.md5Hash(bytes);
+        Iterator<ClientInfo> iterator = destinations.iterator();
+        MessageDigest digest = MessageDigest.getInstance("MD5");
+        while (iterator.hasNext()) {
+            ClientInfo client = iterator.next();
+
+            byte[] buffer = new byte[partManager.splitSize];
+            int numBytes = bufferedInputStream.read(buffer);
+
+            digest.update(buffer, 0, numBytes);
+            String hash = DatatypeConverter.printHexBinary(digest.digest()).toUpperCase();
             FilePartInfo partInfo = new FilePartInfo(hash);
-            InputStream stream = new ByteInputStream(bytes, ((Long) limit).intValue());
+
+            ByteInputStream partInputStream = new ByteInputStream(buffer, numBytes);
+
             SendingMessage partRequest = new SendingMessage(Subject.FETCH_PART);
             partRequest.addParameter("partInfo", partInfo);
-            partRequest.addStream("part", stream);
-            try {
-                connectionManager.sendRequest(partRequest, client.getAddress(), client.getListenPort()).join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            destinations.remove(client);
+            partRequest.addStream("part", partInputStream, (long) partManager.splitSize);
+            connectionManager.sendRequest(partRequest, client.getAddress(), client.getListenPort()).join();
+            iterator.remove();
         }
         return new SendingMessage(Subject.UPLOAD_FILE_OK);
     }

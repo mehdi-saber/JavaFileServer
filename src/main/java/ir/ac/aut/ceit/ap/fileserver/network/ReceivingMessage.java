@@ -5,16 +5,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.net.Socket;
-import java.util.Set;
 
 public class ReceivingMessage extends Message implements Serializable {
-    private Set<String> streamKey;
     private Socket socket;
 
-    public ReceivingMessage(Message message, Set<String> streamKey, Socket socket) {
+    public ReceivingMessage(Message message, Socket socket) {
         super(message);
         this.socket = socket;
-        this.streamKey = streamKey;
     }
 
     public InputStream getStream(String key) {

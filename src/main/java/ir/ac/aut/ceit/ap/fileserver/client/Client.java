@@ -27,6 +27,7 @@ public class Client {
     public void openMainWindow() {
         mainWindowController = new MainWindowController(this);
         fetchDirectory(FSDirectory.ROOT);
+        mainWindowController.upload(new File("/Users/mehdi-saber/Dump20181226.sql"));//todo:remove
     }
 
     public boolean connectToServer(String serverAddress, int serverPort, String username, String password) {
@@ -92,14 +93,13 @@ public class Client {
         //        todo:implement
     }
 
-    public void upload(File file) {
+    public void upload(File file, long fileSize, ProgressCallback callback) {
         if (file == null)
             return;
         try {
             SendingMessage request = new SendingMessage(Subject.UPLOAD_FILE);
-            FileInputStream fileInputStream = new FileInputStream(file);
-            request.addStream("file", fileInputStream);
-            request.addParameter("fileSize", file.length());
+            request.addStream("file", new FileInputStream(file), fileSize);
+            request.addProgressCallback("file", callback);
             connectionManager.sendRequest(request);
         } catch (IOException e) {
             e.printStackTrace();
