@@ -50,8 +50,7 @@ class ProgressWindow extends JFrame {
             int percent = ((Double) ((double) done / max * 100)).intValue();
             number.setText((percent < 10 ? "0" + percent : percent) + "%");
             progressBar.setValue(percent);
-            if (done >= max)
-                setVisible(false);
+
             repaint();
         });
 

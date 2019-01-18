@@ -5,7 +5,7 @@ import java.util.List;
 public class ClientInfo {
    private String username;
    private List<String> parts;
-   private String address;
+    private String address;
    private int listenPort;
 
     ClientInfo(List<String> parts, String address, int listenPort, String username) {

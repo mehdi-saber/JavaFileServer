@@ -7,19 +7,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.List;
-import java.util.Random;
 
 class FilePartManager {
     File directory;
 
-    public FilePartManager() {
-        directory = new File("parts" + File.separator + new Random().nextInt() + File.separator);
-        if (!directory.mkdirs())
-            try {
-                throw new Exception("can not create folder.");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+    public FilePartManager(int listenPort) {
+        directory = new File("data"+File.separator+"parts" + File.separator + listenPort);
+        directory.mkdirs();
     }
 
     public OutputStream storePartOutputStream(FilePartInfo partInfo) {

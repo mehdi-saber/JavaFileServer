@@ -1,5 +1,6 @@
 package ir.ac.aut.ceit.ap.fileserver.network;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -24,6 +25,11 @@ public class SendingMessage extends Message implements Serializable {
     public void addStream(String key, InputStream inputStream, Long size) {
         streamSize.put(key, size);
         streams.put(key, inputStream);
+    }
+
+    public void closeInputStreams() throws IOException {
+        for (InputStream inputStream :streams.values())
+            inputStream.close();
     }
 
     public void addProgressCallback(String key, ProgressCallback progressCallback) {

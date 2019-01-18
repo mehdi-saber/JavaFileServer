@@ -20,7 +20,8 @@ public class Client {
     private int listenPort;
 
     public Client()  {
-        partManager = new FilePartManager();
+        this.listenPort = new Random().nextInt(10000);
+        partManager = new FilePartManager(this.listenPort);
         new ConnectWindowController(this);
     }
 
@@ -31,7 +32,6 @@ public class Client {
     }
 
     public boolean connectToServer(String serverAddress, int serverPort, String username, String password) {
-        this.listenPort = new Random().nextInt(10000);
         connectionManager = new ClientConnectionManager(
                 listenPort,
                 new ClientRouter(this),
@@ -63,12 +63,9 @@ public class Client {
     public void fetchDirectory(FSDirectory directory) {
         SendingMessage request = new SendingMessage(Subject.FETCH_DIRECTORY);
         request.addParameter("directory", directory);
-        request.setResponseCallback(new ResponseCallback() {
-            @Override
-            public void call(ReceivingMessage response) {
-                List<FSPath> list = (List<FSPath>) response.getParameter("list");
-                changeDirectory(directory, list);
-            }
+        request.setResponseCallback(response -> {
+            List<FSPath> list = (List<FSPath>) response.getParameter("list");
+            changeDirectory(directory, list);
         });
         connectionManager.sendRequest(request);
     }
@@ -100,13 +97,14 @@ public class Client {
             SendingMessage request = new SendingMessage(Subject.UPLOAD_FILE);
             request.addStream("file", new FileInputStream(file), fileSize);
             request.addProgressCallback("file", callback);
+            request.addParameter("fileName",file.getName());
             connectionManager.sendRequest(request);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public SendingMessage fetchFile(ReceivingMessage request) {
+    public SendingMessage fetchPart(ReceivingMessage request) {
         FilePartInfo partInfo = (FilePartInfo) request.getParameter("partInfo");
         OutputStream outputStream = partManager.storePartOutputStream(partInfo);
         InputStream inputStream = request.getStream("part");

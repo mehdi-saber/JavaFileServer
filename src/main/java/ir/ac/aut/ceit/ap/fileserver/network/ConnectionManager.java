@@ -10,7 +10,6 @@ public class ConnectionManager {
     private ServerSocket serverSocket;
     private Thread listenerThread;
     private int listenPort;
-    private int bufferSize = 1024 * 1024;
     private Router router;
 
     public ConnectionManager(int listenPort, Router router) {
@@ -27,7 +26,10 @@ public class ConnectionManager {
                 InputStream inputStream = socket.getInputStream();
                 writeMessage(request, outputStream);
                 waitForStreamRequest(request, outputStream, inputStream);
-                request.getResponseCallback().call(readMessage(socket));
+                request.closeInputStreams();
+                ResponseCallback responseCallback = request.getResponseCallback();
+                if (responseCallback != null)
+                    responseCallback.call(readMessage(socket));
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
@@ -45,19 +47,19 @@ public class ConnectionManager {
                 int c;
                 while ((c = inputStream.read()) != -1 && c != '\n')
                     keyBuilder.append((char) c);
-                if (keyBuilder.toString().equals(END_OF_REQUEST_STREAM))
-                    break;
                 String key = keyBuilder.toString();
+                if (key.equals(END_OF_REQUEST_STREAM))
+                    break;
                 ProgressCallback callback = request.getProgressCallback(key);
                 BufferedInputStream bufferedInputStream = new BufferedInputStream(request.getStream(key));
-                BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
-                byte[] buffer = new byte[bufferSize];
-                int numBytes;
-                while ((numBytes = bufferedInputStream.read(buffer)) != -1) {
+                byte[] buffer = new byte[8 * 1024];
+                int len;
+                while ((len = bufferedInputStream.read(buffer)) != -1) {
                     if (callback != null)
-                        callback.call(bufferSize);
-                    bufferedOutputStream.write(buffer, 0, numBytes);
+                        callback.call(len);
+                    outputStream.write(buffer, 0, len);
                 }
+                outputStream.write(-1);
             }
         } catch (IOException e) {
             e.printStackTrace();

@@ -1,21 +1,21 @@
 package ir.ac.aut.ceit.ap.fileserver.server;
 
-import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
-import ir.ac.aut.ceit.ap.fileserver.file.FilePartInfo;
 import ir.ac.aut.ceit.ap.fileserver.file.FileSystem;
 import ir.ac.aut.ceit.ap.fileserver.network.*;
 import ir.ac.aut.ceit.ap.fileserver.server.security.SecurityManager;
+import org.apache.commons.codec.digest.DigestUtils;
 
-import javax.xml.bind.DatatypeConverter;
-import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class Server {
@@ -30,7 +30,7 @@ public class Server {
         connectionManager = new ConnectionManager(port, new ServerRouter(this));
         fileSystem = new FileSystem();
         clientList = new ArrayList<>();
-        partManager = new FilePartManager(1024 * 1024,clientList);
+        partManager = new FilePartManager(clientList);
         securityManager = new SecurityManager();
 
         FSDirectory directory = fileSystem.addDirectory(FSDirectory.ROOT, "dawd");
@@ -38,11 +38,11 @@ public class Server {
             fileSystem.addFile(directory, "dawd.dwad");
     }
 
-    SendingMessage loginUser(Message request, String address) {
+    SendingMessage loginUser(ReceivingMessage request) {
         List<String> partList = (List<String>) request.getParameter("partList");
         int listenPort = (int) request.getParameter("listenPort");
         String username = (String) request.getParameter("username");
-        ClientInfo client = new ClientInfo(partList, address, listenPort, username);
+        ClientInfo client = new ClientInfo(partList, request.getSenderAddress(), listenPort, username);
         SendingMessage response = securityManager.loginUser(request, client);
         if (response.getTitle().equals(Subject.LOGIN_OK))
             clientList.add(client);
@@ -56,29 +56,31 @@ public class Server {
         return response;
     }
 
-    SendingMessage upload(ReceivingMessage request) throws IOException, NoSuchAlgorithmException, InterruptedException {
-        BufferedInputStream bufferedInputStream = new BufferedInputStream(request.getStream("file"));
-        long fileSize = request.getStreamSize("file");
-        List<ClientInfo> destinations = partManager.partsDestinations(fileSize);
-        Iterator<ClientInfo> iterator = destinations.iterator();
-        MessageDigest digest = MessageDigest.getInstance("MD5");
-        while (iterator.hasNext()) {
-            ClientInfo client = iterator.next();
+    SendingMessage upload(ReceivingMessage request) {
+        try {
+            String fileName = (String) request.getParameter("fileName");
+            Long fetchId = partManager.fetchIdentityManager.storeFile(
+                    request.getStream("file"), request.getStreamSize("file"));
+            List<Long> partList = partManager.splitFile(fetchId);
 
-            byte[] buffer = new byte[partManager.splitSize];
-            int numBytes = bufferedInputStream.read(buffer);
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            Map<ClientInfo, List<Long>> destinations = partManager.getDestinations(partList);
+            Map<Long, String> hashList = new HashMap<>();
 
-            digest.update(buffer, 0, numBytes);
-            String hash = DatatypeConverter.printHexBinary(digest.digest()).toUpperCase();
-            FilePartInfo partInfo = new FilePartInfo(hash);
+            for (ClientInfo client : destinations.keySet()) {
+                List<Long> clientParts = destinations.get(client);
 
-            ByteInputStream partInputStream = new ByteInputStream(buffer, numBytes);
-
-            SendingMessage partRequest = new SendingMessage(Subject.FETCH_PART);
-            partRequest.addParameter("partInfo", partInfo);
-            partRequest.addStream("part", partInputStream, (long) partManager.splitSize);
-            connectionManager.sendRequest(partRequest, client.getAddress(), client.getListenPort()).join();
-            iterator.remove();
+                SendingMessage partRequest = new SendingMessage(Subject.FETCH_PART);
+                for (Long partId : clientParts) {
+                    File partFile = partManager.partIdentityManager.getFileById(partId);
+                    String hash = DigestUtils.sha256Hex(new FileInputStream(partFile));
+                    hashList.put(partId, hash);
+                    partRequest.addStream("part-" + partId, new FileInputStream(partFile), partFile.length());
+                }
+                connectionManager.sendRequest(partRequest, client.getAddress(), client.getListenPort()).join();
+            }
+        } catch (NoSuchAlgorithmException | InterruptedException | IOException e) {
+            e.printStackTrace();
         }
         return new SendingMessage(Subject.UPLOAD_FILE_OK);
     }
