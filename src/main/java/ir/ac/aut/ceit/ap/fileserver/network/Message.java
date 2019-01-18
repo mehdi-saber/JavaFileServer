@@ -36,4 +36,8 @@ public abstract class Message implements Serializable {
     public Long getStreamSize(String key){
         return streamSize.get(key);
     }
+
+    public Map<String, Long> getStreamSize() {
+        return streamSize;
+    }
 }

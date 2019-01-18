@@ -36,8 +36,8 @@ class ProgressWindow extends JFrame {
         add(BorderLayout.CENTER, progressBar);
         add(BorderLayout.NORTH, operationLabel);
         add(BorderLayout.EAST, number);
-        btnPanel.add(cancelBtn, BorderLayout.EAST);
-        add(BorderLayout.SOUTH, btnPanel);
+//        btnPanel.add(cancelBtn, BorderLayout.EAST);
+//        add(BorderLayout.SOUTH, btnPanel);
 
         callback = doneDelta -> SwingUtilities.invokeLater(() -> {
             done += doneDelta;
@@ -58,6 +58,7 @@ class ProgressWindow extends JFrame {
         setSize(300, 110);
         setLocationRelativeTo(owner);
         setResizable(false);
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         setVisible(true);
     }
 

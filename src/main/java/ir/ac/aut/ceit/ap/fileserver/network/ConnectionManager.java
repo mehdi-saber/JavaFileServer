@@ -1,6 +1,8 @@
 package ir.ac.aut.ceit.ap.fileserver.network;
 
 
+import ir.ac.aut.ceit.ap.fileserver.util.IOUtil;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -51,15 +53,8 @@ public class ConnectionManager {
                 if (key.equals(END_OF_REQUEST_STREAM))
                     break;
                 ProgressCallback callback = request.getProgressCallback(key);
-                BufferedInputStream bufferedInputStream = new BufferedInputStream(request.getStream(key));
-                byte[] buffer = new byte[8 * 1024];
-                int len;
-                while ((len = bufferedInputStream.read(buffer)) != -1) {
-                    if (callback != null)
-                        callback.call(len);
-                    outputStream.write(buffer, 0, len);
-                }
-                outputStream.write(-1);
+                InputStream theStream = request.getStream(key);
+                IOUtil.writeI2O(outputStream, theStream,8*1024,request.getStreamSize(key),callback);
             }
         } catch (IOException e) {
             e.printStackTrace();

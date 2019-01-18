@@ -5,8 +5,8 @@ import ir.ac.aut.ceit.ap.fileserver.client.view.MainWindowController;
 import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
-import ir.ac.aut.ceit.ap.fileserver.file.FilePartInfo;
 import ir.ac.aut.ceit.ap.fileserver.network.*;
+import ir.ac.aut.ceit.ap.fileserver.util.IOUtil;
 
 import java.io.*;
 import java.util.List;
@@ -28,7 +28,6 @@ public class Client {
     public void openMainWindow() {
         mainWindowController = new MainWindowController(this);
         fetchDirectory(FSDirectory.ROOT);
-        mainWindowController.upload(new File("/Users/mehdi-saber/Dump20181226.sql"));//todo:remove
     }
 
     public boolean connectToServer(String serverAddress, int serverPort, String username, String password) {
@@ -40,7 +39,6 @@ public class Client {
         request.addParameter("username", username);
         request.addParameter("password", password);
         request.addParameter("listenPort", listenPort);
-        request.addParameter("partList", partManager.listPartHashes());
 
         AtomicBoolean connected = new AtomicBoolean(false);
         request.setResponseCallback(response -> {
@@ -90,14 +88,15 @@ public class Client {
         //        todo:implement
     }
 
-    public void upload(File file, long fileSize, ProgressCallback callback) {
-        if (file == null)
-            return;
+    public void upload(File file, FSDirectory directory, long fileSize,
+                       ProgressCallback callback, ResponseCallback responseCallback) {
         try {
             SendingMessage request = new SendingMessage(Subject.UPLOAD_FILE);
             request.addStream("file", new FileInputStream(file), fileSize);
             request.addProgressCallback("file", callback);
             request.addParameter("fileName",file.getName());
+            request.addParameter("directory", directory);
+            request.setResponseCallback(responseCallback);
             connectionManager.sendRequest(request);
         } catch (IOException e) {
             e.printStackTrace();
@@ -105,16 +104,16 @@ public class Client {
     }
 
     public SendingMessage fetchPart(ReceivingMessage request) {
-        FilePartInfo partInfo = (FilePartInfo) request.getParameter("partInfo");
-        OutputStream outputStream = partManager.storePartOutputStream(partInfo);
-        InputStream inputStream = request.getStream("part");
-        try {
-            int b;
-            while ((b = inputStream.read()) != -1)
-                outputStream.write(b);
-            outputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        for (String key : request.getStreamSize().keySet()) {
+            long partId = Integer.valueOf(key.split("-")[1]);
+            try {
+                IOUtil.writeI2O(
+                        new FileOutputStream(partManager.getFileAddress(partId)),
+                        request.getStream(key), request.getStreamSize(key)
+                );
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
         }
         return new SendingMessage(Subject.FETCH_PART_OK);
     }

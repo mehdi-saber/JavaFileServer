@@ -4,6 +4,7 @@ import ir.ac.aut.ceit.ap.fileserver.client.Client;
 import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
+import ir.ac.aut.ceit.ap.fileserver.network.ResponseCallback;
 
 import javax.swing.*;
 import java.awt.event.ActionListener;
@@ -63,7 +64,7 @@ public class MainWindowController {
                 renameAL = e -> client.rename(selectedItem.getInfo(), getNewName()),
                 deleteAL = e -> client.delete(selectedItem.getInfo()),
                 propertiesAL = e -> new PropertiesJFrame(),
-                uploadAL = e -> upload(chooseNewFile()),
+                uploadAL = e -> upload(chooseNewFile(),curDir),
                 newFolderAL = e -> client.search(curDir),
                 pasteAL = e -> client.paste(curDir),
                 searchAL = e -> client.search(curDir),
@@ -91,11 +92,18 @@ public class MainWindowController {
         window.menuBar.deleteMI.addActionListener(deleteAL);
     }
 
-    public void upload(File file) {
+    public void upload(File file, FSDirectory directory) {
         if (file != null) {
             long fileSize = file.length();
-             ProgressWindow progressWindow =new ProgressWindow(window, "Uploading", fileSize);
-            client.upload(file,fileSize, progressWindow.getCallback());
+            ProgressWindow progressWindow = new ProgressWindow(window, "Uploading", fileSize);
+            window.setEnabled(false);
+            ResponseCallback responseCallback = response -> {
+                progressWindow.setVisible(false);
+                progressWindow.dispose();
+                window.setEnabled(true);
+                client.fetchDirectory(curDir);
+            };
+            client.upload(file, curDir, fileSize, progressWindow.getCallback(), responseCallback);
         }
     }
 

@@ -10,8 +10,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,7 +28,7 @@ public class Server {
         connectionManager = new ConnectionManager(port, new ServerRouter(this));
         fileSystem = new FileSystem();
         clientList = new ArrayList<>();
-        partManager = new FilePartManager(clientList);
+        partManager = new FilePartManager(clientList, this);
         securityManager = new SecurityManager();
 
         FSDirectory directory = fileSystem.addDirectory(FSDirectory.ROOT, "dawd");
@@ -57,33 +55,30 @@ public class Server {
     }
 
     SendingMessage upload(ReceivingMessage request) {
-        try {
-            String fileName = (String) request.getParameter("fileName");
-            Long fetchId = partManager.fetchIdentityManager.storeFile(
-                    request.getStream("file"), request.getStreamSize("file"));
-            List<Long> partList = partManager.splitFile(fetchId);
-
-            MessageDigest digest = MessageDigest.getInstance("MD5");
-            Map<ClientInfo, List<Long>> destinations = partManager.getDestinations(partList);
-            Map<Long, String> hashList = new HashMap<>();
-
-            for (ClientInfo client : destinations.keySet()) {
-                List<Long> clientParts = destinations.get(client);
-
-                SendingMessage partRequest = new SendingMessage(Subject.FETCH_PART);
-                for (Long partId : clientParts) {
-                    File partFile = partManager.partIdentityManager.getFileById(partId);
-                    String hash = DigestUtils.sha256Hex(new FileInputStream(partFile));
-                    hashList.put(partId, hash);
-                    partRequest.addStream("part-" + partId, new FileInputStream(partFile), partFile.length());
-                }
-                connectionManager.sendRequest(partRequest, client.getAddress(), client.getListenPort()).join();
-            }
-        } catch (NoSuchAlgorithmException | InterruptedException | IOException e) {
-            e.printStackTrace();
-        }
+        partManager.getAndSplitFile(request);
+        String fileName = (String) request.getParameter("fileName");
+        FSDirectory directory=(FSDirectory)request.getParameter("directory");
+        fileSystem.addFile(directory,fileName);
         return new SendingMessage(Subject.UPLOAD_FILE_OK);
     }
+
+    void sendParts(Map<ClientInfo, List<Long>> destinations) throws IOException, InterruptedException {
+        for (ClientInfo client : destinations.keySet()) {
+            List<Long> clientParts = destinations.get(client);
+
+            SendingMessage partRequest = new SendingMessage(Subject.FETCH_PART);
+            Map<Long, String> hashList = new HashMap<>();
+            for (Long partId : clientParts) {
+                File partFile = partManager.parts.getFileById(partId);
+                String hash = DigestUtils.sha256Hex(new FileInputStream(partFile));
+                hashList.put(partId, hash);
+                partRequest.addStream("part-" + partId, new FileInputStream(partFile), partFile.length());
+            }
+            partRequest.addParameter("hashList", hashList);
+            connectionManager.sendRequest(partRequest, client.getAddress(), client.getListenPort()).join();
+        }
+    }
+
     public void addFile(FSFile info, byte[] data) {
 
     }
