@@ -6,14 +6,12 @@ import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
 import ir.ac.aut.ceit.ap.fileserver.file.FilePartInfo;
-import ir.ac.aut.ceit.ap.fileserver.network.Message;
-import ir.ac.aut.ceit.ap.fileserver.network.ReceivingMessage;
-import ir.ac.aut.ceit.ap.fileserver.network.SendingMessage;
-import ir.ac.aut.ceit.ap.fileserver.network.Subject;
+import ir.ac.aut.ceit.ap.fileserver.network.*;
 
 import java.io.*;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Client {
     private ClientConnectionManager connectionManager;
@@ -42,22 +40,36 @@ public class Client {
         request.addParameter("password", password);
         request.addParameter("listenPort", listenPort);
         request.addParameter("partList", partManager.listPartHashes());
-        Message response = connectionManager.sendRequest(request);
-        if (response.getTitle().equals(Subject.LOGIN_OK)) {
-            String token = (String) response.getParameter("token");
-            connectionManager.setToken(token);
-            return true;
-        } else if (response.getTitle().equals(Subject.LOGIN_FAILED))
-            return false;
-        return false;
+
+        AtomicBoolean connected = new AtomicBoolean(false);
+        request.setResponseCallback(response -> {
+            if (response.getTitle().equals(Subject.LOGIN_OK)) {
+                String token = (String) response.getParameter("token");
+                connectionManager.setToken(token);
+                connected.set(true);
+            } else if (response.getTitle().equals(Subject.LOGIN_FAILED)) {
+                connected.set(false);
+            }
+        });
+        try {
+            connectionManager.sendRequest(request).join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return connected.get();
     }
 
     public void fetchDirectory(FSDirectory directory) {
         SendingMessage request = new SendingMessage(Subject.FETCH_DIRECTORY);
         request.addParameter("directory", directory);
-        Message response = connectionManager.sendRequest(request);
-        List<FSPath> list = (List<FSPath>) response.getParameter("list");
-        changeDirectory(directory, list);
+        request.setResponseCallback(new ResponseCallback() {
+            @Override
+            public void call(ReceivingMessage response) {
+                List<FSPath> list = (List<FSPath>) response.getParameter("list");
+                changeDirectory(directory, list);
+            }
+        });
+        connectionManager.sendRequest(request);
     }
 
     public void download(FSFile file) {
@@ -94,10 +106,10 @@ public class Client {
         }
     }
 
-    public Message fetchFile(ReceivingMessage request) {
+    public SendingMessage fetchFile(ReceivingMessage request) {
         FilePartInfo partInfo = (FilePartInfo) request.getParameter("partInfo");
-        InputStream inputStream = request.getStream("part");
         OutputStream outputStream = partManager.storePartOutputStream(partInfo);
+        InputStream inputStream = request.getStream("part");
         try {
             int b;
             while ((b = inputStream.read()) != -1)

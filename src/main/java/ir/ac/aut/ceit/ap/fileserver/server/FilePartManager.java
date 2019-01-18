@@ -13,11 +13,11 @@ class FilePartManager {
 
     }
 
-    List<ClientInfo> partsDestinations(int fileSize) {
+    List<ClientInfo> partsDestinations(long fileSize) {
         List<ClientInfo> receivingClients = new ArrayList<>();
         int cIndex = 0;
         for (int i = 0; i < (fileSize / splitSize) + 1; i++) {
-            cIndex = clientList.size() < cIndex + 1 ? 0 : cIndex + 1;
+            cIndex = clientList.size() <= cIndex + 1 ? 0 : cIndex + 1;
             receivingClients.add(clientList.get(cIndex));
         }
         return receivingClients;

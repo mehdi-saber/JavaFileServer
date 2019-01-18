@@ -5,9 +5,9 @@ import java.io.InputStream;
 
 public class LimitedInputStream extends InputStream {
     private InputStream inputStream;
-    private int limit;
+    private long limit;
 
-    public LimitedInputStream(InputStream inputStream, int limit) {
+    public LimitedInputStream(InputStream inputStream, long limit) {
         this.inputStream = inputStream;
         this.limit = limit;
     }

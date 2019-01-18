@@ -3,17 +3,13 @@ package ir.ac.aut.ceit.ap.fileserver.network;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.net.Socket;
 import java.util.Set;
 
-public class ReceivingMessage extends Message {
+public class ReceivingMessage extends Message implements Serializable {
     private Set<String> streamKey;
     private Socket socket;
-
-    public ReceivingMessage(Subject title, Socket socket) {
-        super(title);
-        this.socket = socket;
-    }
 
     public ReceivingMessage(Message message, Set<String> streamKey, Socket socket) {
         super(message);
@@ -23,7 +19,7 @@ public class ReceivingMessage extends Message {
 
     public InputStream getStream(String key) {
         try {
-            socket.getOutputStream().write(key.getBytes());
+            socket.getOutputStream().write((key + "\n").getBytes());
             return socket.getInputStream();
         } catch (IOException e) {
             e.printStackTrace();
@@ -33,5 +29,9 @@ public class ReceivingMessage extends Message {
 
     public String getSenderAddress() {
         return socket.getInetAddress().getHostAddress();
+    }
+
+    public void setSocket(Socket socket) {
+        this.socket = socket;
     }
 }

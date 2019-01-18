@@ -25,7 +25,7 @@ class FilePartManager {
     public OutputStream storePartOutputStream(FilePartInfo partInfo) {
         String name = partInfo.getHash();
         try {
-            return new FileOutputStream(new File(directory + name));
+            return new FileOutputStream(new File(directory+File.separator + name));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }

@@ -1,6 +1,8 @@
 package ir.ac.aut.ceit.ap.fileserver.file;
 
-public class FilePartInfo {
+import java.io.Serializable;
+
+public class FilePartInfo implements Serializable {
     private String hash;
 
     public FilePartInfo(String hash) {

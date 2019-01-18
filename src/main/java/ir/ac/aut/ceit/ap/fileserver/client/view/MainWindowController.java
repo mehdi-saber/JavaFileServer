@@ -21,7 +21,6 @@ public class MainWindowController {
 
     public MainWindowController(Client client) {
         this.client = client;
-        connectWindow = new ConnectWindow();
         window = new MainWindowView();
         setMouseListeners();
     }

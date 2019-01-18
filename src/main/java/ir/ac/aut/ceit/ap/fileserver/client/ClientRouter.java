@@ -1,10 +1,8 @@
 package ir.ac.aut.ceit.ap.fileserver.client;
 
-import ir.ac.aut.ceit.ap.fileserver.network.Message;
 import ir.ac.aut.ceit.ap.fileserver.network.ReceivingMessage;
 import ir.ac.aut.ceit.ap.fileserver.network.Router;
-
-import java.net.Socket;
+import ir.ac.aut.ceit.ap.fileserver.network.SendingMessage;
 
 
 public class ClientRouter implements Router {
@@ -14,7 +12,7 @@ public class ClientRouter implements Router {
         this.client = client;
     }
 
-    public Message route(ReceivingMessage request) {
+    public SendingMessage route(ReceivingMessage request) {
         switch (request.getTitle()) {
             case FETCH_PART:
                 return client.fetchFile(request);

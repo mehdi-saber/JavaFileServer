@@ -23,13 +23,13 @@ public class SecurityManager {
         key = Keys.hmacShaKeyFor(JWT_SECRET.getBytes());
     }
 
-    public Message loginUser(Message request, ClientInfo client) {
+    public SendingMessage loginUser(Message request, ClientInfo client) {
         String username = (String) request.getParameter("username");
         String password = (String) request.getParameter("password");
         for (User user : userList)
             if (user.getUsername().equals(username))
                 if (BCrypt.checkpw(password, user.getPassHash())) {
-                    Message tokenData = new SendingMessage(Subject.LOGIN_OK);
+                    SendingMessage tokenData = new SendingMessage(Subject.LOGIN_OK);
                     tokenData.addParameter("token", getUserToken(client));
                     return tokenData;
                 }

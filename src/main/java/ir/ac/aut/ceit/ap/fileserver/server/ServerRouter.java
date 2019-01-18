@@ -1,8 +1,8 @@
 package ir.ac.aut.ceit.ap.fileserver.server;
 
-import ir.ac.aut.ceit.ap.fileserver.network.Message;
 import ir.ac.aut.ceit.ap.fileserver.network.ReceivingMessage;
 import ir.ac.aut.ceit.ap.fileserver.network.Router;
+import ir.ac.aut.ceit.ap.fileserver.network.SendingMessage;
 
 
 public class ServerRouter implements Router {
@@ -12,7 +12,7 @@ public class ServerRouter implements Router {
         this.server = server;
     }
 
-    public Message route(ReceivingMessage request) {
+    public SendingMessage route(ReceivingMessage request) {
         switch (request.getTitle()) {
             case LOGIN:
                 return server.loginUser(request, request.getSenderAddress());

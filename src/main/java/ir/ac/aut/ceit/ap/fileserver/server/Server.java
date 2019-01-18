@@ -1,11 +1,16 @@
 package ir.ac.aut.ceit.ap.fileserver.server;
 
+import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
+import ir.ac.aut.ceit.ap.fileserver.file.FilePartInfo;
 import ir.ac.aut.ceit.ap.fileserver.file.FileSystem;
 import ir.ac.aut.ceit.ap.fileserver.network.*;
 import ir.ac.aut.ceit.ap.fileserver.server.security.SecurityManager;
+import ir.ac.aut.ceit.ap.fileserver.util.HashUtil;
+import org.apache.commons.io.IOUtils;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,34 +36,48 @@ public class Server {
             fileSystem.addFile(directory, "dawd.dwad");
     }
 
-    Message loginUser(Message request, String address) {
+    SendingMessage loginUser(Message request, String address) {
         List<String> partList = (List<String>) request.getParameter("partList");
         int listenPort = (int) request.getParameter("listenPort");
         String username = (String) request.getParameter("username");
         ClientInfo client = new ClientInfo(partList, address, listenPort, username);
-        Message response = securityManager.loginUser(request, client);
+        SendingMessage response = securityManager.loginUser(request, client);
         if (response.getTitle().equals(Subject.LOGIN_OK))
             clientList.add(client);
         return response;
     }
 
-    Message fetchDirectory(Message request) {
+    SendingMessage fetchDirectory(Message request) {
         FSDirectory directory = (FSDirectory) request.getParameter("directory");
-        Message response = new SendingMessage(Subject.FETCH_DIRECTORY_OK);
+        SendingMessage response = new SendingMessage(Subject.FETCH_DIRECTORY_OK);
         response.addParameter("list", fileSystem.listSubPaths(directory));
         return response;
     }
 
-    Message upload(ReceivingMessage request) {
+    SendingMessage upload(ReceivingMessage request) {
         InputStream inputStream = request.getStream("file");
-        int fileSize = (int) request.getParameter("fileSize");
+        long fileSize = (long) request.getParameter("fileSize");
         List<ClientInfo> destinations = partManager.partsDestinations(fileSize);
         for (ClientInfo client : destinations) {
+            long limit = destinations.size() == 1 ? fileSize % partManager.splitSize : partManager.splitSize;
+            LimitedInputStream limitedInputStream = new LimitedInputStream(inputStream, limit);
+            byte[] bytes = new byte[0];
+            try {
+                bytes = IOUtils.toByteArray(limitedInputStream);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            String hash = HashUtil.md5Hash(bytes);
+            FilePartInfo partInfo = new FilePartInfo(hash);
+            InputStream stream = new ByteInputStream(bytes, ((Long) limit).intValue());
             SendingMessage partRequest = new SendingMessage(Subject.FETCH_PART);
-            int limit = destinations.size() == 1 ? fileSize % partManager.splitSize : partManager.splitSize;
-            LimitedInputStream partInputStream = new LimitedInputStream(inputStream, limit);
-            partRequest.addStream("part", partInputStream);
-            ReceivingMessage response = connectionManager.sendRequest(partRequest, client.getAddress(), client.getListenPort());
+            partRequest.addParameter("partInfo", partInfo);
+            partRequest.addStream("part", stream);
+            try {
+                connectionManager.sendRequest(partRequest, client.getAddress(), client.getListenPort()).join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             destinations.remove(client);
         }
         return new SendingMessage(Subject.UPLOAD_FILE_OK);
