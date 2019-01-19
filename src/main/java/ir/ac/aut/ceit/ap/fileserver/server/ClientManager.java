@@ -36,7 +36,7 @@ class ClientManager {
         this.clientList = clientList;
     }
 
-    public List<ClientInfo> getClientList() {
+    List<ClientInfo> getClientList() {
         return clientList;
     }
 }

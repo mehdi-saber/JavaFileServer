@@ -5,10 +5,10 @@ import ir.ac.aut.ceit.ap.fileserver.network.Router;
 import ir.ac.aut.ceit.ap.fileserver.network.SendingMessage;
 
 
-public class ServerRouter implements Router {
+class SRouter implements Router {
     private Server server;
 
-    public ServerRouter(Server server) {
+    SRouter(Server server) {
         this.server = server;
     }
 

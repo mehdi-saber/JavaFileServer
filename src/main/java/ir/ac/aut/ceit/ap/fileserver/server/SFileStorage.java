@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ServerFileStorage extends FileStorage {
+class SFileStorage extends FileStorage {
     private Long idCounter;
     private int splitSize;
     private int repeat;
@@ -20,7 +20,7 @@ public class ServerFileStorage extends FileStorage {
         return idCounter++;
     }
 
-    public ServerFileStorage(Long idCounter) {
+    SFileStorage(Long idCounter) {
         super("data"+File.separator+"temp");
         this.idCounter = idCounter;
         this.splitSize = 3 * 1024 * 1024;
@@ -57,7 +57,7 @@ public class ServerFileStorage extends FileStorage {
         return null;
     }
 
-    public int getRepeat() {
+    int getRepeat() {
         return repeat;
     }
 }

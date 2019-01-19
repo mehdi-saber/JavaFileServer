@@ -6,7 +6,7 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class Receiver extends ServerSocket implements Transformer {
+public class Receiver extends ServerSocket implements Transporter {
     private Router router;
     private int listenPort;
     private boolean doReceive;

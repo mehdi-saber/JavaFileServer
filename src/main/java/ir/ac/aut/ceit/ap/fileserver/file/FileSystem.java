@@ -1,15 +1,14 @@
 package ir.ac.aut.ceit.ap.fileserver.file;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class FileSystem {
-    private Set<FSPath> pathList;
+abstract public class FileSystem {
+    protected Set<FSPath> pathList;
 
-    public FileSystem() {
-        this.pathList = new HashSet<>();
+    public FileSystem(Set<FSPath> pathList) {
+        this.pathList = pathList;
     }
 
     public FSFile addFile(FSDirectory parent, String name, List<Long> parts) {

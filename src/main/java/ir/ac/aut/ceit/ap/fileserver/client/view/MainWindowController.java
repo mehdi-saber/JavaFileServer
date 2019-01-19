@@ -22,6 +22,8 @@ public class MainWindowController {
     private Client client;
     private ListItem selectedItem;
     private FSDirectory curDir;
+    private FSPath pastePath;
+    private OperationType operationType;
 
     public MainWindowController(Client client) {
         this.client = client;
@@ -71,7 +73,7 @@ public class MainWindowController {
                 super.mouseClicked(e);
                 if (e.isPopupTrigger())
                     window.dirPopupMenu.show(e.getComponent(), e.getX(), e.getY());
-                deselectFile();
+                deselectPath();
             }
         });
 
@@ -87,27 +89,29 @@ public class MainWindowController {
         ActionListener
                 downloadAL = e -> download((FSFile) selectedItem.getInfo()),
                 previewAL = e -> new PreviewJFrame(),
-                copyAL = e -> client.copy(selectedItem.getInfo()),
-                cutAL = e -> client.cut(selectedItem.getInfo()),
+                copyAL = e -> updatePasteInfo(selectedItem.getInfo(), OperationType.COPY),
+                cutAL = e -> updatePasteInfo(selectedItem.getInfo(), OperationType.CUT),
                 renameAL = e -> renamePath(selectedItem.getInfo()),
                 deleteAL = e -> client.delete(selectedItem.getInfo()),
                 propertiesAL = e -> new PropertiesJFrame(),
                 uploadAL = e -> upload(chooseNewFile(),curDir),
                 newFolderAL = e -> createNewFolder(),
-                pasteAL = e -> client.paste(curDir),
+                pasteToCurAL = e -> paste(curDir),
+                pasteToSelectedAL = e -> paste((FSDirectory) selectedItem.getInfo()),
                 searchAL = e -> client.search(curDir),
                 exitAL = e -> System.exit(0);
 
         window.pathPopupMenu.previewMI.addActionListener(previewAL);
         window.pathPopupMenu.downloadMI.addActionListener(downloadAL);
-        window.pathPopupMenu.copyMI.addActionListener(copyAL);
         window.pathPopupMenu.cutMI.addActionListener(cutAL);
+        window.pathPopupMenu.copyMI.addActionListener(copyAL);
+        window.pathPopupMenu.pasteMI.addActionListener(pasteToSelectedAL);
         window.pathPopupMenu.renameMI.addActionListener(renameAL);
         window.pathPopupMenu.deleteMI.addActionListener(deleteAL);
         window.pathPopupMenu.propertiesMI.addActionListener(propertiesAL);
 
         window.dirPopupMenu.uploadMI.addActionListener(uploadAL);
-        window.dirPopupMenu.pasteMI.addActionListener(pasteAL);
+        window.dirPopupMenu.pasteMI.addActionListener(pasteToCurAL);
         window.dirPopupMenu.newFolderMI.addActionListener(newFolderAL);
 
         window.menuBar.uploadMI.addActionListener(uploadAL);
@@ -117,9 +121,24 @@ public class MainWindowController {
         window.menuBar.searchMI.addActionListener(searchAL);
         window.menuBar.cutMI.addActionListener(cutAL);
         window.menuBar.copyMI.addActionListener(copyAL);
-        window.menuBar.pasteMI.addActionListener(pasteAL);
+        window.menuBar.pasteMI.addActionListener(pasteToCurAL);
         window.menuBar.renameMI.addActionListener(renameAL);
         window.menuBar.deleteMI.addActionListener(deleteAL);
+        window.menuBar.propertiesMI.addActionListener(propertiesAL);
+    }
+
+    private void paste(FSDirectory directory) {
+        if (operationType.equals(OperationType.CUT)) {
+            client.cut(pastePath, directory);
+            operationType = null;
+            pastePath = null;
+        } else if (operationType.equals(OperationType.COPY))
+            client.copy(pastePath, directory);
+    }
+
+    private void updatePasteInfo(FSPath path, OperationType type) {
+        pastePath = path;
+        operationType = type;
     }
 
     private void upload(File file, FSDirectory directory) {
@@ -160,6 +179,7 @@ public class MainWindowController {
     }
 
     public void showPathList(FSDirectory curDir, Set<FSPath> infoList) {
+        deselectPath();
         SwingUtilities.invokeLater(() -> {
             window.listPanel.removeAll();
             window.navPanel.urlField.setText(curDir.getAbsolutePath());
@@ -178,7 +198,7 @@ public class MainWindowController {
                         super.mousePressed(e);
                         if (e.isPopupTrigger())
                             window.pathPopupMenu.show(e.getComponent(), e.getX(), e.getY());
-                        selectFile(item);
+                        selectPath(item);
                     }
 
                     @Override
@@ -196,18 +216,33 @@ public class MainWindowController {
         });
     }
 
-    private void selectFile(ListItem item) {
-        deselectFile();
-        selectedItem = item;
-        item.switchMode(true);
-        window.menuBar.switchMode(true);
-    }
-
-    private void deselectFile() {
+    private void setNewSelectedItem(ListItem item) {
         if (selectedItem != null) {
             selectedItem.switchMode(false);
             selectedItem = null;
         }
+        selectedItem = item;
+        if (item != null) {
+            item.switchMode(true);
+        }
+    }
+
+    private void selectPath(ListItem item) {
+        setNewSelectedItem(item);
+
+        FSPath path = selectedItem.getInfo();
+
+        window.menuBar.switchMode(true);
+        window.menuBar.downloadMI.setEnabled(path instanceof FSFile);
+
+        boolean pasteEnable = operationType != null && pastePath != null;
+        window.menuBar.pasteMI.setEnabled(pasteEnable);
+        window.dirPopupMenu.pasteMI.setEnabled(pasteEnable);
+        window.pathPopupMenu.pasteMI.setEnabled(pasteEnable && path instanceof FSDirectory);
+    }
+
+    private void deselectPath() {
+        setNewSelectedItem(null);
         window.menuBar.switchMode(false);
     }
 

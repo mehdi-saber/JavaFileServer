@@ -9,14 +9,14 @@ public class ClientInfo {
     private String address;
    private int listenPort;
 
-    ClientInfo(List<Long> parts, String address, int listenPort, String username) {
+    private ClientInfo(List<Long> parts, String address, int listenPort, String username) {
         this.username = username;
         this.parts = parts;
         this.address = address;
         this.listenPort = listenPort;
     }
 
-    public ClientInfo( String address, int listenPort, String username) {
+    ClientInfo(String address, int listenPort, String username) {
         this(new ArrayList<>(), address, listenPort, username);
     }
 

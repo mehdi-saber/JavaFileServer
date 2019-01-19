@@ -8,7 +8,7 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SendingMessage extends Message implements Serializable, Transformer {
+public class SendingMessage extends Message implements Serializable, Transporter {
     private transient Map<String, InputStream> streams;
     private transient ResponseCallback responseCallback;
     private transient Map<String, ProgressCallback> progressCallbacks;

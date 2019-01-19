@@ -3,7 +3,6 @@ package ir.ac.aut.ceit.ap.fileserver.server;
 import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
-import ir.ac.aut.ceit.ap.fileserver.file.FileSystem;
 import ir.ac.aut.ceit.ap.fileserver.network.*;
 import ir.ac.aut.ceit.ap.fileserver.server.security.SecurityManager;
 import ir.ac.aut.ceit.ap.fileserver.util.IOUtil;
@@ -14,24 +13,24 @@ import java.util.*;
 
 
 public class Server {
-    private FileSystem fileSystem;
+    private SFileSystem fileSystem;
     private Receiver receiver;
     private SecurityManager securityManager;
-    private ServerFileStorage fileStorage;
+    private SFileStorage fileStorage;
     private ClientManager clientManager;
     private int port = 5050;
 
     public Server()  {
         try {
-            receiver = new Receiver(port, new ServerRouter(this));
-            fileSystem = new FileSystem();
-            fileStorage = new ServerFileStorage(0L);
+            receiver = new Receiver(port, new SRouter(this));
+            fileSystem = new SFileSystem();
+            fileStorage = new SFileStorage(0L);
             clientManager = new ClientManager();
             securityManager = new SecurityManager();
 
             FSDirectory directory = fileSystem.addDirectory(FSDirectory.ROOT, "dawd");
             for (int i = 0; i < 100; i++)
-                fileSystem.addFile(directory, "dawd.dwad", new ArrayList<>());
+                fileSystem.addFile(directory, i+".pdf", new ArrayList<>());
         } catch (IOException e) {
             e.printStackTrace();
         }

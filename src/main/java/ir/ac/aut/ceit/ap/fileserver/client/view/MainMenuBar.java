@@ -9,6 +9,7 @@ class MainMenuBar extends JMenuBar {
    final JMenuItem searchMI;
    final JMenuItem renameMI;
    final JMenuItem deleteMI;
+    final JMenuItem propertiesMI;
    final JMenuItem exitMI;
 
    final JMenuItem copyMI;
@@ -17,7 +18,7 @@ class MainMenuBar extends JMenuBar {
 
    final private JComponent[] justSelected;
 
-     MainMenuBar() {
+    MainMenuBar() {
         JMenu fileMenu = new JMenu("File");
         JMenu editMenu = new JMenu("Edit");
         JMenu helpMenu = new JMenu("Help");
@@ -28,6 +29,7 @@ class MainMenuBar extends JMenuBar {
         searchMI = new JMenuItem("Search");
         renameMI = new JMenuItem("Rename");
         deleteMI = new JMenuItem("Delete");
+        propertiesMI = new JMenuItem("Properties");
         exitMI = new JMenuItem("Exit");
         fileMenu.add(uploadMI);
         fileMenu.add(downloadMI);
@@ -35,6 +37,7 @@ class MainMenuBar extends JMenuBar {
         fileMenu.add(searchMI);
         fileMenu.add(renameMI);
         fileMenu.add(deleteMI);
+        fileMenu.add(propertiesMI);
         fileMenu.add(exitMI);
 
         cutMI = new JMenuItem("Cut");
@@ -49,7 +52,7 @@ class MainMenuBar extends JMenuBar {
         add(helpMenu);
 
         justSelected = new JComponent[]{
-                downloadMI, renameMI, deleteMI, cutMI, copyMI, pasteMI
+                propertiesMI,downloadMI, renameMI, deleteMI, cutMI, copyMI
         };
 
         switchMode(false);

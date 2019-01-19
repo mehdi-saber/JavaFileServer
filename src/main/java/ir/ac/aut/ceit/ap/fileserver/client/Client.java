@@ -75,11 +75,11 @@ public class Client {
     }
 
 
-    public void copy(FSPath path) {
+    public void copy(FSPath path, FSDirectory directory) {
 //        todo:implement
     }
 
-    public void cut(FSPath path) {
+    public void cut(FSPath path, FSDirectory directory) {
         //        todo:implement
     }
 
@@ -130,10 +130,6 @@ public class Client {
         return null;
     }
 
-    public void paste(FSDirectory directory) {
-        //        todo:implement
-    }
-
     public void search(FSDirectory directory) {
         //        todo:implement
     }
@@ -142,7 +138,7 @@ public class Client {
         mainWindowController.showPathList(directory, pathList);
     }
 
-    public SendingMessage refreshDirectory(ReceivingMessage request) {
+    SendingMessage refreshDirectory(ReceivingMessage request) {
         fetchDirectory(mainWindowController.getCurDir());
         return new SendingMessage(Subject.REFRESH_DIRECTORY_OK);
     }

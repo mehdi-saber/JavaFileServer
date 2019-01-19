@@ -5,7 +5,7 @@ import ir.ac.aut.ceit.ap.fileserver.util.IOUtil;
 import java.io.*;
 import java.net.Socket;
 
-public interface Transformer {
+public interface Transporter {
     default ReceivingMessage readMessage(Socket socket)
             throws ClassNotFoundException, IOException {
         ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
