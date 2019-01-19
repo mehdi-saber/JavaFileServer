@@ -8,23 +8,30 @@ public enum Subject {
     RENAME_FILE,
     UPLOAD_FILE,
     REMOVE_FILE,
-    MOVE_FILE,
+    MOVE_PATH,
+    RENAME_PATH,
+    CREATE_NEW_DIRECTORY,
     FETCH_DIRECTORY,
 
 
     //    S->C Response
     LOGIN_OK,
     LOGIN_FAILED,
-
     FETCH_DIRECTORY_OK,
-
     UPLOAD_FILE_OK,
+    CREATE_NEW_DIRECTORY_REPEATED,
+    CREATE_NEW_DIRECTORY_OK,
+    RENAME_PATH_REPEATED,
+    RENAME_PATH_OK,
+    MOVE_PATH_ALREADY_EXISTS,
+    MOVE_PATH_OK,
+
 
     //    S->C requests
     FETCH_PART,
+    REFRESH_DIRECTORY,
 
     //    C->S responses
     FETCH_PART_OK,
-
-
+    REFRESH_DIRECTORY_OK,
 }

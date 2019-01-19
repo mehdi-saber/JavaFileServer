@@ -16,6 +16,8 @@ public class ClientRouter implements Router {
         switch (request.getTitle()) {
             case FETCH_PART:
                 return client.fetchPart(request);
+            case REFRESH_DIRECTORY:
+                return client.refreshDirectory(request);
         }
         return null;
     }

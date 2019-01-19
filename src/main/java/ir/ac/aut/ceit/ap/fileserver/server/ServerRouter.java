@@ -19,10 +19,13 @@ public class ServerRouter implements Router {
             case FETCH_DIRECTORY:
                 return server.fetchDirectory(request);
             case REMOVE_FILE:
-            case MOVE_FILE:
+            case MOVE_PATH:
             case RENAME_FILE:
+                return server.renameFile(request);
             case UPLOAD_FILE:
                     return server.upload(request);
+            case CREATE_NEW_DIRECTORY:
+                return server.createNewDirectory(request);
         }
         return null;
     }

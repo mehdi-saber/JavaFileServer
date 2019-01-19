@@ -50,8 +50,23 @@ class ProgressWindow extends JFrame {
             int percent = ((Double) ((double) done / max * 100)).intValue();
             number.setText((percent < 10 ? "0" + percent : percent) + "%");
             progressBar.setValue(percent);
-
-            repaint();
+            if (percent == 100) {
+                String waitForServer = "Server is Distributing File";
+                new Thread(() -> {
+                    while (true) {
+                        StringBuilder dotString = new StringBuilder();
+                        for (int j = 0; j < dot % 4; j++)
+                            dotString.append(".");
+                        dot++;
+                        operationLabel.setText(waitForServer + dotString);
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
+            }
         });
 
         getRootPane().setBorder(new EmptyBorder(10, 10, 5, 10));

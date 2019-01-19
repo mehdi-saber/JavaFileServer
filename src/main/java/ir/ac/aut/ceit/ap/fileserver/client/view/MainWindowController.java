@@ -31,9 +31,39 @@ public class MainWindowController {
         return fileChooser.getSelectedFile();
     }
 
-    private String getNewName() {
-        //todo:implement
-        return null;
+    public void createNewFolder() {
+        String name = getNotEmptyString("Enter folder name:", "untitled folder");
+        if (name != null)
+            client.createNewFolder(curDir, name);
+    }
+
+    private String getNotEmptyString(String message, String initialStr) {
+        while (true) {
+            String name = JOptionPane.showInputDialog(window, message, initialStr);
+            if (name == null)
+                return null;
+            else if (!name.equals(""))
+                return name;
+            else
+                showError("Field can not be empty.");
+        }
+    }
+
+    public void showError(String message) {
+        JOptionPane.showMessageDialog(window, message, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    public void renamePath(FSPath path) {
+        String newName = getNotEmptyString("Enter new name:", path.getName());
+        if (newName != null) {
+            FSPath newPath = null;
+            if (path instanceof FSDirectory)
+                newPath = new FSDirectory(path.getParent(), newName);
+            else if (path instanceof FSFile) {
+                newPath = new FSFile(path.getParent(), newName, ((FSFile) path).getParts());
+            }
+            client.rename(path, newPath, true);
+        }
     }
 
     private void setMouseListeners() {
@@ -61,11 +91,11 @@ public class MainWindowController {
                 previewAL = e -> new PreviewJFrame(),
                 copyAL = e -> client.copy(selectedItem.getInfo()),
                 cutAL = e -> client.cut(selectedItem.getInfo()),
-                renameAL = e -> client.rename(selectedItem.getInfo(), getNewName()),
+                renameAL = e -> renamePath(selectedItem.getInfo()),
                 deleteAL = e -> client.delete(selectedItem.getInfo()),
                 propertiesAL = e -> new PropertiesJFrame(),
                 uploadAL = e -> upload(chooseNewFile(),curDir),
-                newFolderAL = e -> client.search(curDir),
+                newFolderAL = e -> createNewFolder(),
                 pasteAL = e -> client.paste(curDir),
                 searchAL = e -> client.search(curDir),
                 exitAL = e -> System.exit(0);
@@ -80,9 +110,11 @@ public class MainWindowController {
 
         window.dirPopupMenu.uploadMI.addActionListener(uploadAL);
         window.dirPopupMenu.pasteMI.addActionListener(pasteAL);
-        window.dirPopupMenu.pasteMI.addActionListener(newFolderAL);
+        window.dirPopupMenu.newFolderMI.addActionListener(newFolderAL);
 
         window.menuBar.uploadMI.addActionListener(uploadAL);
+        window.menuBar.downloadMI.addActionListener(downloadAL);
+        window.menuBar.newFolderMI.addActionListener(newFolderAL);
         window.menuBar.exitMI.addActionListener(exitAL);
         window.menuBar.searchMI.addActionListener(searchAL);
         window.menuBar.cutMI.addActionListener(cutAL);
@@ -92,7 +124,7 @@ public class MainWindowController {
         window.menuBar.deleteMI.addActionListener(deleteAL);
     }
 
-    public void upload(File file, FSDirectory directory) {
+    private void upload(File file, FSDirectory directory) {
         if (file != null) {
             long fileSize = file.length();
             ProgressWindow progressWindow = new ProgressWindow(window, "Uploading", fileSize);
@@ -101,9 +133,9 @@ public class MainWindowController {
                 progressWindow.setVisible(false);
                 progressWindow.dispose();
                 window.setEnabled(true);
-                client.fetchDirectory(curDir);
+                client.fetchDirectory(directory);
             };
-            client.upload(file, curDir, fileSize, progressWindow.getCallback(), responseCallback);
+            client.upload(file, directory, fileSize, progressWindow.getCallback(), responseCallback);
         }
     }
 
@@ -125,7 +157,7 @@ public class MainWindowController {
                     super.mousePressed(e);
                     if (e.isPopupTrigger())
                         window.pathPopupMenu.show(e.getComponent(), e.getX(), e.getY());
-                    selectAFile(item);
+                    selectFile(item);
                 }
 
                 @Override
@@ -142,14 +174,22 @@ public class MainWindowController {
         window.repaint();
     }
 
-    private void selectAFile(ListItem item) {
+    private void selectFile(ListItem item) {
         deselectFile();
         selectedItem = item;
-        item.switchToHighLight();
+        item.switchMode(true);
+        window.menuBar.switchMode(true);
     }
 
     private void deselectFile() {
-        if (selectedItem != null)
-            selectedItem.switchToNormal();
+        if (selectedItem != null) {
+            selectedItem.switchMode(false);
+            selectedItem = null;
+        }
+        window.menuBar.switchMode(false);
+    }
+
+    public FSDirectory getCurDir() {
+        return curDir;
     }
 }

@@ -16,12 +16,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class Client {
     private ClientConnectionManager connectionManager;
     private MainWindowController mainWindowController;
-    private FilePartManager partManager;
+    private ClientFileStorage fileStorage;
     private int listenPort;
 
     public Client()  {
         this.listenPort = new Random().nextInt(10000);
-        partManager = new FilePartManager(this.listenPort);
+        fileStorage = new ClientFileStorage(listenPort);
         new ConnectWindowController(this);
     }
 
@@ -80,9 +80,6 @@ public class Client {
         //        todo:implement
     }
 
-    public void rename(FSPath path, String newName) {
-        //        todo:implement
-    }
 
     public void delete(FSPath path) {
         //        todo:implement
@@ -104,18 +101,17 @@ public class Client {
     }
 
     public SendingMessage fetchPart(ReceivingMessage request) {
-        for (String key : request.getStreamSize().keySet()) {
-            long partId = Integer.valueOf(key.split("-")[1]);
-            try {
+        try {
+            for (String key : request.getStreamSize().keySet())
                 IOUtil.writeI2O(
-                        new FileOutputStream(partManager.getFileAddress(partId)),
+                        new FileOutputStream(fileStorage.getFileById(Long.valueOf(key))),
                         request.getStream(key), request.getStreamSize(key)
                 );
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
+            return new SendingMessage(Subject.FETCH_PART_OK);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
-        return new SendingMessage(Subject.FETCH_PART_OK);
+        return null;
     }
 
     Message getFilePart(Message request) {
@@ -132,5 +128,41 @@ public class Client {
 
     public void changeDirectory(FSDirectory directory, List<FSPath> pathList) {
         mainWindowController.showFileList(directory, pathList);
+    }
+
+    public SendingMessage refreshDirectory(ReceivingMessage request) {
+        fetchDirectory(mainWindowController.getCurDir());
+        return new SendingMessage(Subject.REFRESH_DIRECTORY_OK);
+    }
+
+    public void createNewFolder(FSDirectory parent, String name) {
+        SendingMessage request = new SendingMessage(Subject.CREATE_NEW_DIRECTORY);
+        request.addParameter("parent", parent);
+        request.addParameter("name", name);
+        ResponseCallback responseCallback = response -> {
+            if (response.getTitle().equals(Subject.CREATE_NEW_DIRECTORY_REPEATED)) {
+                mainWindowController.showError("directory \"" + parent.getAbsolutePath() + name + "\"already exists.");
+                mainWindowController.createNewFolder();
+            }
+        };
+        request.setResponseCallback(responseCallback);
+        connectionManager.sendRequest(request);
+    }
+
+    public void rename(FSPath path, String newName) {
+        SendingMessage request = new SendingMessage(Subject.MOVE_PATH);
+        request.addParameter("path", path);
+        request.addParameter("newName", newName);
+        ResponseCallback responseCallback = response -> {
+            if (response.getTitle().equals(Subject.MOVE_PATH_ALREADY_EXISTS)) {
+                String newPath = path.getAbsolutePath() + newName;
+                if (path instanceof FSDirectory)
+                    newPath += FSPath.SEPARATOR;
+                mainWindowController.showError("path \"" + newPath + "\"already exists.");
+                mainWindowController.renamePath(path);
+            }
+        };
+        request.setResponseCallback(responseCallback);
+        connectionManager.sendRequest(request);
     }
 }

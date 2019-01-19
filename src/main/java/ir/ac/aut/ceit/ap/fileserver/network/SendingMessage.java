@@ -18,7 +18,7 @@ public class SendingMessage extends Message implements Serializable {
         progressCallbacks = new HashMap<>();
     }
 
-    InputStream getStream(String key) {
+    public InputStream getStream(String key) {
         return streams.get(key);
     }
 

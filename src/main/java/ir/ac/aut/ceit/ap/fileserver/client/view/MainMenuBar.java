@@ -2,16 +2,20 @@ package ir.ac.aut.ceit.ap.fileserver.client.view;
 
 import javax.swing.*;
 
- class MainMenuBar extends JMenuBar {
-    JMenuItem uploadMI;
-    JMenuItem pasteMI;
-    JMenuItem exitMI;
+class MainMenuBar extends JMenuBar {
+   final JMenuItem uploadMI;
+   final JMenuItem downloadMI;
+   final JMenuItem newFolderMI;
+   final JMenuItem searchMI;
+   final JMenuItem renameMI;
+   final JMenuItem deleteMI;
+   final JMenuItem exitMI;
 
-    JMenuItem searchMI;
-    JMenuItem copyMI;
-    JMenuItem cutMI;
-    JMenuItem renameMI;
-    JMenuItem deleteMI;
+   final JMenuItem copyMI;
+   final JMenuItem cutMI;
+   final JMenuItem pasteMI;
+
+   final private JComponent[] justSelected;
 
      MainMenuBar() {
         JMenu fileMenu = new JMenu("File");
@@ -19,26 +23,40 @@ import javax.swing.*;
         JMenu helpMenu = new JMenu("Help");
 
         uploadMI = new JMenuItem("Upload");
+        downloadMI = new JMenuItem("Download");
+        newFolderMI = new JMenuItem("New Folder");
+        searchMI = new JMenuItem("Search");
+        renameMI = new JMenuItem("Rename");
+        deleteMI = new JMenuItem("Delete");
         exitMI = new JMenuItem("Exit");
         fileMenu.add(uploadMI);
+        fileMenu.add(downloadMI);
+        fileMenu.add(newFolderMI);
+        fileMenu.add(searchMI);
+        fileMenu.add(renameMI);
+        fileMenu.add(deleteMI);
         fileMenu.add(exitMI);
 
-
-        searchMI = new JMenuItem("Search");
         cutMI = new JMenuItem("Cut");
         copyMI = new JMenuItem("Copy");
         pasteMI = new JMenuItem("Paste");
-        renameMI = new JMenuItem("Rename");
-        deleteMI = new JMenuItem("Delete");
-        editMenu.add(searchMI);
         editMenu.add(copyMI);
         editMenu.add(cutMI);
-        fileMenu.add(pasteMI);
-        editMenu.add(renameMI);
-        editMenu.add(deleteMI);
+        editMenu.add(pasteMI);
 
         add(fileMenu);
         add(editMenu);
         add(helpMenu);
-    }
+
+        justSelected = new JComponent[]{
+                downloadMI, renameMI, deleteMI, cutMI, copyMI, pasteMI
+        };
+
+        switchMode(false);
+     }
+
+   void switchMode(boolean fileSelected) {
+      for (JComponent component : justSelected)
+         component.setEnabled(fileSelected);
+   }
 }

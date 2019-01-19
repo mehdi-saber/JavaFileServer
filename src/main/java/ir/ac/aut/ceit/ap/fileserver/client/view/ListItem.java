@@ -1,8 +1,8 @@
 package ir.ac.aut.ceit.ap.fileserver.client.view;
 
-import ir.ac.aut.ceit.ap.fileserver.file.FileCategory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
+import ir.ac.aut.ceit.ap.fileserver.file.FileCategory;
 import ir.ac.aut.ceit.ap.fileserver.util.icon.IconUtil;
 
 import javax.swing.*;
@@ -31,7 +31,7 @@ class ListItem extends JPanel {
         add(image);
         add(label);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        switchToNormal();
+        switchMode(false);
     }
 
     FSPath getInfo() {
@@ -49,12 +49,11 @@ class ListItem extends JPanel {
         return "files.png";
     }
 
-    void switchToHighLight() {
-        setBorder(new LineBorder(Color.BLACK));
-    }
-
-    void switchToNormal() {
-        setBorder(new EmptyBorder(1,1,1,1));
+    void switchMode(boolean selected) {
+        if (selected)
+            setBorder(new LineBorder(Color.BLACK));
+        else
+            setBorder(new EmptyBorder(1, 1, 1, 1));
     }
 
     @Override
