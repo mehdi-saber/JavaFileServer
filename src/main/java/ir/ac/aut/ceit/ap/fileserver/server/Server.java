@@ -15,22 +15,26 @@ import java.util.*;
 
 public class Server {
     private FileSystem fileSystem;
-    private ConnectionManager connectionManager;
+    private Receiver receiver;
     private SecurityManager securityManager;
     private ServerFileStorage fileStorage;
     private ClientManager clientManager;
     private int port = 5050;
 
     public Server()  {
-        connectionManager = new ConnectionManager(port, new ServerRouter(this));
-        fileSystem = new FileSystem();
-        fileStorage = new ServerFileStorage(0L);
-        clientManager = new ClientManager();
-        securityManager = new SecurityManager();
+        try {
+            receiver = new Receiver(port, new ServerRouter(this));
+            fileSystem = new FileSystem();
+            fileStorage = new ServerFileStorage(0L);
+            clientManager = new ClientManager();
+            securityManager = new SecurityManager();
 
-        FSDirectory directory = fileSystem.addDirectory(FSDirectory.ROOT, "dawd");
-        for (int i = 0; i < 100; i++)
-            fileSystem.addFile(directory, "dawd.dwad", new ArrayList<>());
+            FSDirectory directory = fileSystem.addDirectory(FSDirectory.ROOT, "dawd");
+            for (int i = 0; i < 100; i++)
+                fileSystem.addFile(directory, "dawd.dwad", new ArrayList<>());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     SendingMessage loginUser(ReceivingMessage request) {
@@ -136,7 +140,7 @@ public class Server {
                     partRequest.addProgressCallback(partId.toString(), callback);
                 }
                 partRequest.addParameter("hashList", hashList);
-                connectionManager.sendRequest(partRequest, client.getAddress(), client.getListenPort()).join();
+                partRequest.send(client.getAddress(), client.getListenPort()).join();
             }
 
             callback.call(-1);
@@ -156,7 +160,7 @@ public class Server {
     private void refreshClients() {
         for (ClientInfo client : clientManager.getClientList()) {
             SendingMessage partRequest = new SendingMessage(Subject.REFRESH_DIRECTORY);
-            connectionManager.sendRequest(partRequest, client.getAddress(), client.getListenPort());
+            partRequest.send(client.getAddress(), client.getListenPort());
         }
     }
 

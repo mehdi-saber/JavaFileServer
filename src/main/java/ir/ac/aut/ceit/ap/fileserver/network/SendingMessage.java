@@ -2,11 +2,13 @@ package ir.ac.aut.ceit.ap.fileserver.network;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
+import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SendingMessage extends Message implements Serializable {
+public class SendingMessage extends Message implements Serializable, Transformer {
     private transient Map<String, InputStream> streams;
     private transient ResponseCallback responseCallback;
     private transient Map<String, ProgressCallback> progressCallbacks;
@@ -44,7 +46,24 @@ public class SendingMessage extends Message implements Serializable {
         this.responseCallback = responseCallback;
     }
 
-    ResponseCallback getResponseCallback() {
-        return responseCallback;
+    public Thread send( String address, int port) {
+        Thread requestThread = new Thread(() -> {
+            try {
+                Socket socket = new Socket(address, port);
+                OutputStream outputStream = socket.getOutputStream();
+                InputStream inputStream = socket.getInputStream();
+                writeMessage(this, outputStream);
+                waitForStreamRequest(this, outputStream, inputStream);
+                this.closeInputStreams();
+                ReceivingMessage receivingMessage = readMessage(socket);
+                if (responseCallback != null)
+                    responseCallback.call(receivingMessage);
+                outputStream.write((StreamsCommand.END_READING_STREAMS + "\n").getBytes());
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        });
+        requestThread.start();
+        return requestThread;
     }
 }

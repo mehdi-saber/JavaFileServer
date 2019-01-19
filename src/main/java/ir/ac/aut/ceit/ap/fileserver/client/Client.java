@@ -14,7 +14,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Client {
-    private ClientConnectionManager connectionManager;
+    private Receiver receiver;
+    private RequestFactory requestFactory;
     private MainWindowController mainWindowController;
     private ClientFileStorage fileStorage;
     private int listenPort;
@@ -32,10 +33,6 @@ public class Client {
     }
 
     public boolean connectToServer(String serverAddress, int serverPort, String username, String password) {
-        connectionManager = new ClientConnectionManager(
-                listenPort,
-                new ClientRouter(this),
-                serverAddress, serverPort);
         SendingMessage request = new SendingMessage(Subject.LOGIN);
         request.addParameter("username", username);
         request.addParameter("password", password);
@@ -43,30 +40,38 @@ public class Client {
 
         AtomicBoolean connected = new AtomicBoolean(false);
         request.setResponseCallback(response -> {
-            if (response.getTitle().equals(Subject.LOGIN_OK)) {
-                String token = (String) response.getParameter("token");
-                connectionManager.setToken(token);
-                connected.set(true);
-            } else if (response.getTitle().equals(Subject.LOGIN_FAILED)) {
-                connected.set(false);
+            try {
+
+                if (response.getTitle().equals(Subject.LOGIN_OK)) {
+                    String token = (String) response.getParameter("token");
+                    receiver = new Receiver(listenPort, new ClientRouter(this));
+                    requestFactory = new RequestFactory(serverAddress, serverPort, token);
+                    connected.set(true);
+                } else if (response.getTitle().equals(Subject.LOGIN_FAILED))
+                    connected.set(false);
+
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         });
+
         try {
-            connectionManager.sendRequest(request).join();
+            request.send(serverAddress, serverPort).join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
         return connected.get();
     }
 
     public void fetchDirectory(FSDirectory directory) {
-        SendingMessage request = new SendingMessage(Subject.FETCH_DIRECTORY);
+        CRequest request = requestFactory.create(Subject.FETCH_DIRECTORY);
         request.addParameter("directory", directory);
         request.setResponseCallback(response -> {
             Set<FSPath> list = (Set<FSPath>) response.getParameter("list");
             changeDirectory(directory, list);
         });
-        connectionManager.sendRequest(request);
+        request.send();
     }
 
 
@@ -85,26 +90,26 @@ public class Client {
 
     public void upload(File file, FSDirectory directory, ProgressCallback progressCallback, ResponseCallback responseCallback) {
         try {
-            SendingMessage request = new SendingMessage(Subject.UPLOAD_FILE);
+            CRequest request = requestFactory.create(Subject.UPLOAD_FILE);
             request.addInputStream("file", new FileInputStream(file), file.length());
             request.addProgressCallback("file", progressCallback);
             request.addParameter("fileName",file.getName());
             request.addParameter("directory", directory);
             request.setResponseCallback(responseCallback);
-            connectionManager.sendRequest(request);
+            request.send();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public void download(FSFile file, ProgressCallback progressCallback, ResponseCallback uiResponseCallback) {
-            SendingMessage request = new SendingMessage(Subject.DOWNLOAD_FILE);
-            request.addParameter("file", file);
-            ResponseCallback responseCallback = response -> {
-                uiResponseCallback.call(response);
-            };
-            request.setResponseCallback(responseCallback);
-            connectionManager.sendRequest(request);
+        CRequest request = requestFactory.create(Subject.DOWNLOAD_FILE);
+        request.addParameter("file", file);
+        ResponseCallback responseCallback = response -> {
+            uiResponseCallback.call(response);
+        };
+        request.setResponseCallback(responseCallback);
+        request.send();
     }
 
     public SendingMessage fetchPart(ReceivingMessage request) {
@@ -143,7 +148,7 @@ public class Client {
     }
 
     public void createNewFolder(FSDirectory parent, String name) {
-        SendingMessage request = new SendingMessage(Subject.CREATE_NEW_DIRECTORY);
+        CRequest request = requestFactory.create(Subject.CREATE_NEW_DIRECTORY);
         request.addParameter("parent", parent);
         request.addParameter("name", name);
         ResponseCallback responseCallback = response -> {
@@ -153,11 +158,11 @@ public class Client {
             }
         };
         request.setResponseCallback(responseCallback);
-        connectionManager.sendRequest(request);
+        request.send();
     }
 
     public void rename(FSPath path, String newName) {
-        SendingMessage request = new SendingMessage(Subject.MOVE_PATH);
+        CRequest request = requestFactory.create(Subject.MOVE_PATH);
         request.addParameter("path", path);
         request.addParameter("newName", newName);
         ResponseCallback responseCallback = response -> {
@@ -170,6 +175,6 @@ public class Client {
             }
         };
         request.setResponseCallback(responseCallback);
-        connectionManager.sendRequest(request);
+        request.send();
     }
 }
