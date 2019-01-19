@@ -39,6 +39,7 @@ class ProgressWindow extends JFrame {
 //        btnPanel.add(cancelBtn, BorderLayout.EAST);
 //        add(BorderLayout.SOUTH, btnPanel);
 
+        final String distributeLabel = "Server Distributing File";
         callback = doneDelta -> SwingUtilities.invokeLater(() -> {
             done += doneDelta;
             StringBuilder dotStr = new StringBuilder();
@@ -46,27 +47,10 @@ class ProgressWindow extends JFrame {
                 dotStr.append(".");
             dot++;
 
-            operationLabel.setText(operationName + dotStr);
-            int percent = ((Double) ((double) done / max * 100)).intValue();
+            operationLabel.setText(done < max ? operationName + dotStr : distributeLabel + dotStr);
+            int percent = ((Double) ((double) done / max * 100 / 2)).intValue();
             number.setText((percent < 10 ? "0" + percent : percent) + "%");
             progressBar.setValue(percent);
-            if (percent == 100) {
-                String waitForServer = "Server is Distributing File";
-                new Thread(() -> {
-                    while (true) {
-                        StringBuilder dotString = new StringBuilder();
-                        for (int j = 0; j < dot % 4; j++)
-                            dotString.append(".");
-                        dot++;
-                        operationLabel.setText(waitForServer + dotString);
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }).start();
-            }
         });
 
         getRootPane().setBorder(new EmptyBorder(10, 10, 5, 10));

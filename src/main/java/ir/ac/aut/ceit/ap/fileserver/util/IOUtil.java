@@ -2,10 +2,12 @@ package ir.ac.aut.ceit.ap.fileserver.util;
 
 import ir.ac.aut.ceit.ap.fileserver.network.ProgressCallback;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 public class IOUtil {
+    private static final int defaultBufferSize = 16 * 1024;
     public static void writeI2O(OutputStream outputStream, InputStream inputStream,
                                 int bufferSize, Long size, ProgressCallback callback) {
         try {
@@ -22,11 +24,21 @@ public class IOUtil {
         }
     }
 
-    public static void writeI2O(OutputStream outputStream, InputStream inputStream) {
-        writeI2O(outputStream, inputStream, 8 * 1024, Long.MAX_VALUE, null);
+    public static void writeI2O(OutputStream outputStream, InputStream inputStream, Long size) {
+        writeI2O(outputStream, inputStream, defaultBufferSize, size, null);
     }
 
-    public static void writeI2O(OutputStream outputStream, InputStream inputStream, Long size) {
-        writeI2O(outputStream, inputStream, 8 * 1024, size, null);
+    public static String readLineNoBuffer(InputStream inputStream) {
+        try {
+
+            StringBuilder keyBuilder = new StringBuilder();
+            int c;
+            while ((c = inputStream.read()) != -1 && c != '\n')
+                keyBuilder.append((char) c);
+            return keyBuilder.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

@@ -9,8 +9,8 @@ import ir.ac.aut.ceit.ap.fileserver.network.*;
 import ir.ac.aut.ceit.ap.fileserver.util.IOUtil;
 
 import java.io.*;
-import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Client {
@@ -28,6 +28,7 @@ public class Client {
     public void openMainWindow() {
         mainWindowController = new MainWindowController(this);
         fetchDirectory(FSDirectory.ROOT);
+//        mainWindowController.upload(new File("/Users/mehdi-saber/Desktop/1.mp4"), FSDirectory.ROOT);//todo:remove
     }
 
     public boolean connectToServer(String serverAddress, int serverPort, String username, String password) {
@@ -62,15 +63,12 @@ public class Client {
         SendingMessage request = new SendingMessage(Subject.FETCH_DIRECTORY);
         request.addParameter("directory", directory);
         request.setResponseCallback(response -> {
-            List<FSPath> list = (List<FSPath>) response.getParameter("list");
+            Set<FSPath> list = (Set<FSPath>) response.getParameter("list");
             changeDirectory(directory, list);
         });
         connectionManager.sendRequest(request);
     }
 
-    public void download(FSFile file) {
-//        todo:implement
-    }
 
     public void copy(FSPath path) {
 //        todo:implement
@@ -85,12 +83,11 @@ public class Client {
         //        todo:implement
     }
 
-    public void upload(File file, FSDirectory directory, long fileSize,
-                       ProgressCallback callback, ResponseCallback responseCallback) {
+    public void upload(File file, FSDirectory directory, ProgressCallback progressCallback, ResponseCallback responseCallback) {
         try {
             SendingMessage request = new SendingMessage(Subject.UPLOAD_FILE);
-            request.addStream("file", new FileInputStream(file), fileSize);
-            request.addProgressCallback("file", callback);
+            request.addInputStream("file", new FileInputStream(file), file.length());
+            request.addProgressCallback("file", progressCallback);
             request.addParameter("fileName",file.getName());
             request.addParameter("directory", directory);
             request.setResponseCallback(responseCallback);
@@ -100,12 +97,22 @@ public class Client {
         }
     }
 
+    public void download(FSFile file, ProgressCallback progressCallback, ResponseCallback uiResponseCallback) {
+            SendingMessage request = new SendingMessage(Subject.DOWNLOAD_FILE);
+            request.addParameter("file", file);
+            ResponseCallback responseCallback = response -> {
+                uiResponseCallback.call(response);
+            };
+            request.setResponseCallback(responseCallback);
+            connectionManager.sendRequest(request);
+    }
+
     public SendingMessage fetchPart(ReceivingMessage request) {
         try {
             for (String key : request.getStreamSize().keySet())
                 IOUtil.writeI2O(
                         new FileOutputStream(fileStorage.getFileById(Long.valueOf(key))),
-                        request.getStream(key), request.getStreamSize(key)
+                        request.getInputStream(key), request.getStreamSize(key)
                 );
             return new SendingMessage(Subject.FETCH_PART_OK);
         } catch (FileNotFoundException e) {
@@ -126,8 +133,8 @@ public class Client {
         //        todo:implement
     }
 
-    public void changeDirectory(FSDirectory directory, List<FSPath> pathList) {
-        mainWindowController.showFileList(directory, pathList);
+    public void changeDirectory(FSDirectory directory, Set<FSPath> pathList) {
+        mainWindowController.showPathList(directory, pathList);
     }
 
     public SendingMessage refreshDirectory(ReceivingMessage request) {

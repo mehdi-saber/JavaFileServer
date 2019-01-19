@@ -9,7 +9,7 @@ public enum Subject {
     UPLOAD_FILE,
     REMOVE_FILE,
     MOVE_PATH,
-    RENAME_PATH,
+    DOWNLOAD_FILE,
     CREATE_NEW_DIRECTORY,
     FETCH_DIRECTORY,
 
@@ -25,6 +25,7 @@ public enum Subject {
     RENAME_PATH_OK,
     MOVE_PATH_ALREADY_EXISTS,
     MOVE_PATH_OK,
+    DOWNLOAD_FILE_OK,
 
 
     //    S->C requests

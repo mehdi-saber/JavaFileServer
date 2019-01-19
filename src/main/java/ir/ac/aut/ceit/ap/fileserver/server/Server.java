@@ -3,15 +3,13 @@ package ir.ac.aut.ceit.ap.fileserver.server;
 import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
+import ir.ac.aut.ceit.ap.fileserver.file.FileSystem;
 import ir.ac.aut.ceit.ap.fileserver.network.*;
 import ir.ac.aut.ceit.ap.fileserver.server.security.SecurityManager;
 import ir.ac.aut.ceit.ap.fileserver.util.IOUtil;
 import org.apache.commons.codec.digest.DigestUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 
@@ -30,11 +28,9 @@ public class Server {
         clientManager = new ClientManager();
         securityManager = new SecurityManager();
 
-        FSDirectory directory = new FSDirectory(FSDirectory.ROOT, "dawd");
-        fileSystem.addPath(directory);
-        for (int i = 0; i < 100; i++) {
-            fileSystem.addPath(new FSFile(directory, "dawd.dwad", new ArrayList<>()));
-        }
+        FSDirectory directory = fileSystem.addDirectory(FSDirectory.ROOT, "dawd");
+        for (int i = 0; i < 100; i++)
+            fileSystem.addFile(directory, "dawd.dwad", new ArrayList<>());
     }
 
     SendingMessage loginUser(ReceivingMessage request) {
@@ -56,53 +52,104 @@ public class Server {
 
     SendingMessage upload(ReceivingMessage request) {
         try {
-            File downloadingFile = fileStorage.getNewFile();
+            File downloadingFile = File.createTempFile("server", "dl");
+            Long fileSize = request.getStreamSize("file");
             IOUtil.writeI2O(
                     new FileOutputStream(downloadingFile),
-                    request.getStream("file"),
-                    request.getStreamSize("file")
+                    request.getInputStream("file"), fileSize
             );
+            SendingMessage response = new SendingMessage(Subject.UPLOAD_FILE_OK);
 
-            List<Long> parts = fileStorage.splitFile(downloadingFile);
-            downloadingFile.delete();
-
-            Map<ClientInfo, Set<Long>> destinations =
-                    clientManager.getDestinations(parts, fileStorage.getRepeat());
-
-            sendParts(destinations);
-
-            clientManager.updateParts(destinations);
-
-            for (Long part : parts)
-                fileStorage.getFileById(part).delete();
+            PipedInputStream pipedInputStream = new PipedInputStream();
+            PrintWriter out = new PrintWriter(new PipedOutputStream(pipedInputStream));
+            response.addInputStream("status", pipedInputStream, Long.MAX_VALUE);
 
             String fileName = (String) request.getParameter("fileName");
             FSDirectory directory = (FSDirectory) request.getParameter("directory");
-            fileSystem.addPath(new FSFile(directory, fileName, parts));
 
-            refreshClients();
-
-            return new SendingMessage(Subject.UPLOAD_FILE_OK);
-        } catch (InterruptedException | IOException e) {
+            new Thread(() -> {
+                sendParts(downloadingFile, directory, fileName, out);
+            }).start();
+            return response;
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    private void sendParts(Map<ClientInfo, Set<Long>> destinations) throws IOException, InterruptedException {
-        for (ClientInfo client : destinations.keySet()) {
-            Set<Long> clientParts = destinations.get(client);
+    SendingMessage download(ReceivingMessage request) {
+        try {
+            File downloadingFile = File.createTempFile("server", "dl");
+            FSFile file = (FSFile) request.getParameter("file");
+            Long fileSize = file.getSize();
+            IOUtil.writeI2O(
+                    new FileOutputStream(downloadingFile),
+                    request.getInputStream("file"), fileSize
+            );
+            SendingMessage response = new SendingMessage(Subject.UPLOAD_FILE_OK);
 
-            SendingMessage partRequest = new SendingMessage(Subject.FETCH_PART);
-            Map<Long, String> hashList = new HashMap<>();
-            for (Long partId : clientParts) {
-                File partFile = fileStorage.getFileById(partId);
-                String hash = DigestUtils.sha256Hex(new FileInputStream(partFile));
-                hashList.put(partId, hash);
-                partRequest.addStream(partId.toString(), new FileInputStream(partFile), partFile.length());
+            PipedInputStream pipedInputStream = new PipedInputStream();
+            PrintWriter out = new PrintWriter(new PipedOutputStream(pipedInputStream));
+            response.addInputStream("status", pipedInputStream, Long.MAX_VALUE);
+
+            String fileName = (String) request.getParameter("fileName");
+            FSDirectory directory = (FSDirectory) request.getParameter("directory");
+
+            new Thread(() -> {
+                sendParts(downloadingFile, directory, fileName, out);
+            }).start();
+            return response;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private void sendParts(File downloadingFile, FSDirectory directory, String fileName, PrintWriter out) {
+        try {
+            ProgressCallback callback = doneDelta -> {
+                if (doneDelta == -1) {
+                    out.println(StreamsCommand.PROGRESS_END.name());
+                    out.close();
+                    return;
+                }
+                out.println(StreamsCommand.PROGRESS_PASSED.name());
+                out.println(doneDelta);
+                out.flush();
+            };
+
+            List<Long> parts = fileStorage.splitFile(downloadingFile);
+            downloadingFile.delete();
+            Map<ClientInfo, Set<Long>> destinations =
+                    clientManager.getDestinations(parts, fileStorage.getRepeat());
+
+            for (ClientInfo client : destinations.keySet()) {
+                Set<Long> clientParts = destinations.get(client);
+
+                SendingMessage partRequest = new SendingMessage(Subject.FETCH_PART);
+                Map<Long, String> hashList = new HashMap<>();
+                for (Long partId : clientParts) {
+                    File partFile = fileStorage.getFileById(partId);
+                    String hash = DigestUtils.sha256Hex(new FileInputStream(partFile));
+                    hashList.put(partId, hash);
+                    partRequest.addInputStream(partId.toString(), new FileInputStream(partFile), partFile.length());
+                    partRequest.addProgressCallback(partId.toString(), callback);
+                }
+                partRequest.addParameter("hashList", hashList);
+                connectionManager.sendRequest(partRequest, client.getAddress(), client.getListenPort()).join();
             }
-            partRequest.addParameter("hashList", hashList);
-            connectionManager.sendRequest(partRequest, client.getAddress(), client.getListenPort()).join();
+
+            callback.call(-1);
+
+            clientManager.updateParts(destinations);
+
+            for (Long part : parts)
+                fileStorage.getFileById(part).delete();
+            fileSystem.addFile(directory, fileName, parts);
+
+            refreshClients();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
@@ -125,13 +172,11 @@ public class Server {
 
     }
 
-
     SendingMessage renameFile(ReceivingMessage request) {
         FSPath path = (FSPath) request.getParameter("path");
-        FSPath newPath = (FSPath) request.getParameter("newPath");
-        if (fileSystem.pathIsNew(newPath)) {
-            fileSystem.removePath(path);
-            fileSystem.addPath(newPath);
+        String newName = (String) request.getParameter("newName");
+        boolean result = fileSystem.renamePath(path, newName);
+        if (result) {
             refreshClients();
             return new SendingMessage(Subject.MOVE_PATH_OK);
         } else
@@ -141,9 +186,8 @@ public class Server {
     SendingMessage createNewDirectory(ReceivingMessage request) {
         FSDirectory parent = (FSDirectory) request.getParameter("parent");
         String name = (String) request.getParameter("name");
-        FSDirectory newDirectory = new FSDirectory(parent, name);
-        if (fileSystem.pathIsNew(newDirectory)) {
-            fileSystem.addPath(newDirectory);
+        FSDirectory newDirectory = fileSystem.addDirectory(parent, name);
+        if (newDirectory != null) {
             refreshClients();
             return new SendingMessage(Subject.CREATE_NEW_DIRECTORY_OK);
         } else

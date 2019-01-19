@@ -18,17 +18,17 @@ public class SendingMessage extends Message implements Serializable {
         progressCallbacks = new HashMap<>();
     }
 
-    public InputStream getStream(String key) {
+    InputStream getStream(String key) {
         return streams.get(key);
     }
 
-    public void addStream(String key, InputStream inputStream, Long size) {
+    public void addInputStream(String key, InputStream inputStream, Long size) {
         streamSize.put(key, size);
         streams.put(key, inputStream);
     }
 
-    public void closeInputStreams() throws IOException {
-        for (InputStream inputStream :streams.values())
+    void closeInputStreams() throws IOException {
+        for (InputStream inputStream : streams.values())
             inputStream.close();
     }
 
@@ -36,7 +36,7 @@ public class SendingMessage extends Message implements Serializable {
         progressCallbacks.put(key, progressCallback);
     }
 
-    public ProgressCallback getProgressCallback(String key) {
+    ProgressCallback getProgressCallback(String key) {
         return progressCallbacks.get(key);
     }
 
@@ -44,7 +44,7 @@ public class SendingMessage extends Message implements Serializable {
         this.responseCallback = responseCallback;
     }
 
-    public ResponseCallback getResponseCallback() {
+    ResponseCallback getResponseCallback() {
         return responseCallback;
     }
 }

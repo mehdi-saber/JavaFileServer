@@ -4,14 +4,18 @@ import ir.ac.aut.ceit.ap.fileserver.client.Client;
 import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
+import ir.ac.aut.ceit.ap.fileserver.network.ProgressCallback;
+import ir.ac.aut.ceit.ap.fileserver.network.ReceivingMessage;
 import ir.ac.aut.ceit.ap.fileserver.network.ResponseCallback;
+import ir.ac.aut.ceit.ap.fileserver.network.StreamsCommand;
 
 import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.util.List;
+import java.util.Scanner;
+import java.util.Set;
 
 public class MainWindowController {
     private MainWindowView window;
@@ -56,13 +60,7 @@ public class MainWindowController {
     public void renamePath(FSPath path) {
         String newName = getNotEmptyString("Enter new name:", path.getName());
         if (newName != null) {
-            FSPath newPath = null;
-            if (path instanceof FSDirectory)
-                newPath = new FSDirectory(path.getParent(), newName);
-            else if (path instanceof FSFile) {
-                newPath = new FSFile(path.getParent(), newName, ((FSFile) path).getParts());
-            }
-            client.rename(path, newPath, true);
+            client.rename(path, newName);
         }
     }
 
@@ -87,7 +85,7 @@ public class MainWindowController {
         });
 
         ActionListener
-                downloadAL = e -> client.download((FSFile) selectedItem.getInfo()),
+                downloadAL = e -> download((FSFile) selectedItem.getInfo()),
                 previewAL = e -> new PreviewJFrame(),
                 copyAL = e -> client.copy(selectedItem.getInfo()),
                 cutAL = e -> client.cut(selectedItem.getInfo()),
@@ -129,49 +127,73 @@ public class MainWindowController {
             long fileSize = file.length();
             ProgressWindow progressWindow = new ProgressWindow(window, "Uploading", fileSize);
             window.setEnabled(false);
-            ResponseCallback responseCallback = response -> {
-                progressWindow.setVisible(false);
-                progressWindow.dispose();
-                window.setEnabled(true);
-                client.fetchDirectory(directory);
-            };
-            client.upload(file, directory, fileSize, progressWindow.getCallback(), responseCallback);
+            ProgressCallback progressCallback = progressWindow.getCallback();
+            ResponseCallback responseCallback = response -> taskCallback(progressWindow, response);
+            client.upload(file, directory, progressCallback, responseCallback);
         }
     }
 
-    public void showFileList(FSDirectory curDir, List<FSPath> infoList) {
-        window.listPanel.removeAll();
-        window.navPanel.urlField.setText(curDir.getAbsolutePath());
-        this.curDir = curDir;
+    public void download(FSFile file) {
+        long fileSize = file.getSize();
+        ProgressWindow progressWindow = new ProgressWindow(window, "Uploading", fileSize);
+        ProgressCallback progressCallback = progressWindow.getCallback();
+        window.setEnabled(false);
+        ResponseCallback responseCallback = response -> taskCallback(progressWindow, response);
+        client.download(file, progressCallback, responseCallback);
+    }
 
-        if (curDir.getParent() == null)
-            window.navPanel.disableParentBtn();
-        else
-            window.navPanel.enableParentBtn();
-
-        for (FSPath path : infoList) {
-            ListItem item = new ListItem(path);
-            item.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mousePressed(MouseEvent e) {
-                    super.mousePressed(e);
-                    if (e.isPopupTrigger())
-                        window.pathPopupMenu.show(e.getComponent(), e.getX(), e.getY());
-                    selectFile(item);
-                }
-
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    super.mouseClicked(e);
-                    if (e.getClickCount() == 2)
-                        if (path instanceof FSDirectory)
-                            client.fetchDirectory((FSDirectory) path);
-                }
-            });
-            window.listPanel.add(item);
+    private void taskCallback(ProgressWindow progressWindow, ReceivingMessage response) {
+        Scanner scanner = new Scanner(response.getInputStream("status"));
+        ProgressCallback progressCallback = progressWindow.getCallback();
+        while (true) {
+            StreamsCommand command = StreamsCommand.valueOf(scanner.nextLine());
+            if (command.equals(StreamsCommand.PROGRESS_END))
+                break;
+            else if (command.equals(StreamsCommand.PROGRESS_PASSED))
+                progressCallback.call(Integer.valueOf(scanner.nextLine()));
         }
-        window.revalidate();
-        window.repaint();
+        SwingUtilities.invokeLater(() -> {
+            progressWindow.setVisible(false);
+            progressWindow.dispose();
+            window.setEnabled(true);
+        });
+    }
+
+    public void showPathList(FSDirectory curDir, Set<FSPath> infoList) {
+        SwingUtilities.invokeLater(() -> {
+            window.listPanel.removeAll();
+            window.navPanel.urlField.setText(curDir.getAbsolutePath());
+            this.curDir = curDir;
+
+            if (curDir.getParent() == null)
+                window.navPanel.disableParentBtn();
+            else
+                window.navPanel.enableParentBtn();
+
+            for (FSPath path : infoList) {
+                ListItem item = new ListItem(path);
+                item.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mousePressed(MouseEvent e) {
+                        super.mousePressed(e);
+                        if (e.isPopupTrigger())
+                            window.pathPopupMenu.show(e.getComponent(), e.getX(), e.getY());
+                        selectFile(item);
+                    }
+
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        super.mouseClicked(e);
+                        if (e.getClickCount() == 2)
+                            if (path instanceof FSDirectory)
+                                client.fetchDirectory((FSDirectory) path);
+                    }
+                });
+                window.listPanel.add(item);
+            }
+            window.revalidate();
+            window.repaint();
+        });
     }
 
     private void selectFile(ListItem item) {
