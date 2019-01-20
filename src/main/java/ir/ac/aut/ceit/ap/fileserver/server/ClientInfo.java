@@ -1,15 +1,17 @@
 package ir.ac.aut.ceit.ap.fileserver.server;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ClientInfo {
    private String username;
-    private List<Long> parts;
+    private Set<Long> parts;
     private String address;
    private int listenPort;
 
-    private ClientInfo(List<Long> parts, String address, int listenPort, String username) {
+    private ClientInfo(Set<Long> parts, String address, int listenPort, String username) {
         this.username = username;
         this.parts = parts;
         this.address = address;
@@ -17,14 +19,14 @@ public class ClientInfo {
     }
 
     ClientInfo(String address, int listenPort, String username) {
-        this(new ArrayList<>(), address, listenPort, username);
+        this(new HashSet<>(), address, listenPort, username);
     }
 
     public String getUsername() {
         return username;
     }
 
-    public List<Long> getParts() {
+    public Set<Long> getParts() {
         return parts;
     }
 

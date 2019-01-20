@@ -12,9 +12,8 @@ class ProgressWindow extends JFrame {
     private JLabel operationLabel;
     private JLabel number;
     private JProgressBar progressBar;
-    private JButton cancelBtn;
 
-    String operationName;
+    private String operationName;
     private int done = 0;
     private int dot = 0;
 
@@ -26,7 +25,6 @@ class ProgressWindow extends JFrame {
         operationLabel = new JLabel(operationName);
         number = new JLabel();
         progressBar = new JProgressBar(0, 100);
-        cancelBtn = new JButton("cancel");
         JPanel btnPanel = new JPanel(new BorderLayout());
 
         number.setText("00%");
@@ -39,7 +37,6 @@ class ProgressWindow extends JFrame {
 //        btnPanel.add(cancelBtn, BorderLayout.EAST);
 //        add(BorderLayout.SOUTH, btnPanel);
 
-        final String distributeLabel = "Server Distributing File";
         callback = doneDelta -> SwingUtilities.invokeLater(() -> {
             done += doneDelta;
             StringBuilder dotStr = new StringBuilder();
@@ -47,8 +44,8 @@ class ProgressWindow extends JFrame {
                 dotStr.append(".");
             dot++;
 
-            operationLabel.setText(done < max ? operationName + dotStr : distributeLabel + dotStr);
-            int percent = ((Double) ((double) done / max * 100 / 2)).intValue();
+            operationLabel.setText(this.operationName + dotStr);
+            int percent = ((Double) ((double) done / max * 100)).intValue();
             number.setText((percent < 10 ? "0" + percent : percent) + "%");
             progressBar.setValue(percent);
         });
@@ -61,7 +58,11 @@ class ProgressWindow extends JFrame {
         setVisible(true);
     }
 
-    public ProgressCallback getCallback() {
+    ProgressCallback getCallback() {
         return callback;
+    }
+
+    public void setOperationName(String operationName) {
+        this.operationName = operationName;
     }
 }

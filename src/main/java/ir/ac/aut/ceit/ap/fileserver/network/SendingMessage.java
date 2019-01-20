@@ -2,15 +2,13 @@ package ir.ac.aut.ceit.ap.fileserver.network;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.Serializable;
-import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SendingMessage extends Message implements Serializable, Transporter {
+public class SendingMessage extends Message implements Serializable {
     private transient Map<String, InputStream> streams;
-    private transient ResponseCallback responseCallback;
+    protected transient ResponseCallback responseCallback;
     private transient Map<String, ProgressCallback> progressCallbacks;
 
     public SendingMessage(Subject title) {
@@ -29,7 +27,7 @@ public class SendingMessage extends Message implements Serializable, Transporter
         streams.put(key, inputStream);
     }
 
-    void closeInputStreams() throws IOException {
+    protected void closeInputStreams() throws IOException {
         for (InputStream inputStream : streams.values())
             inputStream.close();
     }
@@ -46,24 +44,5 @@ public class SendingMessage extends Message implements Serializable, Transporter
         this.responseCallback = responseCallback;
     }
 
-    public Thread send( String address, int port) {
-        Thread requestThread = new Thread(() -> {
-            try {
-                Socket socket = new Socket(address, port);
-                OutputStream outputStream = socket.getOutputStream();
-                InputStream inputStream = socket.getInputStream();
-                writeMessage(this, outputStream);
-                waitForStreamRequest(this, outputStream, inputStream);
-                this.closeInputStreams();
-                ReceivingMessage receivingMessage = readMessage(socket);
-                if (responseCallback != null)
-                    responseCallback.call(receivingMessage);
-                outputStream.write((StreamsCommand.END_READING_STREAMS + "\n").getBytes());
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-        });
-        requestThread.start();
-        return requestThread;
-    }
+
 }

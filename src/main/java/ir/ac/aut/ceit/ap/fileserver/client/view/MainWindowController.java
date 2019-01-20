@@ -5,7 +5,6 @@ import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
 import ir.ac.aut.ceit.ap.fileserver.network.ProgressCallback;
-import ir.ac.aut.ceit.ap.fileserver.network.ReceivingMessage;
 import ir.ac.aut.ceit.ap.fileserver.network.ResponseCallback;
 import ir.ac.aut.ceit.ap.fileserver.network.StreamsCommand;
 
@@ -14,8 +13,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
 
 public class MainWindowController {
     private MainWindowView window;
@@ -31,9 +29,18 @@ public class MainWindowController {
         setMouseListeners();
     }
 
-    private File chooseNewFile() {
+    private File openFileChoose() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.showOpenDialog(window);
+        return fileChooser.getSelectedFile();
+    }
+
+    private File saveFileChoose(FSFile file) {
+        JFileChooser fileChooser = new JFileChooser();
+        String desktopPath = System.getProperty("user.home") + File.separator + "Desktop" + File.separator;
+        File defaultFile = new File(desktopPath + file.getName());
+        fileChooser.setSelectedFile(defaultFile);
+        fileChooser.showSaveDialog(window);
         return fileChooser.getSelectedFile();
     }
 
@@ -87,14 +94,14 @@ public class MainWindowController {
         });
 
         ActionListener
-                downloadAL = e -> download((FSFile) selectedItem.getInfo()),
+                downloadAL = e -> download((FSFile) selectedItem.getInfo(), saveFileChoose((FSFile) selectedItem.getInfo())),
                 previewAL = e -> new PreviewJFrame(),
                 copyAL = e -> updatePasteInfo(selectedItem.getInfo(), OperationType.COPY),
                 cutAL = e -> updatePasteInfo(selectedItem.getInfo(), OperationType.CUT),
                 renameAL = e -> renamePath(selectedItem.getInfo()),
                 deleteAL = e -> client.delete(selectedItem.getInfo()),
                 propertiesAL = e -> new PropertiesJFrame(),
-                uploadAL = e -> upload(chooseNewFile(),curDir),
+                uploadAL = e -> upload(openFileChoose(), curDir),
                 newFolderAL = e -> createNewFolder(),
                 pasteToCurAL = e -> paste(curDir),
                 pasteToSelectedAL = e -> paste((FSDirectory) selectedItem.getInfo()),
@@ -141,45 +148,51 @@ public class MainWindowController {
         operationType = type;
     }
 
-    private void upload(File file, FSDirectory directory) {
+    public void upload(File file, FSDirectory directory) {
         if (file != null) {
             long fileSize = file.length();
-            ProgressWindow progressWindow = new ProgressWindow(window, "Uploading", fileSize);
+            ProgressWindow progressWindow = new ProgressWindow(window, "Uploading", 2 * fileSize);
             window.setEnabled(false);
             ProgressCallback progressCallback = progressWindow.getCallback();
-            ResponseCallback responseCallback = response -> taskCallback(progressWindow, response);
+            ResponseCallback responseCallback = response -> {
+                progressWindow.setOperationName("Server Distributing File");
+                Scanner scanner = new Scanner(response.getInputStream("status"));
+                while (true) {
+                    StreamsCommand command = StreamsCommand.valueOf(scanner.nextLine());
+                    if (command.equals(StreamsCommand.PROGRESS_END))
+                        break;
+                    else if (command.equals(StreamsCommand.PROGRESS_PASSED))
+                        progressCallback.call(Integer.valueOf(scanner.nextLine()));
+                }
+                SwingUtilities.invokeLater(() -> {
+                    progressWindow.setVisible(false);
+                    progressWindow.dispose();
+                    window.setEnabled(true);
+                });
+            };
             client.upload(file, directory, progressCallback, responseCallback);
         }
     }
 
-    public void download(FSFile file) {
+    private void download(FSFile file, File newFile) {
+        if (newFile == null)
+            return;
         long fileSize = file.getSize();
-        ProgressWindow progressWindow = new ProgressWindow(window, "Uploading", fileSize);
+        ProgressWindow progressWindow = new ProgressWindow(window, "downloading", fileSize);
         ProgressCallback progressCallback = progressWindow.getCallback();
         window.setEnabled(false);
-        ResponseCallback responseCallback = response -> taskCallback(progressWindow, response);
-        client.download(file, progressCallback, responseCallback);
-    }
-
-    private void taskCallback(ProgressWindow progressWindow, ReceivingMessage response) {
-        Scanner scanner = new Scanner(response.getInputStream("status"));
-        ProgressCallback progressCallback = progressWindow.getCallback();
-        while (true) {
-            StreamsCommand command = StreamsCommand.valueOf(scanner.nextLine());
-            if (command.equals(StreamsCommand.PROGRESS_END))
-                break;
-            else if (command.equals(StreamsCommand.PROGRESS_PASSED))
-                progressCallback.call(Integer.valueOf(scanner.nextLine()));
-        }
-        SwingUtilities.invokeLater(() -> {
+        ResponseCallback responseCallback = response -> SwingUtilities.invokeLater(() -> {
             progressWindow.setVisible(false);
             progressWindow.dispose();
             window.setEnabled(true);
         });
+        client.download(file, newFile, progressCallback, responseCallback);
     }
 
-    public void showPathList(FSDirectory curDir, Set<FSPath> infoList) {
+    public void showPathList(FSDirectory curDir, Set<FSPath> pathSet) {
         deselectPath();
+        List<FSPath> pathList = new ArrayList<>(pathSet);
+        pathList.sort(Comparator.comparing(FSPath::getName));
         SwingUtilities.invokeLater(() -> {
             window.listPanel.removeAll();
             window.navPanel.urlField.setText(curDir.getAbsolutePath());
@@ -190,7 +203,7 @@ public class MainWindowController {
             else
                 window.navPanel.enableParentBtn();
 
-            for (FSPath path : infoList) {
+            for (FSPath path : pathList) {
                 ListItem item = new ListItem(path);
                 item.addMouseListener(new MouseAdapter() {
                     @Override
@@ -234,6 +247,7 @@ public class MainWindowController {
 
         window.menuBar.switchMode(true);
         window.menuBar.downloadMI.setEnabled(path instanceof FSFile);
+        window.pathPopupMenu.downloadMI.setEnabled(path instanceof FSFile);
 
         boolean pasteEnable = operationType != null && pastePath != null;
         window.menuBar.pasteMI.setEnabled(pasteEnable);

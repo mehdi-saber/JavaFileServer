@@ -25,12 +25,12 @@ public class Server {
             receiver = new Receiver(port, new SRouter(this));
             fileSystem = new SFileSystem();
             fileStorage = new SFileStorage(0L);
-            clientManager = new ClientManager();
+            clientManager = new ClientManager(2);
             securityManager = new SecurityManager();
 
             FSDirectory directory = fileSystem.addDirectory(FSDirectory.ROOT, "dawd");
             for (int i = 0; i < 100; i++)
-                fileSystem.addFile(directory, i+".pdf", new ArrayList<>());
+                fileSystem.addFile(directory, i + ".pdf", 10L, new HashSet<>());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -82,24 +82,37 @@ public class Server {
 
     SendingMessage download(ReceivingMessage request) {
         try {
-            File downloadingFile = File.createTempFile("server", "dl");
             FSFile file = (FSFile) request.getParameter("file");
             Long fileSize = file.getSize();
-            IOUtil.writeI2O(
-                    new FileOutputStream(downloadingFile),
-                    request.getInputStream("file"), fileSize
-            );
-            SendingMessage response = new SendingMessage(Subject.UPLOAD_FILE_OK);
 
-            PipedInputStream pipedInputStream = new PipedInputStream();
-            PrintWriter out = new PrintWriter(new PipedOutputStream(pipedInputStream));
-            response.addInputStream("status", pipedInputStream, Long.MAX_VALUE);
+            Map<Long, ClientInfo> partMap = clientManager.getFileClientList(file);
 
-            String fileName = (String) request.getParameter("fileName");
-            FSDirectory directory = (FSDirectory) request.getParameter("directory");
+            SendingMessage response = new SendingMessage(Subject.DOWNLOAD_FILE_OK);
+            PipedInputStream fileInputStream = new PipedInputStream();
+            response.addInputStream("file", fileInputStream, fileSize);
+            PipedOutputStream fileOutputStream = new PipedOutputStream(fileInputStream);
 
             new Thread(() -> {
-                sendParts(downloadingFile, directory, fileName, out);
+                for (Map.Entry<Long, ClientInfo> entry : partMap.entrySet()) {
+                    Long partId = entry.getKey();
+                    ClientInfo client = entry.getValue();
+
+                    SRequest partRequest = new SRequest(Subject.SEND_PART);
+                    partRequest.addParameter("partId", partId);
+                    ResponseCallback responseCallback = partResponse -> {
+                        IOUtil.writeI2O(
+                                fileOutputStream,
+                                partResponse.getInputStream("part"),
+                                partResponse.getStreamSize("part")
+                        );
+                    };
+                    partRequest.setResponseCallback(responseCallback);
+                    try {
+                        partRequest.send(client).join();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             }).start();
             return response;
         } catch (IOException e) {
@@ -122,14 +135,15 @@ public class Server {
             };
 
             List<Long> parts = fileStorage.splitFile(downloadingFile);
+            Long fileSize = downloadingFile.length();
             downloadingFile.delete();
             Map<ClientInfo, Set<Long>> destinations =
-                    clientManager.getDestinations(parts, fileStorage.getRepeat());
+                    clientManager.getDestinations(parts);
 
             for (ClientInfo client : destinations.keySet()) {
                 Set<Long> clientParts = destinations.get(client);
 
-                SendingMessage partRequest = new SendingMessage(Subject.FETCH_PART);
+                SRequest partRequest = new SRequest(Subject.RECEIVE_PART);
                 Map<Long, String> hashList = new HashMap<>();
                 for (Long partId : clientParts) {
                     File partFile = fileStorage.getFileById(partId);
@@ -139,7 +153,7 @@ public class Server {
                     partRequest.addProgressCallback(partId.toString(), callback);
                 }
                 partRequest.addParameter("hashList", hashList);
-                partRequest.send(client.getAddress(), client.getListenPort()).join();
+                partRequest.send(client).join();
             }
 
             callback.call(-1);
@@ -148,7 +162,7 @@ public class Server {
 
             for (Long part : parts)
                 fileStorage.getFileById(part).delete();
-            fileSystem.addFile(directory, fileName, parts);
+            fileSystem.addFile(directory, fileName,fileSize, new HashSet<>(parts));
 
             refreshClients();
         } catch (IOException | InterruptedException e) {
@@ -158,8 +172,8 @@ public class Server {
 
     private void refreshClients() {
         for (ClientInfo client : clientManager.getClientList()) {
-            SendingMessage partRequest = new SendingMessage(Subject.REFRESH_DIRECTORY);
-            partRequest.send(client.getAddress(), client.getListenPort());
+            SRequest partRequest = new SRequest(Subject.REFRESH_DIRECTORY);
+            partRequest.send(client);
         }
     }
 

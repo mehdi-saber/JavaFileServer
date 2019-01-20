@@ -15,25 +15,27 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Client {
     private Receiver receiver;
-    private RequestFactory requestFactory;
+    private CRequestFactory requestFactory;
     private MainWindowController mainWindowController;
-    private ClientFileStorage fileStorage;
+    private CFileStorage fileStorage;
     private int listenPort;
 
     public Client()  {
         this.listenPort = new Random().nextInt(10000);
-        fileStorage = new ClientFileStorage(listenPort);
+        fileStorage = new CFileStorage(listenPort);
         new ConnectWindowController(this);
     }
 
     public void openMainWindow() {
         mainWindowController = new MainWindowController(this);
         fetchDirectory(FSDirectory.ROOT);
-//        mainWindowController.upload(new File("/Users/mehdi-saber/Desktop/1.mp4"), FSDirectory.ROOT);//todo:remove
+        mainWindowController.upload(new File("/Users/mehdi-saber/Desktop/1.mp4"), FSDirectory.ROOT);//todo:remove
+
     }
 
     public boolean connectToServer(String serverAddress, int serverPort, String username, String password) {
-        SendingMessage request = new SendingMessage(Subject.LOGIN);
+        requestFactory = new CRequestFactory(serverAddress, serverPort);
+        CRequest request = requestFactory.create(Subject.LOGIN);
         request.addParameter("username", username);
         request.addParameter("password", password);
         request.addParameter("listenPort", listenPort);
@@ -41,11 +43,10 @@ public class Client {
         AtomicBoolean connected = new AtomicBoolean(false);
         request.setResponseCallback(response -> {
             try {
-
                 if (response.getTitle().equals(Subject.LOGIN_OK)) {
                     String token = (String) response.getParameter("token");
-                    receiver = new Receiver(listenPort, new ClientRouter(this));
-                    requestFactory = new RequestFactory(serverAddress, serverPort, token);
+                    requestFactory.setToken(token);
+                    receiver = new Receiver(listenPort, new CRouter(this));
                     connected.set(true);
                 } else if (response.getTitle().equals(Subject.LOGIN_FAILED))
                     connected.set(false);
@@ -102,11 +103,21 @@ public class Client {
         }
     }
 
-    public void download(FSFile file, ProgressCallback progressCallback, ResponseCallback uiResponseCallback) {
+    public void download(FSFile file, File downloadFile, ProgressCallback progressCallback, ResponseCallback uiResponseCallback) {
         CRequest request = requestFactory.create(Subject.DOWNLOAD_FILE);
         request.addParameter("file", file);
         ResponseCallback responseCallback = response -> {
-            uiResponseCallback.call(response);
+            try {
+                IOUtil.writeI2O(
+                        new FileOutputStream(downloadFile),
+                        response.getInputStream("file"),
+                        response.getStreamSize("file"),
+                        progressCallback
+                );
+                uiResponseCallback.call(response);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
         };
         request.setResponseCallback(responseCallback);
         request.send();
@@ -119,7 +130,7 @@ public class Client {
                         new FileOutputStream(fileStorage.getFileById(Long.valueOf(key))),
                         request.getInputStream(key), request.getStreamSize(key)
                 );
-            return new SendingMessage(Subject.FETCH_PART_OK);
+            return new SendingMessage(Subject.RECEIVE_PART_OK);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -172,5 +183,19 @@ public class Client {
         };
         request.setResponseCallback(responseCallback);
         request.send();
+    }
+
+    SendingMessage sendPart(ReceivingMessage request) {
+        try {
+            SendingMessage response = new SendingMessage(Subject.SEND_PART_OK);
+            Long partId = (Long) request.getParameter("partId");
+            File file = fileStorage.getFileById(partId);
+            FileInputStream fileInputStream = new FileInputStream(file);
+            response.addInputStream("part", fileInputStream, file.length());
+            return response;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

@@ -1,10 +1,10 @@
 package ir.ac.aut.ceit.ap.fileserver.file;
 
 
-import java.util.List;
+import java.util.Set;
 
 public class FSFile extends FSPath {
-    private List<Long> parts;
+    private Set<Long> parts;
     private Long size;
 //    private List<FilePartitionInfo> partList;
 //    private String ownerUsername;
@@ -12,9 +12,10 @@ public class FSFile extends FSPath {
 //    private Timestamp lastAccessDate;
 //    private String hashString;
 
-    FSFile(FSDirectory parent, String name, List<Long> parts) {
+    FSFile(FSDirectory parent, String name,Long size, Set<Long> parts) {
         super(parent, name);
         this.parts = parts;
+        this.size=size;
     }
 
     public String getExtension() {
@@ -29,7 +30,7 @@ public class FSFile extends FSPath {
         return parent + SEPARATOR + name;
     }
 
-    public List<Long> getParts() {
+    public Set<Long> getParts() {
         return parts;
     }
 

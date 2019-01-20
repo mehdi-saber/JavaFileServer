@@ -7,9 +7,9 @@ public enum Subject {
     RENAME_USER,
     RENAME_FILE,
     UPLOAD_FILE,
+    DOWNLOAD_FILE,
     REMOVE_FILE,
     MOVE_PATH,
-    DOWNLOAD_FILE,
     CREATE_NEW_DIRECTORY,
     FETCH_DIRECTORY,
 
@@ -29,10 +29,12 @@ public enum Subject {
 
 
     //    S->C requests
-    FETCH_PART,
+    RECEIVE_PART,
+    SEND_PART,
     REFRESH_DIRECTORY,
 
     //    C->S responses
-    FETCH_PART_OK,
+    RECEIVE_PART_OK,
+    SEND_PART_OK,
     REFRESH_DIRECTORY_OK,
 }

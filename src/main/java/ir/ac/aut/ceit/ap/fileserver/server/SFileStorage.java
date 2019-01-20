@@ -14,7 +14,7 @@ import java.util.List;
 class SFileStorage extends FileStorage {
     private Long idCounter;
     private int splitSize;
-    private int repeat;
+
 
     private synchronized Long createId() {
         return idCounter++;
@@ -24,7 +24,6 @@ class SFileStorage extends FileStorage {
         super("data"+File.separator+"temp");
         this.idCounter = idCounter;
         this.splitSize = 3 * 1024 * 1024;
-        this.repeat = 2;
     }
 
     File getNewFile() {
@@ -55,9 +54,5 @@ class SFileStorage extends FileStorage {
             e.printStackTrace();
         }
         return null;
-    }
-
-    int getRepeat() {
-        return repeat;
     }
 }

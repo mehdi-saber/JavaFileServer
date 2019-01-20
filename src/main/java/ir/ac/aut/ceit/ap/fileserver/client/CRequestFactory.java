@@ -2,18 +2,21 @@ package ir.ac.aut.ceit.ap.fileserver.client;
 
 import ir.ac.aut.ceit.ap.fileserver.network.Subject;
 
-class RequestFactory {
+class CRequestFactory {
     private String serverAddress;
     private int port;
-    private String token;
+    private String token=null;
 
-    RequestFactory(String serverAddress, int port, String token) {
+    CRequestFactory(String serverAddress, int port) {
         this.serverAddress = serverAddress;
         this.port = port;
-        this.token = token;
     }
 
     CRequest create(Subject title) {
         return new CRequest(title, serverAddress, port, token);
+    }
+
+     void setToken(String token) {
+        this.token = token;
     }
 }

@@ -11,10 +11,10 @@ abstract public class FileSystem {
         this.pathList = pathList;
     }
 
-    public FSFile addFile(FSDirectory parent, String name, List<Long> parts) {
+    public FSFile addFile(FSDirectory parent, String name,Long size, Set<Long> parts) {
         if (pathExists(parent, name, false) || !pathExists(parent))
             return null;
-        FSFile file = new FSFile(parent, name, parts);
+        FSFile file = new FSFile(parent, name,size, parts);
         pathList.add(file);
         return file;
     }

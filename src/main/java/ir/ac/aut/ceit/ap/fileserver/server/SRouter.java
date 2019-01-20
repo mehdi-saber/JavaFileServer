@@ -18,7 +18,8 @@ class SRouter implements Router {
                 return server.loginUser(request);
             case FETCH_DIRECTORY:
                 return server.fetchDirectory(request);
-            case REMOVE_FILE:
+            case DOWNLOAD_FILE:
+                return server.download(request);
             case MOVE_PATH:
             case RENAME_FILE:
                 return server.renameFile(request);
