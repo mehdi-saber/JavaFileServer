@@ -6,8 +6,8 @@ import ir.ac.aut.ceit.ap.fileserver.server.Server;
 public class FileServerApplication {
 
     public static void main(String[] args) {
-        new Server();
-        new Client();
+        Server server = new Server();
+        new Client(server.getFinalCallback(), 6161);
 //        new Client();
 //        new Client();
     }

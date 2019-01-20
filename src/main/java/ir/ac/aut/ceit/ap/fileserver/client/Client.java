@@ -9,7 +9,6 @@ import ir.ac.aut.ceit.ap.fileserver.network.*;
 import ir.ac.aut.ceit.ap.fileserver.util.IOUtil;
 
 import java.io.*;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -18,18 +17,20 @@ public class Client {
     private CRequestFactory requestFactory;
     private MainWindowController mainWindowController;
     private CFileStorage fileStorage;
+    private Runnable finalCallback;
     private int listenPort;
 
-    public Client()  {
-        this.listenPort = new Random().nextInt(10000);
-        fileStorage = new CFileStorage(listenPort);
+    public Client(Runnable finalCallback, int listenPort)  {
+        this.finalCallback=finalCallback;
+        this.listenPort = listenPort;
+        fileStorage = new CFileStorage(this.listenPort);
         new ConnectWindowController(this);
     }
 
     public void openMainWindow() {
-        mainWindowController = new MainWindowController(this);
+        mainWindowController = new MainWindowController(this,finalCallback);
         fetchDirectory(FSDirectory.ROOT);
-        mainWindowController.upload(new File("/Users/mehdi-saber/Desktop/1.mp4"), FSDirectory.ROOT);//todo:remove
+//        mainWindowController.upload(new File("/Users/mehdi-saber/Desktop/1.mp4"), FSDirectory.ROOT);//todo:remove
 
     }
 
@@ -198,4 +199,5 @@ public class Client {
         }
         return null;
     }
+
 }

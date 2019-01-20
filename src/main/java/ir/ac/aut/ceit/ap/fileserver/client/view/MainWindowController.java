@@ -23,10 +23,20 @@ public class MainWindowController {
     private FSPath pastePath;
     private OperationType operationType;
 
-    public MainWindowController(Client client) {
+    public MainWindowController(Client client, Runnable finalCallback) {
         this.client = client;
         window = new MainWindowView();
+        setupFinalizeCallback(finalCallback);
         setMouseListeners();
+    }
+
+    private void setupFinalizeCallback(Runnable finalCallback) {
+        window.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                finalCallback.run();
+            }
+        });
     }
 
     private File openFileChoose() {

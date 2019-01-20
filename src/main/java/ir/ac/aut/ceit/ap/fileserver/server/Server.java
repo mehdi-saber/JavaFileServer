@@ -18,6 +18,7 @@ public class Server {
     private SecurityManager securityManager;
     private SFileStorage fileStorage;
     private ClientManager clientManager;
+    private Runnable finalCallback;
     private int port = 5050;
 
     public Server()  {
@@ -28,9 +29,10 @@ public class Server {
             clientManager = new ClientManager(2);
             securityManager = new SecurityManager();
 
-            FSDirectory directory = fileSystem.addDirectory(FSDirectory.ROOT, "dawd");
-            for (int i = 0; i < 100; i++)
-                fileSystem.addFile(directory, i + ".pdf", 10L, new HashSet<>());
+            finalCallback = () -> {
+                clientManager.save();
+                fileSystem.save();
+            };
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -162,7 +164,7 @@ public class Server {
 
             for (Long part : parts)
                 fileStorage.getFileById(part).delete();
-            fileSystem.addFile(directory, fileName,fileSize, new HashSet<>(parts));
+            fileSystem.addFile(directory, fileName, fileSize, new HashSet<>(parts));
 
             refreshClients();
         } catch (IOException | InterruptedException e) {
@@ -209,5 +211,9 @@ public class Server {
             return new SendingMessage(Subject.CREATE_NEW_DIRECTORY_OK);
         } else
             return new SendingMessage(Subject.CREATE_NEW_DIRECTORY_REPEATED);
+    }
+
+    public Runnable getFinalCallback() {
+        return finalCallback;
     }
 }

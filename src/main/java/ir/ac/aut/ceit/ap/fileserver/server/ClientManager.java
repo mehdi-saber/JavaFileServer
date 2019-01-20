@@ -2,15 +2,22 @@ package ir.ac.aut.ceit.ap.fileserver.server;
 
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 
+import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
-class ClientManager {
+class ClientManager implements SaveAble {
+    private static final File saveFile = new File("data" + File.separator + "clientList");
+
     private List<ClientInfo> clientList;
     private int repeat;
 
     ClientManager(int repeat) {
-        this.clientList = new ArrayList<>();
+        List<ClientInfo> clientList = (List<ClientInfo>) load();
+        if (clientList != null)
+            this.clientList = clientList;
+        else
+            this.clientList = new ArrayList<>();
         this.repeat = repeat;
     }
 
@@ -58,5 +65,15 @@ class ClientManager {
 
     List<ClientInfo> getClientList() {
         return clientList;
+    }
+
+    @Override
+    public Object getSaveObject() {
+        return clientList;
+    }
+
+    @Override
+    public File getSaveFile() {
+        return saveFile;
     }
 }

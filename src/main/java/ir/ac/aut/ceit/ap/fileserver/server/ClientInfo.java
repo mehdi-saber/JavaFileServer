@@ -1,15 +1,14 @@
 package ir.ac.aut.ceit.ap.fileserver.server;
 
-import java.util.ArrayList;
+import java.io.Serializable;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-public class ClientInfo {
-   private String username;
+public class ClientInfo implements Serializable {
+    private String username;
     private Set<Long> parts;
     private String address;
-   private int listenPort;
+    private int listenPort;
 
     private ClientInfo(Set<Long> parts, String address, int listenPort, String username) {
         this.username = username;
@@ -37,4 +36,5 @@ public class ClientInfo {
     public int getListenPort() {
         return listenPort;
     }
+
 }

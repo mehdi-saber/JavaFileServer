@@ -9,13 +9,15 @@ import java.net.Socket;
 public class Receiver extends ServerSocket implements Transporter {
     private Router router;
     private int listenPort;
+    private Thread mainLoopThread;
     private boolean doReceive;
 
     public Receiver(int port, Router router) throws IOException {
         super(port);
         this.doReceive = true;
         this.router = router;
-        new Thread(this::waitForConnection).start();
+        this.mainLoopThread = new Thread(this::waitForConnection);
+        this.mainLoopThread.start();
     }
 
     private void waitForConnection() {
@@ -47,5 +49,9 @@ public class Receiver extends ServerSocket implements Transporter {
 
     private void stopListener() {
         doReceive = false;
+    }
+
+    public Thread getMainLoopThread() {
+        return mainLoopThread;
     }
 }
