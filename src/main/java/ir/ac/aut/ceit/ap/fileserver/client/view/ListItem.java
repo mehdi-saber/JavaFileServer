@@ -14,12 +14,14 @@ import java.awt.*;
 import java.io.IOException;
 
 class ListItem extends JPanel {
+    private final JLabel nameLabel;
     private FSPath info;
 
     ListItem(FSPath info) {
         super();
         this.info = info;
-        JLabel label = new JLabel(info.getName());
+
+        nameLabel = new JLabel(createName(true));
         JLabel image = new JLabel();
         try {
             image.setIcon(IconUtil.getImageIcon(32, 32, getIconPath()));
@@ -27,15 +29,22 @@ class ListItem extends JPanel {
             e.printStackTrace();
         }
         image.setAlignmentX(CENTER_ALIGNMENT);
-        label.setAlignmentX(CENTER_ALIGNMENT);
+        nameLabel.setAlignmentX(CENTER_ALIGNMENT);
         add(image);
-        add(label);
+        add(nameLabel);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         switchMode(false);
     }
 
     FSPath getInfo() {
         return info;
+    }
+
+    private String createName(boolean emphasise) {
+        String name = info.getName().replaceAll("(.{10})", "$1<br>");
+        name = emphasise && name.length() > 20 ? name.substring(0, 20) + "..." : name;
+        name = "<html>" + name + "</html>";
+        return name;
     }
 
     private String getIconPath() {
@@ -50,10 +59,13 @@ class ListItem extends JPanel {
     }
 
     void switchMode(boolean selected) {
-        if (selected)
+        if (selected) {
             setBorder(new LineBorder(Color.BLACK));
-        else
+            nameLabel.setText(createName(false));
+        } else {
             setBorder(new EmptyBorder(1, 1, 1, 1));
+            nameLabel.setText(createName(true));
+        }
     }
 
     @Override

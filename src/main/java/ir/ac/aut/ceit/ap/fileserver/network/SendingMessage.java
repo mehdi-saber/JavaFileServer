@@ -27,7 +27,7 @@ public class SendingMessage extends Message implements Serializable {
         streams.put(key, inputStream);
     }
 
-    protected void closeInputStreams() throws IOException {
+    void closeInputStreams() throws IOException {
         for (InputStream inputStream : streams.values())
             inputStream.close();
     }

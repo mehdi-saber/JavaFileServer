@@ -36,7 +36,7 @@ abstract public class FileSystem {
                 .collect(Collectors.toSet());
     }
 
-    public boolean pathExists(FSPath thePath) {
+    private boolean pathExists(FSPath thePath) {
         if(thePath.equals(FSDirectory.ROOT))
             return true;
         return pathList.stream()
@@ -52,7 +52,7 @@ abstract public class FileSystem {
                 );
     }
 
-    public boolean removePath(FSPath thePath) {
+    private boolean removePath(FSPath thePath) {
         if (!pathExists(thePath))
             return false;
         if (thePath instanceof FSDirectory) {

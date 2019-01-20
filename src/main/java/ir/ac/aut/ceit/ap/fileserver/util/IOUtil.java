@@ -7,7 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public class IOUtil {
-    public static final int defaultBufferSize = 16 * 1024;
+    private static final int defaultBufferSize = 16 * 1024;
     public static void writeI2O(OutputStream outputStream, InputStream inputStream,
                                 int bufferSize, Long size, ProgressCallback callback) {
         try {
@@ -34,7 +34,6 @@ public class IOUtil {
 
     public static String readLineNoBuffer(InputStream inputStream) {
         try {
-
             StringBuilder keyBuilder = new StringBuilder();
             int c;
             while ((c = inputStream.read()) != -1 && c != '\n')

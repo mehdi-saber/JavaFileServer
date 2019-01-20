@@ -29,7 +29,7 @@ public interface Transporter {
                 String key = IOUtil.readLineNoBuffer(inputStream);
                 ProgressCallback callback = request.getProgressCallback(key);
                 InputStream messageInputStream = request.getStream(key);
-                IOUtil.writeI2O(outputStream, messageInputStream, 8 * 1024, request.getStreamSize(key), callback);
+                IOUtil.writeI2O(outputStream, messageInputStream, request.getStreamSize(key), callback);
             }
         }
     }

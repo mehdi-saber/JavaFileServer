@@ -89,14 +89,14 @@ public class Client {
         //        todo:implement
     }
 
-    public void upload(File file, FSDirectory directory, ProgressCallback progressCallback, ResponseCallback responseCallback) {
+    public void upload(File file, FSDirectory directory, ProgressCallback progressCallback, ResponseCallback uiCallback) {
         try {
             CRequest request = requestFactory.create(Subject.UPLOAD_FILE);
             request.addInputStream("file", new FileInputStream(file), file.length());
             request.addProgressCallback("file", progressCallback);
             request.addParameter("fileName",file.getName());
             request.addParameter("directory", directory);
-            request.setResponseCallback(responseCallback);
+            request.setResponseCallback(uiCallback);
             request.send();
         } catch (IOException e) {
             e.printStackTrace();
@@ -108,13 +108,13 @@ public class Client {
         request.addParameter("file", file);
         ResponseCallback responseCallback = response -> {
             try {
+                uiResponseCallback.call(response);
                 IOUtil.writeI2O(
                         new FileOutputStream(downloadFile),
                         response.getInputStream("file"),
                         response.getStreamSize("file"),
                         progressCallback
                 );
-                uiResponseCallback.call(response);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
@@ -156,7 +156,7 @@ public class Client {
         request.addParameter("name", name);
         ResponseCallback responseCallback = response -> {
             if (response.getTitle().equals(Subject.CREATE_NEW_DIRECTORY_REPEATED)) {
-                mainWindowController.showError("directory \"" + parent.getAbsolutePath() + name + "\"already exists.");
+                mainWindowController.showPathRepeatedError(parent.getAbsolutePath() + name);
                 mainWindowController.createNewFolder();
             }
         };
@@ -173,7 +173,7 @@ public class Client {
                 String newPath = path.getAbsolutePath() + newName;
                 if (path instanceof FSDirectory)
                     newPath += FSPath.SEPARATOR;
-                mainWindowController.showError("path \"" + newPath + "\"already exists.");
+                mainWindowController.showPathRepeatedError(newPath);
                 mainWindowController.renamePath(path);
             }
         };

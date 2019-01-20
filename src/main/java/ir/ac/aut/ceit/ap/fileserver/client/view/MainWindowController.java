@@ -4,16 +4,17 @@ import ir.ac.aut.ceit.ap.fileserver.client.Client;
 import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
-import ir.ac.aut.ceit.ap.fileserver.network.ProgressCallback;
-import ir.ac.aut.ceit.ap.fileserver.network.ResponseCallback;
-import ir.ac.aut.ceit.ap.fileserver.network.StreamsCommand;
+import ir.ac.aut.ceit.ap.fileserver.network.*;
 
 import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
 
 public class MainWindowController {
     private MainWindowView window;
@@ -22,10 +23,12 @@ public class MainWindowController {
     private FSDirectory curDir;
     private FSPath pastePath;
     private OperationType operationType;
+    private File desktop;
 
     public MainWindowController(Client client, Runnable finalCallback) {
         this.client = client;
         window = new MainWindowView();
+        desktop = new File(System.getProperty("user.home") + File.separator + "Desktop" + File.separator);
         setupFinalizeCallback(finalCallback);
         setMouseListeners();
     }
@@ -41,17 +44,22 @@ public class MainWindowController {
 
     private File openFileChoose() {
         JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setCurrentDirectory(desktop);
         fileChooser.showOpenDialog(window);
         return fileChooser.getSelectedFile();
     }
 
+
     private File saveFileChoose(FSFile file) {
         JFileChooser fileChooser = new JFileChooser();
-        String desktopPath = System.getProperty("user.home") + File.separator + "Desktop" + File.separator;
-        File defaultFile = new File(desktopPath + file.getName());
+        File defaultFile = new File(desktop + File.separator + file.getName());
         fileChooser.setSelectedFile(defaultFile);
-        fileChooser.showSaveDialog(window);
-        return fileChooser.getSelectedFile();
+        int userSelection = fileChooser.showSaveDialog(window);
+
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            return fileChooser.getSelectedFile();
+        } else
+            return null;
     }
 
     public void createNewFolder() {
@@ -72,7 +80,23 @@ public class MainWindowController {
         }
     }
 
-    public void showError(String message) {
+    public void showPathRepeatedError(FSPath path) {
+        StringBuilder message = new StringBuilder();
+        if (path instanceof FSFile)
+            message.append("Directory");
+        else if (path instanceof FSDirectory)
+            message.append("File");
+        message.append(" \"").append(path.getAbsolutePath()).append("\"already exists.");
+        showError(message.toString());
+    }
+
+    public void showPathRepeatedError(String path) {
+        StringBuilder message = new StringBuilder();
+        message.append("path \"").append(path).append("\"already exists.");
+        showError(message.toString());
+    }
+
+    private void showError(String message) {
         JOptionPane.showMessageDialog(window, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
@@ -158,45 +182,57 @@ public class MainWindowController {
         operationType = type;
     }
 
-    public void upload(File file, FSDirectory directory) {
-        if (file != null) {
-            long fileSize = file.length();
-            ProgressWindow progressWindow = new ProgressWindow(window, "Uploading", 2 * fileSize);
-            window.setEnabled(false);
-            ProgressCallback progressCallback = progressWindow.getCallback();
-            ResponseCallback responseCallback = response -> {
-                progressWindow.setOperationName("Server Distributing File");
-                Scanner scanner = new Scanner(response.getInputStream("status"));
-                while (true) {
-                    StreamsCommand command = StreamsCommand.valueOf(scanner.nextLine());
-                    if (command.equals(StreamsCommand.PROGRESS_END))
-                        break;
-                    else if (command.equals(StreamsCommand.PROGRESS_PASSED))
-                        progressCallback.call(Integer.valueOf(scanner.nextLine()));
-                }
+    private void upload(File file, FSDirectory directory) {
+        if (file == null)
+            return;
+        long fileSize = file.length();
+        ProgressWindow progressWindow = new ProgressWindow(window, "Uploading", 2 * fileSize);
+        window.setEnabled(false);
+        ResponseCallback responseCallback = response -> {
+            if (response.getTitle().equals(Subject.UPLOAD_FILE_REPEATED)) {
+                showPathRepeatedError(directory.getAbsolutePath() + file.getName());
+                closeProgressWindow(progressWindow);
+            } else
                 SwingUtilities.invokeLater(() -> {
-                    progressWindow.setVisible(false);
-                    progressWindow.dispose();
-                    window.setEnabled(true);
+                    try {
+                        progressWindow.setOperationName("Server Distributing File");
+                        ProgressCallback progressCallback = progressWindow.getCallback();
+                        new ProgressReader(response.getInputStream("status"), progressCallback).join();
+                        closeProgressWindow(progressWindow);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 });
-            };
-            client.upload(file, directory, progressCallback, responseCallback);
-        }
+        };
+        client.upload(file, directory, progressWindow.getCallback(), responseCallback);
     }
+
 
     private void download(FSFile file, File newFile) {
         if (newFile == null)
             return;
         long fileSize = file.getSize();
-        ProgressWindow progressWindow = new ProgressWindow(window, "downloading", fileSize);
+        ProgressWindow progressWindow = new ProgressWindow(window, "Server Gathering Distributing File", fileSize);
         ProgressCallback progressCallback = progressWindow.getCallback();
         window.setEnabled(false);
         ResponseCallback responseCallback = response -> SwingUtilities.invokeLater(() -> {
+            try {
+                new ProgressReader(response.getInputStream("status"), progressCallback).join();
+                progressWindow.setOperationName("Downloading");
+                closeProgressWindow(progressWindow);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+        client.download(file, newFile, progressCallback, responseCallback);
+    }
+
+    private void closeProgressWindow(ProgressWindow progressWindow) {
+        SwingUtilities.invokeLater(() -> {
             progressWindow.setVisible(false);
             progressWindow.dispose();
             window.setEnabled(true);
         });
-        client.download(file, newFile, progressCallback, responseCallback);
     }
 
     public void showPathList(FSDirectory curDir, Set<FSPath> pathSet) {

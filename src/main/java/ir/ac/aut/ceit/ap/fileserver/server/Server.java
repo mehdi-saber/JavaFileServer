@@ -33,6 +33,13 @@ public class Server {
                 clientManager.save();
                 fileSystem.save();
             };
+
+
+//            FSDirectory directory = fileSystem.addDirectory(FSDirectory.ROOT, "dawd");
+//            for (int i = 0; i < 10; i++) {
+//                fileSystem.addFile(directory, i + ".pdf", 1L, new HashSet<>());
+//                fileSystem.addFile(FSDirectory.ROOT, i + ".pdf", 1L, new HashSet<>());
+//            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -55,26 +62,32 @@ public class Server {
         return response;
     }
 
+    private File createTempFile() throws IOException {
+        return File.createTempFile("server", "dl");
+    }
+
     SendingMessage upload(ReceivingMessage request) {
         try {
-            File downloadingFile = File.createTempFile("server", "dl");
-            Long fileSize = request.getStreamSize("file");
-            IOUtil.writeI2O(
-                    new FileOutputStream(downloadingFile),
-                    request.getInputStream("file"), fileSize
-            );
-            SendingMessage response = new SendingMessage(Subject.UPLOAD_FILE_OK);
-
-            PipedInputStream pipedInputStream = new PipedInputStream();
-            PrintWriter out = new PrintWriter(new PipedOutputStream(pipedInputStream));
-            response.addInputStream("status", pipedInputStream, Long.MAX_VALUE);
-
             String fileName = (String) request.getParameter("fileName");
             FSDirectory directory = (FSDirectory) request.getParameter("directory");
 
-            new Thread(() -> {
-                sendParts(downloadingFile, directory, fileName, out);
-            }).start();
+            if (fileSystem.pathExists(directory, fileName, false))
+                return new SendingMessage(Subject.UPLOAD_FILE_REPEATED);
+
+            File downloadingFile = createTempFile();
+            Long fileSize = request.getStreamSize("file");
+            FileOutputStream downloadOutput = new FileOutputStream(downloadingFile);
+            IOUtil.writeI2O(downloadOutput, request.getInputStream("file"), fileSize);
+            downloadOutput.close();
+
+            SendingMessage response = new SendingMessage(Subject.UPLOAD_FILE_OK);
+
+            PipedInputStream pipedInputStream = new PipedInputStream();
+            response.addInputStream("status", pipedInputStream, Long.MAX_VALUE);
+            ProgressWriter progressWriter = new ProgressWriter(new PipedOutputStream(pipedInputStream));
+
+            new Thread(() -> sendParts(downloadingFile, directory, fileName, progressWriter)).start();
+
             return response;
         } catch (IOException e) {
             e.printStackTrace();
@@ -84,38 +97,50 @@ public class Server {
 
     SendingMessage download(ReceivingMessage request) {
         try {
+            File downloadingFile = createTempFile();
+
             FSFile file = (FSFile) request.getParameter("file");
             Long fileSize = file.getSize();
 
             Map<Long, ClientInfo> partMap = clientManager.getFileClientList(file);
 
             SendingMessage response = new SendingMessage(Subject.DOWNLOAD_FILE_OK);
-            PipedInputStream fileInputStream = new PipedInputStream();
-            response.addInputStream("file", fileInputStream, fileSize);
-            PipedOutputStream fileOutputStream = new PipedOutputStream(fileInputStream);
 
+            PipedInputStream pipedInputStream = new PipedInputStream();
+            response.addInputStream("status", pipedInputStream, Long.MAX_VALUE);
+            PipedOutputStream pipedOutputStream = new PipedOutputStream(pipedInputStream);
+
+            ProgressWriter progressWriter = new ProgressWriter(pipedOutputStream);
+
+            response.addInputStream("file", new FileInputStream(downloadingFile), fileSize);
             new Thread(() -> {
-                for (Map.Entry<Long, ClientInfo> entry : partMap.entrySet()) {
-                    Long partId = entry.getKey();
-                    ClientInfo client = entry.getValue();
+                FileOutputStream fileOutputStream;
+                try {
+                    fileOutputStream = new FileOutputStream(downloadingFile);
+                    for (Map.Entry<Long, ClientInfo> entry : partMap.entrySet()) {
+                        Long partId = entry.getKey();
+                        ClientInfo client = entry.getValue();
 
-                    SRequest partRequest = new SRequest(Subject.SEND_PART);
-                    partRequest.addParameter("partId", partId);
-                    ResponseCallback responseCallback = partResponse -> {
-                        IOUtil.writeI2O(
-                                fileOutputStream,
-                                partResponse.getInputStream("part"),
-                                partResponse.getStreamSize("part")
-                        );
-                    };
-                    partRequest.setResponseCallback(responseCallback);
-                    try {
+                        SRequest partRequest = new SRequest(Subject.SEND_PART);
+                        partRequest.addParameter("partId", partId);
+                        ResponseCallback responseCallback = partResponse -> {
+                            IOUtil.writeI2O(
+                                    fileOutputStream,
+                                    partResponse.getInputStream("part"),
+                                    partResponse.getStreamSize("part"),
+                                    progressWriter
+                            );
+                        };
+                        partRequest.setResponseCallback(responseCallback);
                         partRequest.send(client).join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
                     }
+                    progressWriter.close();
+                    fileOutputStream.close();
+                } catch (InterruptedException | IOException e) {
+                    e.printStackTrace();
                 }
             }).start();
+
             return response;
         } catch (IOException e) {
             e.printStackTrace();
@@ -123,18 +148,8 @@ public class Server {
         return null;
     }
 
-    private void sendParts(File downloadingFile, FSDirectory directory, String fileName, PrintWriter out) {
+    private void sendParts(File downloadingFile, FSDirectory directory, String fileName, ProgressWriter progressWriter) {
         try {
-            ProgressCallback callback = doneDelta -> {
-                if (doneDelta == -1) {
-                    out.println(StreamsCommand.PROGRESS_END.name());
-                    out.close();
-                    return;
-                }
-                out.println(StreamsCommand.PROGRESS_PASSED.name());
-                out.println(doneDelta);
-                out.flush();
-            };
 
             List<Long> parts = fileStorage.splitFile(downloadingFile);
             Long fileSize = downloadingFile.length();
@@ -152,13 +167,13 @@ public class Server {
                     String hash = DigestUtils.sha256Hex(new FileInputStream(partFile));
                     hashList.put(partId, hash);
                     partRequest.addInputStream(partId.toString(), new FileInputStream(partFile), partFile.length());
-                    partRequest.addProgressCallback(partId.toString(), callback);
+                    partRequest.addProgressCallback(partId.toString(), progressWriter);
                 }
                 partRequest.addParameter("hashList", hashList);
                 partRequest.send(client).join();
             }
 
-            callback.call(-1);
+            progressWriter.close();
 
             clientManager.updateParts(destinations);
 
