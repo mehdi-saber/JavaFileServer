@@ -33,7 +33,6 @@ public class Client {
 //        mainWindowController.upload(new File("/Users/mehdi-saber/Desktop/1.mp4"), FSDirectory.ROOT);//todo:remove
 
     }
-
     public boolean connectToServer(String serverAddress, int serverPort, String username, String password) {
         requestFactory = new CRequestFactory(serverAddress, serverPort);
         CRequest request = requestFactory.create(Subject.LOGIN);
@@ -71,7 +70,7 @@ public class Client {
         request.addParameter("directory", directory);
         request.setResponseCallback(response -> {
             Set<FSPath> list = (Set<FSPath>) response.getParameter("list");
-            changeDirectory(directory, list);
+            mainWindowController.showPathList(directory, list);
         });
         request.send();
     }
@@ -124,7 +123,7 @@ public class Client {
         request.send();
     }
 
-    public SendingMessage fetchPart(ReceivingMessage request) {
+    SendingMessage fetchPart(ReceivingMessage request) {
         try {
             for (String key : request.getStreamSize().keySet())
                 IOUtil.writeI2O(
@@ -144,10 +143,6 @@ public class Client {
 
     public void search(FSDirectory directory) {
         //        todo:implement
-    }
-
-    public void changeDirectory(FSDirectory directory, Set<FSPath> pathList) {
-        mainWindowController.showPathList(directory, pathList);
     }
 
     SendingMessage refreshDirectory(ReceivingMessage request) {
