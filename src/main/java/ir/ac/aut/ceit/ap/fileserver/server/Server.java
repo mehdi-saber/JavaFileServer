@@ -1,13 +1,13 @@
 package ir.ac.aut.ceit.ap.fileserver.server;
 
+import ir.ac.aut.ceit.ap.fileserver.client.view.PasteOperationType;
 import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
 import ir.ac.aut.ceit.ap.fileserver.network.Message;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressWriter;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.ResponseSubject;
 import ir.ac.aut.ceit.ap.fileserver.network.protocol.S2CRequest;
-import ir.ac.aut.ceit.ap.fileserver.network.protocol.S2CResponse;
-import ir.ac.aut.ceit.ap.fileserver.network.protocol.Subject;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.Receiver;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.ReceivingMessage;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.ResponseCallback;
@@ -33,21 +33,15 @@ public class Server {
         try {
             receiver = new Receiver(port, new SRouter(this));
             fileSystem = new SFileSystem();
-            fileStorage = new SFileStorage(0L);
+            fileStorage = new SFileStorage(3 * 1024 * 1024);
             clientManager = new ClientManager(2);
             securityManager = new SecurityManager();
 
             finalCallback = () -> {
                 clientManager.save();
                 fileSystem.save();
+                fileStorage.save();
             };
-
-
-//            FSDirectory directory = fileSystem.addDirectory(FSDirectory.ROOT, "dawd");
-//            for (int i = 0; i < 10; i++) {
-//                fileSystem.addFile(directory, i + ".pdf", 1L, new HashSet<>());
-//                fileSystem.addFile(FSDirectory.ROOT, i + ".pdf", 1L, new HashSet<>());
-//            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -58,14 +52,14 @@ public class Server {
         String username = (String) request.getParameter("username");
         ClientInfo client = new ClientInfo(request.getSenderAddress(), listenPort, username);
         SendingMessage response = securityManager.loginUser(request, client);
-        if (response.getTitle().equals(S2CResponse.LOGIN_OK))
+        if (response.getTitle().equals(ResponseSubject.OK))
             clientManager.addClient(client);
         return response;
     }
 
     SendingMessage fetchDirectory(Message request) {
         FSDirectory directory = (FSDirectory) request.getParameter("directory");
-        SendingMessage response = new SendingMessage(S2CResponse.FETCH_DIRECTORY_OK);
+        SendingMessage response = new SendingMessage(ResponseSubject.OK);
         response.addParameter("list", fileSystem.listSubPaths(directory));
         return response;
     }
@@ -80,7 +74,7 @@ public class Server {
             FSDirectory directory = (FSDirectory) request.getParameter("directory");
 
             if (fileSystem.pathExists(directory, fileName, false))
-                return new SendingMessage(S2CResponse.UPLOAD_FILE_REPEATED);
+                return new SendingMessage(ResponseSubject.REPEATED);
 
             File downloadingFile = createTempFile();
             Long fileSize = request.getStreamSize("file");
@@ -88,7 +82,7 @@ public class Server {
             IOUtil.writeI2O(downloadOutput, request.getInputStream("file"), fileSize);
             downloadOutput.close();
 
-            SendingMessage response = new SendingMessage(S2CResponse.UPLOAD_FILE_OK);
+            SendingMessage response = new SendingMessage(ResponseSubject.OK);
 
             PipedInputStream pipedInputStream = new PipedInputStream();
             response.addInputStream("status", pipedInputStream, Long.MAX_VALUE);
@@ -111,7 +105,7 @@ public class Server {
 
             Map<Long, ClientInfo> partMap = clientManager.getFileClientList(file);
 
-            SendingMessage response = new SendingMessage(S2CResponse.DOWNLOAD_FILE_OK);
+            SendingMessage response = new SendingMessage(ResponseSubject.OK);
 
             PipedOutputStream pipedOutputStream = new PipedOutputStream();
             PipedInputStream pipedInputStream = new PipedInputStream(pipedOutputStream);
@@ -219,9 +213,9 @@ public class Server {
         boolean result = fileSystem.renamePath(path, newName);
         if (result) {
             refreshClients();
-            return new SendingMessage(S2CResponse.MOVE_PATH_OK);
+            return new SendingMessage(ResponseSubject.OK);
         } else
-            return new SendingMessage(S2CResponse.MOVE_PATH_ALREADY_EXISTS);
+            return new SendingMessage(ResponseSubject.REPEATED);
     }
 
     SendingMessage createNewDirectory(ReceivingMessage request) {
@@ -230,12 +224,21 @@ public class Server {
         FSDirectory newDirectory = fileSystem.addDirectory(parent, name);
         if (newDirectory != null) {
             refreshClients();
-            return new SendingMessage(S2CResponse.CREATE_NEW_DIRECTORY_OK);
+            return new SendingMessage(ResponseSubject.OK);
         } else
-            return new SendingMessage(S2CResponse.CREATE_NEW_DIRECTORY_REPEATED);
+            return new SendingMessage(ResponseSubject.REPEATED);
     }
 
     public Runnable getFinalCallback() {
         return finalCallback;
+    }
+
+    public SendingMessage paste(ReceivingMessage request) {
+        FSPath path = (FSPath) request.getParameter("path");
+        FSDirectory directory = (FSDirectory) request.getParameter("directory");
+        PasteOperationType operationType = (PasteOperationType) request.getParameter("operation");
+        boolean force = (boolean) request.getParameter("force");
+
+        return null;
     }
 }

@@ -28,6 +28,8 @@ class SRouter implements Router {
                     return server.upload(request);
             case CREATE_NEW_DIRECTORY:
                 return server.createNewDirectory(request);
+            case PASTE:
+                return server.paste(request);
         }
         return null;
     }

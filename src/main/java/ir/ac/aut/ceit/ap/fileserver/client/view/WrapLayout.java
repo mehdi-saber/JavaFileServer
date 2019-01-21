@@ -1,4 +1,4 @@
-package ir.ac.aut.ceit.ap.fileserver.util;
+package ir.ac.aut.ceit.ap.fileserver.client.view;
 
 import java.awt.*;
 import javax.swing.JScrollPane;

@@ -24,11 +24,11 @@ abstract public class FSPath implements Serializable {
         return name;
     }
 
-    void setParent(FSDirectory parent) {
+    public void setParent(FSDirectory parent) {
         this.parent = parent;
     }
 
-    void setName(String name) {
+    public void setName(String name) {
         this.name = name;
     }
 

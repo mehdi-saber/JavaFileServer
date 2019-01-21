@@ -3,34 +3,65 @@ package ir.ac.aut.ceit.ap.fileserver.client.view;
 import ir.ac.aut.ceit.ap.fileserver.util.icon.IconUtil;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.io.IOException;
 
- class NavigationPanel extends JPanel {
-    CustomButton parentBtn;
-    CustomButton searchBtn;
-    JTextField urlField;
-    JTextField searchField;
+class NavigationPanel extends JPanel {
+    final JButton parentBtn;
+    final JButton refreshBtn;
+    final JButton searchBtn;
+    final JTextField urlField;
+    final JTextField searchField;
 
-     NavigationPanel() {
-        BoxLayout boxLayout = new BoxLayout(this, BoxLayout.X_AXIS);
-        setLayout(boxLayout);
-        parentBtn = new CustomButton(10);
-        searchBtn = new CustomButton(10);
+    NavigationPanel() {
+        setLayout(new GridBagLayout());
+        parentBtn = new JButton();
+        searchBtn = new JButton();
+        refreshBtn = new JButton();
         urlField = new JTextField();
         searchField = new JTextField();
 
+        parentBtn.setBorder(BorderFactory.createCompoundBorder(
+                new EmptyBorder(0, 0, 0, 5),
+                new LineBorder(Color.BLACK)
+        ));
+        urlField.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(Color.BLACK),
+                new EmptyBorder(0, 10, 0, 10)
+        ));
+        refreshBtn.setBorder(BorderFactory.createCompoundBorder(
+                new EmptyBorder(0, 0, 0, 5),
+                new LineBorder(Color.BLACK)
+        ));
+        searchField.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(Color.BLACK),
+                new EmptyBorder(0, 5, 0, 5)
+        ));
+        searchBtn.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(Color.BLACK),
+                new EmptyBorder(0, 5, 0, 5)
+        ));
+        setBorder(new EmptyBorder(5, 5, 5, 5));
+
         try {
-            parentBtn.setIcon(IconUtil.getImageIcon(16, 16, "dis-up.png"));
-            searchBtn.setIcon(IconUtil.getImageIcon(20, 20, "search.png"));
+            parentBtn.setIcon(IconUtil.getImageIcon(20, 20, "dis-up.png"));
+            searchBtn.setIcon(IconUtil.getImageIcon(16, 16, "search.png"));
+            refreshBtn.setIcon(IconUtil.getImageIcon(16, 16, "refresh.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
         urlField.setEditable(false);
 
+        GridBagConstraints c = new GridBagConstraints();
         add(parentBtn);
-        add(urlField);
-        add(searchField);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 0.8;
+        add(urlField, c);
+        c.weightx = 0.2;
+        add(refreshBtn);
+        add(searchField, c);
         add(searchBtn);
     }
 

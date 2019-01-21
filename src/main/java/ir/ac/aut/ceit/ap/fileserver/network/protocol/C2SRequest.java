@@ -10,5 +10,6 @@ public enum  C2SRequest implements RequestSubject{
     REMOVE_FILE,
     MOVE_PATH,
     CREATE_NEW_DIRECTORY,
-    FETCH_DIRECTORY
+    FETCH_DIRECTORY,
+    PASTE
 }

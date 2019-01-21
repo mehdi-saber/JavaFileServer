@@ -2,6 +2,7 @@ package ir.ac.aut.ceit.ap.fileserver.server;
 
 import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import ir.ac.aut.ceit.ap.fileserver.file.FileStorage;
+import ir.ac.aut.ceit.ap.fileserver.file.SaveAble;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressWriter;
 import ir.ac.aut.ceit.ap.fileserver.util.IOUtil;
 
@@ -16,15 +17,15 @@ class SFileStorage extends FileStorage implements SaveAble {
     private Long idCounter;
     private int splitSize;
 
-
     private synchronized Long createId() {
         return idCounter++;
     }
 
-    SFileStorage(Long idCounter) {
+    SFileStorage(int splitSize) {
         super("data"+File.separator+"temp");
-        this.idCounter = idCounter;
-        this.splitSize = 3 * 1024 * 1024;
+        Long idCounter = (Long) load();
+        this.idCounter = idCounter == null ? 0 : idCounter;
+        this.splitSize = splitSize;
     }
 
     File getNewFile() {

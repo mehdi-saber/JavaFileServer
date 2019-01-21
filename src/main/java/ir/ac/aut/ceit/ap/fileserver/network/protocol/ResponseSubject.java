@@ -1,4 +1,7 @@
 package ir.ac.aut.ceit.ap.fileserver.network.protocol;
 
-public interface ResponseSubject extends Subject{
+public enum ResponseSubject implements Subject {
+    OK,
+    FAILED,
+    REPEATED,
 }

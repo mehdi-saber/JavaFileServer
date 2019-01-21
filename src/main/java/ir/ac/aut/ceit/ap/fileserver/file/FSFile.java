@@ -12,7 +12,7 @@ public class FSFile extends FSPath {
 //    private Timestamp lastAccessDate;
 //    private String hashString;
 
-    FSFile(FSDirectory parent, String name,Long size, Set<Long> parts) {
+    public FSFile(FSDirectory parent, String name, Long size, Set<Long> parts) {
         super(parent, name);
         this.parts = parts;
         this.size=size;
@@ -27,7 +27,7 @@ public class FSFile extends FSPath {
 
     @Override
     public String getAbsolutePath() {
-        return parent + SEPARATOR + name;
+        return parent.getAbsolutePath()  + name;
     }
 
     public Set<Long> getParts() {

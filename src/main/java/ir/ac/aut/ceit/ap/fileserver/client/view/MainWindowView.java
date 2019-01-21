@@ -1,7 +1,5 @@
 package ir.ac.aut.ceit.ap.fileserver.client.view;
 
-import ir.ac.aut.ceit.ap.fileserver.util.WrapLayout;
-
 import javax.swing.*;
 import java.awt.*;
 

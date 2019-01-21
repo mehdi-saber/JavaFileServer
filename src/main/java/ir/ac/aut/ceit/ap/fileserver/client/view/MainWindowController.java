@@ -6,9 +6,8 @@ import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressCallback;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressReader;
-import ir.ac.aut.ceit.ap.fileserver.network.protocol.S2CResponse;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.ResponseSubject;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.ResponseCallback;
-import ir.ac.aut.ceit.ap.fileserver.network.protocol.Subject;
 
 import javax.swing.*;
 import java.awt.event.ActionListener;
@@ -26,7 +25,7 @@ public class MainWindowController {
     private ListItem selectedItem;
     private FSDirectory curDir;
     private FSPath pastePath;
-    private OperationType operationType;
+    private PasteOperationType pasteOperation;
     private File desktopDir;
     private File downloadDir;
 
@@ -35,7 +34,7 @@ public class MainWindowController {
         window = new MainWindowView();
         String homePath = System.getProperty("user.home") + File.separator;
         desktopDir = new File(homePath + "Desktop" + File.separator);
-        downloadDir = new File(homePath + "Download" + File.separator);
+        downloadDir = new File(homePath + "Downloads" + File.separator);
         setupFinalizeCallback(finalCallback);
         setMouseListeners();
     }
@@ -87,20 +86,13 @@ public class MainWindowController {
         }
     }
 
-    public void showPathRepeatedError(FSPath path) {
-        StringBuilder message = new StringBuilder();
-        if (path instanceof FSFile)
-            message.append("Directory");
-        else if (path instanceof FSDirectory)
-            message.append("File");
-        message.append(" \"").append(path.getAbsolutePath()).append("\"already exists.");
-        showError(message.toString());
+    public void showPathRepeatedError(String path) {
+        showError("path \"" + path + "\"already exists.");
     }
 
-    public void showPathRepeatedError(String path) {
-        StringBuilder message = new StringBuilder();
-        message.append("path \"").append(path).append("\"already exists.");
-        showError(message.toString());
+    public boolean replacePrompt(String path) {
+        String message = "path \"" + path + "\"already exists.\nDo you wand replace?";
+        return JOptionPane.showConfirmDialog(window, message, "replace", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
     }
 
     private void showError(String message) {
@@ -115,30 +107,11 @@ public class MainWindowController {
     }
 
     private void setMouseListeners() {
-        window.listPanel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                super.mouseClicked(e);
-                if (e.isPopupTrigger())
-                    window.dirPopupMenu.show(e.getComponent(), e.getX(), e.getY());
-                deselectPath();
-            }
-        });
-
-        window.navPanel.parentBtn.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                super.mouseClicked(e);
-                if (curDir.getParent() != null)
-                    client.fetchDirectory(curDir.getParent());
-            }
-        });
-
         ActionListener
                 downloadAL = e -> download((FSFile) selectedItem.getInfo(), saveFileChoose((FSFile) selectedItem.getInfo())),
                 previewAL = e -> new PreviewJFrame(),
-                copyAL = e -> updatePasteInfo(selectedItem.getInfo(), OperationType.COPY),
-                cutAL = e -> updatePasteInfo(selectedItem.getInfo(), OperationType.CUT),
+                copyAL = e -> updatePasteInfo(selectedItem.getInfo(), PasteOperationType.COPY),
+                cutAL = e -> updatePasteInfo(selectedItem.getInfo(), PasteOperationType.CUT),
                 renameAL = e -> renamePath(selectedItem.getInfo()),
                 deleteAL = e -> client.delete(selectedItem.getInfo()),
                 propertiesAL = e -> new PropertiesJFrame(),
@@ -173,30 +146,48 @@ public class MainWindowController {
         window.menuBar.renameMI.addActionListener(renameAL);
         window.menuBar.deleteMI.addActionListener(deleteAL);
         window.menuBar.propertiesMI.addActionListener(propertiesAL);
+
+        window.navPanel.parentBtn.addActionListener(e -> {
+            if (curDir.getParent() != null)
+                client.fetchDirectory(curDir.getParent());
+        });
+
+        window.navPanel.refreshBtn.addActionListener(e -> client.fetchDirectory(curDir));
+
+        window.listPanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                super.mouseClicked(e);
+                if (e.isPopupTrigger())
+                    window.dirPopupMenu.show(e.getComponent(), e.getX(), e.getY());
+                deselectPath();
+            }
+        });
     }
 
     private void paste(FSDirectory directory) {
-        if (operationType.equals(OperationType.CUT)) {
-            client.cut(pastePath, directory);
-            operationType = null;
+        FSPath path = pastePath;
+        PasteOperationType operationType = this.pasteOperation;
+        if (pasteOperation.equals(PasteOperationType.CUT)) {
+            pasteOperation = null;
             pastePath = null;
-        } else if (operationType.equals(OperationType.COPY))
-            client.copy(pastePath, directory);
+        }
+        client.paste(path, directory, operationType, false);
     }
 
-    private void updatePasteInfo(FSPath path, OperationType type) {
+    private void updatePasteInfo(FSPath path, PasteOperationType type) {
         pastePath = path;
-        operationType = type;
+        pasteOperation = type;
     }
 
     private void upload(File file, FSDirectory directory) {
         if (file == null)
             return;
         long fileSize = file.length();
-        ProgressWindow progressWindow = new ProgressWindow(window, "Uploading", 3 * fileSize);
+        ProgressWindow progressWindow = new ProgressWindow(window, "Uploading", 4 * fileSize);
         window.setEnabled(false);
         ResponseCallback responseCallback = response -> {
-            if (response.getTitle().equals(S2CResponse.UPLOAD_FILE_REPEATED)) {
+            if (response.getTitle().equals(ResponseSubject.REPEATED)) {
                 showPathRepeatedError(directory.getAbsolutePath() + file.getName());
                 closeProgressWindow(progressWindow);
             } else {
@@ -301,7 +292,7 @@ public class MainWindowController {
         window.menuBar.downloadMI.setEnabled(path instanceof FSFile);
         window.pathPopupMenu.downloadMI.setEnabled(path instanceof FSFile);
 
-        boolean pasteEnable = operationType != null && pastePath != null;
+        boolean pasteEnable = pasteOperation != null && pastePath != null;
         window.menuBar.pasteMI.setEnabled(pasteEnable);
         window.dirPopupMenu.pasteMI.setEnabled(pasteEnable);
         window.pathPopupMenu.pasteMI.setEnabled(pasteEnable && path instanceof FSDirectory);

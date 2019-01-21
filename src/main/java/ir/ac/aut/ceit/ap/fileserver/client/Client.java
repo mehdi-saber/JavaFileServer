@@ -2,6 +2,7 @@ package ir.ac.aut.ceit.ap.fileserver.client;
 
 import ir.ac.aut.ceit.ap.fileserver.client.view.ConnectWindowController;
 import ir.ac.aut.ceit.ap.fileserver.client.view.MainWindowController;
+import ir.ac.aut.ceit.ap.fileserver.client.view.PasteOperationType;
 import ir.ac.aut.ceit.ap.fileserver.client.view.ProgressWindow;
 import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
@@ -9,8 +10,7 @@ import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
 import ir.ac.aut.ceit.ap.fileserver.network.Message;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressCallback;
 import ir.ac.aut.ceit.ap.fileserver.network.protocol.C2SRequest;
-import ir.ac.aut.ceit.ap.fileserver.network.protocol.C2SResponse;
-import ir.ac.aut.ceit.ap.fileserver.network.protocol.S2CResponse;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.ResponseSubject;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.Receiver;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.ReceivingMessage;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.ResponseCallback;
@@ -51,12 +51,12 @@ public class Client {
         AtomicBoolean connected = new AtomicBoolean(false);
         request.setResponseCallback(response -> {
             try {
-                if (response.getTitle().equals(S2CResponse.LOGIN_OK)) {
+                if (response.getTitle().equals(ResponseSubject.OK)) {
                     String token = (String) response.getParameter("token");
                     requestFactory.setToken(token);
                     receiver = new Receiver(listenPort, new CRouter(this));
                     connected.set(true);
-                } else if (response.getTitle().equals(S2CResponse.LOGIN_FAILED))
+                } else if (response.getTitle().equals(ResponseSubject.FAILED))
                     connected.set(false);
 
             } catch (IOException e) {
@@ -83,15 +83,21 @@ public class Client {
         request.send();
     }
 
-
-    public void copy(FSPath path, FSDirectory directory) {
-//        CRequest request=requestFactory.create(Subject.)
+    public void paste(FSPath path, FSDirectory directory, PasteOperationType pasteOperation, boolean force) {
+        CRequest request = requestFactory.create(C2SRequest.PASTE);
+        request.addParameter("path", path);
+        request.addParameter("directory", directory);
+        request.addParameter("operation", pasteOperation);
+        request.addParameter("force", force);
+        request.setResponseCallback(response -> {
+            if (response.getTitle().equals(ResponseSubject.REPEATED)) {
+                FSPath newPath = (FSPath) response.getParameter("newPath");
+                if (mainWindowController.replacePrompt(newPath.getAbsolutePath()))
+                    paste(path, directory, pasteOperation, true);
+            }
+        });
+        request.send();
     }
-
-    public void cut(FSPath path, FSDirectory directory) {
-        //        todo:implement
-    }
-
 
     public void delete(FSPath path) {
         //        todo:implement
@@ -139,7 +145,7 @@ public class Client {
                         new FileOutputStream(fileStorage.getFileById(Long.valueOf(key))),
                         request.getInputStream(key), request.getStreamSize(key)
                 );
-            return new SendingMessage(C2SResponse.RECEIVE_PART_OK);
+            return new SendingMessage(ResponseSubject.OK);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -156,7 +162,7 @@ public class Client {
 
     SendingMessage refreshDirectory(ReceivingMessage request) {
         fetchDirectory(mainWindowController.getCurDir());
-        return new SendingMessage(C2SResponse.REFRESH_DIRECTORY_OK);
+        return new SendingMessage(ResponseSubject.OK);
     }
 
     public void createNewFolder(FSDirectory parent, String name) {
@@ -164,7 +170,7 @@ public class Client {
         request.addParameter("parent", parent);
         request.addParameter("name", name);
         ResponseCallback responseCallback = response -> {
-            if (response.getTitle().equals(S2CResponse.CREATE_NEW_DIRECTORY_REPEATED)) {
+            if (response.getTitle().equals(ResponseSubject.REPEATED)) {
                 mainWindowController.showPathRepeatedError(parent.getAbsolutePath() + name);
                 mainWindowController.createNewFolder();
             }
@@ -178,8 +184,8 @@ public class Client {
         request.addParameter("path", path);
         request.addParameter("newName", newName);
         ResponseCallback responseCallback = response -> {
-            if (response.getTitle().equals(S2CResponse.MOVE_PATH_ALREADY_EXISTS)) {
-                String newPath = path.getAbsolutePath() + newName;
+            if (response.getTitle().equals(ResponseSubject.REPEATED)) {
+                String newPath = path.getParent().getAbsolutePath() + newName;
                 if (path instanceof FSDirectory)
                     newPath += FSPath.SEPARATOR;
                 mainWindowController.showPathRepeatedError(newPath);
@@ -192,7 +198,7 @@ public class Client {
 
     SendingMessage sendPart(ReceivingMessage request) {
         try {
-            SendingMessage response = new SendingMessage(C2SResponse.SEND_PART_OK);
+            SendingMessage response = new SendingMessage(ResponseSubject.OK);
             Long partId = (Long) request.getParameter("partId");
             File file = fileStorage.getFileById(partId);
             FileInputStream fileInputStream = new FileInputStream(file);
