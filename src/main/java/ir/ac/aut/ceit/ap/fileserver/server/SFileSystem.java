@@ -10,21 +10,22 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 class SFileSystem implements SaveAble {
-    private Set<FSPath> pathList;
+    private Set<FSPath> pathSet;
 
     SFileSystem() {
         Set<FSPath> pathList = (Set<FSPath>) load();
         if (pathList != null)
-            this.pathList = pathList;
+            this.pathSet = pathList;
         else
-            this.pathList = new HashSet<>();
+            this.pathSet = new HashSet<>();
     }
+
 
     FSFile addFile(FSDirectory parent, String name, Long size, Set<Long> parts) {
         if (pathExists(parent, name, false) || !pathExists(parent))
             return null;
         FSFile file = new FSFile(parent, name,size, parts);
-        pathList.add(file);
+        pathSet.add(file);
         return file;
     }
 
@@ -32,48 +33,67 @@ class SFileSystem implements SaveAble {
         if (pathExists(parent, name, true) || !pathExists(parent))
             return null;
         FSDirectory directory = new FSDirectory(parent, name);
-        pathList.add(directory);
+        pathSet.add(directory);
         return directory;
     }
 
     Set<FSPath> listSubPaths(FSDirectory directory) {
-        return pathList.stream()
+        return pathSet.stream()
                 .filter(path -> path.getParent().equals(directory))
                 .collect(Collectors.toSet());
     }
 
-    private boolean pathExists(FSPath thePath) {
-        if(thePath.equals(FSDirectory.ROOT))
-            return true;
-        return pathList.stream()
-                .anyMatch(path -> path.equals(thePath));
+    Set<FSPath> listRecurSubPaths(FSDirectory directory) {
+        return pathSet.stream()
+                .filter(path -> isInsideDirectory(directory, path))
+                .collect(Collectors.toSet());
     }
 
-    private FSPath getPath(FSPath pathObject) {
-        return pathList.stream()
-                .filter(path -> path.equals(pathObject))
-                .findFirst().get();
+    boolean isInsideDirectory(FSDirectory directory, FSPath path) {
+        return path.getAbsolutePath().startsWith(directory.getAbsolutePath());
     }
+
+    boolean pathExists(FSPath thePath) {
+        return pathExists(thePath.getParent(), thePath.getName(), thePath instanceof FSDirectory);
+    }
+
 
     boolean pathExists(FSDirectory parent, String name, boolean isDirectory) {
-        return pathList.stream()
-                .anyMatch(
-                        path -> path.getParent().equals(parent) &&
-                                path.getName().equals(name) &&
-                                ((isDirectory && path instanceof FSDirectory) || (!isDirectory && path instanceof FSFile))
-                );
+        return getPath(parent, name, isDirectory) != null;
     }
 
-    private boolean removePath(FSPath thePath) {
+    FSPath getPath(FSPath path) {
+        return getPath(path.getParent(), path.getName(), path instanceof FSDirectory);
+    }
+
+    void updateRefrences() {
+        for (FSPath path : pathSet)
+            path.setParent((FSDirectory) getPath(path.getParent()));
+    }
+
+    FSPath getPath(FSDirectory parent, String name, boolean isDirectory) {
+        if (parent == FSDirectory.ROOT.getParent() && name.equals(FSDirectory.ROOT.getName()))
+            return FSDirectory.ROOT;
+        return pathSet.stream()
+                .filter(path -> path.getParent().equals(parent) &&
+                        path.getName().equals(name) &&
+                        ((isDirectory && path instanceof FSDirectory) || (!isDirectory && path instanceof FSFile))
+                ).findFirst().orElse(null);
+    }
+
+    Set<FSFile> remove(FSPath thePath) {
         if (!pathExists(thePath))
-            return false;
+            return null;
+        Set<FSFile> deletingFiles = new HashSet<>();
         if (thePath instanceof FSDirectory) {
             FSDirectory directory = (FSDirectory) thePath;
             for (FSPath path : listSubPaths(directory))
-                removePath(path);
+                remove(path);
         }
-        pathList.remove(thePath);
-        return true;
+        pathSet.remove(thePath);
+        if (thePath instanceof FSFile)
+            deletingFiles.add((FSFile) thePath);
+        return deletingFiles;
     }
 
     boolean renamePath(FSPath thePath, String newName) {
@@ -83,25 +103,43 @@ class SFileSystem implements SaveAble {
         return true;
     }
 
-    boolean movePath(FSPath thePath, FSDirectory newDirectory) {
-        if (!pathExists(thePath) || !pathExists(newDirectory) ||
-                pathExists(newDirectory, thePath.getName(),thePath instanceof FSDirectory))
+    boolean move(FSPath path, FSDirectory newDirectory) {
+        if (!pathExists(path) || !pathExists(newDirectory) ||
+                pathExists(newDirectory, path.getName(), path instanceof FSDirectory))
             return false;
-        thePath.setParent(newDirectory);
+        updateRefrences();
+        getPath(path).setParent(newDirectory);
         return true;
     }
 
-    boolean copy(FSPath thePath, FSDirectory newDirectory) {
-        if (!pathExists(thePath) || !pathExists(newDirectory) ||
-                pathExists(newDirectory, thePath.getName(), thePath instanceof FSDirectory))
+    boolean copy(FSPath path, FSDirectory newDirectory) {
+        if (!pathExists(path) || !pathExists(newDirectory) ||
+                pathExists(newDirectory, path.getName(), path instanceof FSDirectory))
             return false;
-        thePath.setParent(newDirectory);
+        FSPath newPath = clonePath(newDirectory, path);
+        if (path instanceof FSDirectory)
+            for (FSPath subPath : listSubPaths((FSDirectory) path))
+                copy(subPath, (FSDirectory) newPath);
         return true;
+    }
+
+    private FSPath clonePath(FSDirectory parent, FSPath path) {
+        if (path instanceof FSDirectory)
+            return addDirectory(parent, path.getName());
+        else if (path instanceof FSFile) {
+            FSFile file = (FSFile) path;
+            return addFile(parent, file.getName(), file.getSize(), file.getParts());
+        }
+        return null;
+    }
+
+    public Set<FSPath> getPathSet() {
+        return pathSet;
     }
 
     @Override
     public Object getSaveObject() {
-        return pathList;
+        return pathSet;
     }
 
     @Override

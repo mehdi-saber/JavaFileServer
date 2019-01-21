@@ -1,10 +1,12 @@
 package ir.ac.aut.ceit.ap.fileserver.server;
 
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
+import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
 import ir.ac.aut.ceit.ap.fileserver.file.SaveAble;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 class ClientManager implements SaveAble {
 
@@ -74,5 +76,28 @@ class ClientManager implements SaveAble {
     @Override
     public String getSaveFileName() {
         return "clientManager";
+    }
+
+    Map<ClientInfo, Set<Long>> getDeletingParts(Set<FSFile> files, Set<FSPath> remainPath) {
+        Map<ClientInfo, Set<Long>> partsMap = new HashMap<>();
+
+        Set<Long> filesParts = files.stream()
+                .flatMap(file -> file.getParts().stream())
+                .collect(Collectors.toSet());
+
+        Set<Long> remainFilesParts = remainPath.stream()
+                .flatMap(file -> file instanceof FSFile ? ((FSFile) file).getParts().stream() : Stream.of())
+                .collect(Collectors.toSet());
+
+        filesParts.removeIf(remainFilesParts::contains);//may copied other place
+
+        for (ClientInfo client : clientList) {
+            Set<Long> intersection = new HashSet<>(filesParts);
+            intersection.retainAll(client.getParts());
+            if (intersection.size() > 0)
+                partsMap.put(client, intersection);
+        }
+
+        return partsMap;
     }
 }

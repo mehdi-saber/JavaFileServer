@@ -56,7 +56,7 @@ public class Client {
                     requestFactory.setToken(token);
                     receiver = new Receiver(listenPort, new CRouter(this));
                     connected.set(true);
-                } else if (response.getTitle().equals(ResponseSubject.FAILED))
+                } else if (response.getTitle().equals(ResponseSubject.FORBIDDEN))
                     connected.set(false);
 
             } catch (IOException e) {
@@ -83,17 +83,19 @@ public class Client {
         request.send();
     }
 
-    public void paste(FSPath path, FSDirectory directory, PasteOperationType pasteOperation, boolean force) {
+    public void paste(FSPath path, FSDirectory directory, PasteOperationType pasteOperation) {
         CRequest request = requestFactory.create(C2SRequest.PASTE);
         request.addParameter("path", path);
         request.addParameter("directory", directory);
         request.addParameter("operation", pasteOperation);
-        request.addParameter("force", force);
         request.setResponseCallback(response -> {
-            if (response.getTitle().equals(ResponseSubject.REPEATED)) {
-                FSPath newPath = (FSPath) response.getParameter("newPath");
-                if (mainWindowController.replacePrompt(newPath.getAbsolutePath()))
-                    paste(path, directory, pasteOperation, true);
+            switch ((ResponseSubject) response.getTitle()) {
+                case REPEATED:
+                    mainWindowController.showPathRepeatedError(directory.getAbsolutePath() + path.getName());
+                    break;
+                case SELF_PASTE:
+                    mainWindowController.showError("Can not paste an item inside or onto the item.");
+                    break;
             }
         });
         request.send();
@@ -180,7 +182,7 @@ public class Client {
     }
 
     public void rename(FSPath path, String newName) {
-        CRequest request = requestFactory.create(C2SRequest.MOVE_PATH);
+        CRequest request = requestFactory.create(C2SRequest.RENAME_FILE);
         request.addParameter("path", path);
         request.addParameter("newName", newName);
         ResponseCallback responseCallback = response -> {
@@ -210,4 +212,10 @@ public class Client {
         return null;
     }
 
+    SendingMessage deleteParts(ReceivingMessage request) {
+        Set<Long> parts = (Set<Long>) request.getParameter("parts");
+        for (Long partId : parts)
+            fileStorage.getFileById(partId).delete();
+        return new SendingMessage(ResponseSubject.OK);
+    }
 }

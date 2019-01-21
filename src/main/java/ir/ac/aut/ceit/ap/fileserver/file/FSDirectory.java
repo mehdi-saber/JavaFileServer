@@ -8,10 +8,4 @@ public class FSDirectory extends FSPath {
         super(parent, name);
     }
 
-    @Override
-    public String getAbsolutePath() {
-        if (this.equals(ROOT))
-            return SEPARATOR;
-        return parent.getAbsolutePath() + name + SEPARATOR;
-    }
 }

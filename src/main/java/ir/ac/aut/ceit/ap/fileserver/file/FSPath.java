@@ -18,7 +18,21 @@ abstract public class FSPath implements Serializable {
         return parent;
     }
 
-    abstract public String getAbsolutePath();
+    public String getAbsolutePath() {
+        if (this.equals(FSDirectory.ROOT))
+            return SEPARATOR;
+        StringBuilder absolute = new StringBuilder(name);
+        if (this instanceof FSDirectory)
+            absolute.append(SEPARATOR);
+        FSDirectory parDir = parent;
+        while (!parDir.equals(FSDirectory.ROOT)) {
+            absolute.insert(0, SEPARATOR);
+            absolute.insert(0, parDir.name);
+            parDir = parDir.parent;
+        }
+        absolute.insert(0, SEPARATOR);
+        return absolute.toString();
+    }
 
     public String getName() {
         return name;

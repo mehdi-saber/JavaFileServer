@@ -199,10 +199,6 @@ public class Server {
 
     }
 
-    public void removeFile(FSFile info) {
-
-    }
-
     public void fetchFile(FSFile info) {
 
     }
@@ -233,12 +229,43 @@ public class Server {
         return finalCallback;
     }
 
-    public SendingMessage paste(ReceivingMessage request) {
+    private void removePath(FSPath path) {
+        Set<FSFile> files = fileSystem.remove(path);
+        Map<ClientInfo, Set<Long>> partMap = clientManager.getDeletingParts(files, fileSystem.getPathSet());
+
+        for (Map.Entry<ClientInfo, Set<Long>> entry : partMap.entrySet()) {
+            ClientInfo client = entry.getKey();
+            Set<Long> parts = entry.getValue();
+            SRequest request = new SRequest(S2CRequest.DELETE_PART);
+            request.addParameter("parts", parts);
+            request.send(client);
+        }
+    }
+
+    SendingMessage paste(ReceivingMessage request) {
         FSPath path = (FSPath) request.getParameter("path");
         FSDirectory directory = (FSDirectory) request.getParameter("directory");
         PasteOperationType operationType = (PasteOperationType) request.getParameter("operation");
-        boolean force = (boolean) request.getParameter("force");
+        FSPath newPath = fileSystem.getPath(directory, path.getName(), path instanceof FSDirectory);
 
-        return null;
+        boolean selfPaste = path.equals(newPath);
+        if (path instanceof FSDirectory)
+            selfPaste |= fileSystem.isInsideDirectory((FSDirectory) path, directory);
+        if (selfPaste)
+            return new SendingMessage(ResponseSubject.SELF_PASTE);
+
+        if (newPath != null)
+                return new SendingMessage(ResponseSubject.REPEATED);
+
+        switch (operationType) {
+            case CUT:
+                fileSystem.move(path, directory);
+                break;
+            case COPY:
+                fileSystem.copy(path, directory);
+                break;
+        }
+        refreshClients();
+        return new SendingMessage(ResponseSubject.OK);
     }
 }

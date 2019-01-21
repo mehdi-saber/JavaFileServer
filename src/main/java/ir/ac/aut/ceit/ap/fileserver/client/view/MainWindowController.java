@@ -37,6 +37,7 @@ public class MainWindowController {
         downloadDir = new File(homePath + "Downloads" + File.separator);
         setupFinalizeCallback(finalCallback);
         setMouseListeners();
+        updatePasteBtn();
     }
 
     private void setupFinalizeCallback(Runnable finalCallback) {
@@ -90,12 +91,7 @@ public class MainWindowController {
         showError("path \"" + path + "\"already exists.");
     }
 
-    public boolean replacePrompt(String path) {
-        String message = "path \"" + path + "\"already exists.\nDo you wand replace?";
-        return JOptionPane.showConfirmDialog(window, message, "replace", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
-    }
-
-    private void showError(String message) {
+    public void showError(String message) {
         JOptionPane.showMessageDialog(window, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
@@ -172,12 +168,14 @@ public class MainWindowController {
             pasteOperation = null;
             pastePath = null;
         }
-        client.paste(path, directory, operationType, false);
+        updatePasteBtn();
+        client.paste(path, directory, operationType);
     }
 
     private void updatePasteInfo(FSPath path, PasteOperationType type) {
         pastePath = path;
         pasteOperation = type;
+        updatePasteBtn();
     }
 
     private void upload(File file, FSDirectory directory) {
@@ -292,15 +290,20 @@ public class MainWindowController {
         window.menuBar.downloadMI.setEnabled(path instanceof FSFile);
         window.pathPopupMenu.downloadMI.setEnabled(path instanceof FSFile);
 
-        boolean pasteEnable = pasteOperation != null && pastePath != null;
-        window.menuBar.pasteMI.setEnabled(pasteEnable);
-        window.dirPopupMenu.pasteMI.setEnabled(pasteEnable);
-        window.pathPopupMenu.pasteMI.setEnabled(pasteEnable && path instanceof FSDirectory);
+        updatePasteBtn();
     }
 
     private void deselectPath() {
         setNewSelectedItem(null);
         window.menuBar.switchMode(false);
+    }
+
+    private void updatePasteBtn() {
+        boolean pasteEnable = pasteOperation != null && pastePath != null;
+        window.menuBar.pasteMI.setEnabled(pasteEnable);
+        window.dirPopupMenu.pasteMI.setEnabled(pasteEnable);
+        if (selectedItem != null)
+            window.pathPopupMenu.pasteMI.setEnabled(pasteEnable && selectedItem.getInfo() instanceof FSDirectory);
     }
 
     public FSDirectory getCurDir() {

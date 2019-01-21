@@ -21,7 +21,6 @@ class MainMenuBar extends JMenuBar {
     MainMenuBar() {
         JMenu fileMenu = new JMenu("File");
         JMenu editMenu = new JMenu("Edit");
-        JMenu helpMenu = new JMenu("Help");
 
         uploadMI = new JMenuItem("Upload");
         downloadMI = new JMenuItem("Download");
@@ -49,7 +48,6 @@ class MainMenuBar extends JMenuBar {
 
         add(fileMenu);
         add(editMenu);
-        add(helpMenu);
 
         justSelected = new JComponent[]{
                 propertiesMI,downloadMI, renameMI, deleteMI, cutMI, copyMI

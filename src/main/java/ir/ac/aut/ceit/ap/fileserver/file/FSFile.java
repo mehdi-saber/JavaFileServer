@@ -25,11 +25,6 @@ public class FSFile extends FSPath {
         return "";
     }
 
-    @Override
-    public String getAbsolutePath() {
-        return parent.getAbsolutePath()  + name;
-    }
-
     public Set<Long> getParts() {
         return parts;
     }

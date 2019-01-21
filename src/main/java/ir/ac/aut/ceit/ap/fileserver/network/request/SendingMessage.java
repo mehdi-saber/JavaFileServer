@@ -1,8 +1,8 @@
 package ir.ac.aut.ceit.ap.fileserver.network.request;
 
 import ir.ac.aut.ceit.ap.fileserver.network.Message;
-import ir.ac.aut.ceit.ap.fileserver.network.protocol.Subject;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressCallback;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.Subject;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.ResponseCallback;
 
 import java.io.IOException;
@@ -13,7 +13,7 @@ import java.util.Map;
 
 public class SendingMessage extends Message implements Serializable {
     private transient Map<String, InputStream> streams;
-    protected transient ResponseCallback responseCallback;
+    transient ResponseCallback responseCallback;
     private transient Map<String, ProgressCallback> progressCallbacks;
 
     public SendingMessage(Subject title) {

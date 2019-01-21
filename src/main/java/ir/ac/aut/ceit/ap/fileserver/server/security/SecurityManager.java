@@ -29,11 +29,11 @@ public class SecurityManager {
         for (User user : userList)
             if (user.getUsername().equals(username))
                 if (BCrypt.checkpw(password, user.getPassHash())) {
-                    SendingMessage tokenData = new SendingMessage(ResponseSubject.OK);
-                    tokenData.addParameter("token", getUserToken(client));
-                    return tokenData;
+                    SendingMessage tokenResponse = new SendingMessage(ResponseSubject.OK);
+                    tokenResponse.addParameter("token", getUserToken(client));
+                    return tokenResponse;
                 }
-        return new SendingMessage(ResponseSubject.FAILED);
+        return new SendingMessage(ResponseSubject.FORBIDDEN);
     }
 
     private String getUserToken(ClientInfo client) {
@@ -49,20 +49,4 @@ public class SecurityManager {
         return username.matches("/^[a-z][^\\W_]{3,14}$/i") &&
                 password.matches("/^(?=[^a-z]*[a-z])(?=\\D*\\d)[^:&.~\\s]{5,20}$/");
     }
-
-    public Message authUser(Message request, List<ClientInfo> clientList) {
-//        String username = (String) request.getParameter("username");
-//        String password = (String) request.getParameter("password");
-//
-//        for (ClientInfo client : clientList)
-//            if (client.username.equals(username))
-//                return new Message(Subject.REGISTER_USER_REPEATED_USERNAME);
-//
-//        Message tokenData = new Message(Subject.LOGIN_OK);
-//        String token = generateToken(username);
-//        tokenData.addParameter("token", token);
-//        return tokenData;
-        return null;
-    }
-
 }
