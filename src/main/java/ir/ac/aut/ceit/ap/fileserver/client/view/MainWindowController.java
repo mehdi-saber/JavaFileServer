@@ -4,7 +4,11 @@ import ir.ac.aut.ceit.ap.fileserver.client.Client;
 import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
-import ir.ac.aut.ceit.ap.fileserver.network.*;
+import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressCallback;
+import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressReader;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.S2CResponse;
+import ir.ac.aut.ceit.ap.fileserver.network.receiver.ResponseCallback;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.Subject;
 
 import javax.swing.*;
 import java.awt.event.ActionListener;
@@ -23,12 +27,15 @@ public class MainWindowController {
     private FSDirectory curDir;
     private FSPath pastePath;
     private OperationType operationType;
-    private File desktop;
+    private File desktopDir;
+    private File downloadDir;
 
     public MainWindowController(Client client, Runnable finalCallback) {
         this.client = client;
         window = new MainWindowView();
-        desktop = new File(System.getProperty("user.home") + File.separator + "Desktop" + File.separator);
+        String homePath = System.getProperty("user.home") + File.separator;
+        desktopDir = new File(homePath + "Desktop" + File.separator);
+        downloadDir = new File(homePath + "Download" + File.separator);
         setupFinalizeCallback(finalCallback);
         setMouseListeners();
     }
@@ -44,21 +51,21 @@ public class MainWindowController {
 
     private File openFileChoose() {
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setCurrentDirectory(desktop);
-        fileChooser.showOpenDialog(window);
-        return fileChooser.getSelectedFile();
+        fileChooser.setCurrentDirectory(desktopDir);
+        if (fileChooser.showOpenDialog(window) == JFileChooser.APPROVE_OPTION)
+            return fileChooser.getSelectedFile();
+        else
+            return null;
     }
 
 
     private File saveFileChoose(FSFile file) {
         JFileChooser fileChooser = new JFileChooser();
-        File defaultFile = new File(desktop + File.separator + file.getName());
+        File defaultFile = new File(downloadDir + File.separator + file.getName());
         fileChooser.setSelectedFile(defaultFile);
-        int userSelection = fileChooser.showSaveDialog(window);
-
-        if (userSelection == JFileChooser.APPROVE_OPTION) {
+        if (fileChooser.showSaveDialog(window) == JFileChooser.APPROVE_OPTION)
             return fileChooser.getSelectedFile();
-        } else
+        else
             return null;
     }
 
@@ -186,23 +193,21 @@ public class MainWindowController {
         if (file == null)
             return;
         long fileSize = file.length();
-        ProgressWindow progressWindow = new ProgressWindow(window, "Uploading", 2 * fileSize);
+        ProgressWindow progressWindow = new ProgressWindow(window, "Uploading", 3 * fileSize);
         window.setEnabled(false);
         ResponseCallback responseCallback = response -> {
-            if (response.getTitle().equals(Subject.UPLOAD_FILE_REPEATED)) {
+            if (response.getTitle().equals(S2CResponse.UPLOAD_FILE_REPEATED)) {
                 showPathRepeatedError(directory.getAbsolutePath() + file.getName());
                 closeProgressWindow(progressWindow);
-            } else
-                SwingUtilities.invokeLater(() -> {
-                    try {
-                        progressWindow.setOperationName("Server Distributing File");
-                        ProgressCallback progressCallback = progressWindow.getCallback();
-                        new ProgressReader(response.getInputStream("status"), progressCallback).join();
-                        closeProgressWindow(progressWindow);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                });
+            } else {
+                SwingUtilities.invokeLater(() -> progressWindow.setOperationName("Server Distributing File"));
+                try {
+                    new ProgressReader(response.getInputStream("status"), progressWindow.getCallback()).start().join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                closeProgressWindow(progressWindow);
+            }
         };
         client.upload(file, directory, progressWindow.getCallback(), responseCallback);
     }
@@ -212,22 +217,23 @@ public class MainWindowController {
         if (newFile == null)
             return;
         long fileSize = file.getSize();
-        ProgressWindow progressWindow = new ProgressWindow(window, "Server Gathering Distributing File", fileSize);
+        ProgressWindow progressWindow = new ProgressWindow(window, "Server Gathering Distributing File", 2 * fileSize);
         ProgressCallback progressCallback = progressWindow.getCallback();
         window.setEnabled(false);
-        ResponseCallback responseCallback = response -> SwingUtilities.invokeLater(() -> {
+        ResponseCallback responseCallback = response -> {
             try {
-                new ProgressReader(response.getInputStream("status"), progressCallback).join();
-                progressWindow.setOperationName("Downloading");
-                closeProgressWindow(progressWindow);
+                new ProgressReader(response.getInputStream("status"), progressCallback).start().join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        });
-        client.download(file, newFile, progressCallback, responseCallback);
+            SwingUtilities.invokeLater(() -> {
+                progressWindow.setOperationName("Downloading");
+            });
+        };
+        client.download(file, newFile, progressWindow, responseCallback);
     }
 
-    private void closeProgressWindow(ProgressWindow progressWindow) {
+    public void closeProgressWindow(ProgressWindow progressWindow) {
         SwingUtilities.invokeLater(() -> {
             progressWindow.setVisible(false);
             progressWindow.dispose();

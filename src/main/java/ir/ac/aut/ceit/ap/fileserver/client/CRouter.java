@@ -1,8 +1,9 @@
 package ir.ac.aut.ceit.ap.fileserver.client;
 
-import ir.ac.aut.ceit.ap.fileserver.network.ReceivingMessage;
-import ir.ac.aut.ceit.ap.fileserver.network.Router;
-import ir.ac.aut.ceit.ap.fileserver.network.SendingMessage;
+import ir.ac.aut.ceit.ap.fileserver.network.receiver.ReceivingMessage;
+import ir.ac.aut.ceit.ap.fileserver.network.receiver.Router;
+import ir.ac.aut.ceit.ap.fileserver.network.request.SendingMessage;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.S2CRequest;
 
 
 public class CRouter implements Router {
@@ -13,7 +14,7 @@ public class CRouter implements Router {
     }
 
     public SendingMessage route(ReceivingMessage request) {
-        switch (request.getTitle()) {
+        switch ((S2CRequest) request.getTitle()) {
             case RECEIVE_PART:
                 return client.fetchPart(request);
             case SEND_PART:

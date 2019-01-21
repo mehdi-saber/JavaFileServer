@@ -2,12 +2,10 @@ package ir.ac.aut.ceit.ap.fileserver.server;
 
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 
-import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
 class ClientManager implements SaveAble {
-    private static final File saveFile = new File("data" + File.separator + "clientList");
 
     private List<ClientInfo> clientList;
     private int repeat;
@@ -73,7 +71,7 @@ class ClientManager implements SaveAble {
     }
 
     @Override
-    public File getSaveFile() {
-        return saveFile;
+    public String getSaveFileName() {
+        return "clientManager";
     }
 }

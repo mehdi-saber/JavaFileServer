@@ -1,4 +1,9 @@
-package ir.ac.aut.ceit.ap.fileserver.network;
+package ir.ac.aut.ceit.ap.fileserver.network.request;
+
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.RequestSubject;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.StreamingSubject;
+import ir.ac.aut.ceit.ap.fileserver.network.Transporter;
+import ir.ac.aut.ceit.ap.fileserver.network.receiver.ReceivingMessage;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -6,7 +11,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 abstract public class Request extends SendingMessage implements Transporter {
-    public Request(Subject title) {
+    public Request(RequestSubject title) {
         super(title);
     }
 
@@ -22,7 +27,7 @@ abstract public class Request extends SendingMessage implements Transporter {
                 ReceivingMessage receivingMessage = readMessage(socket);
                 if (responseCallback != null)
                     responseCallback.call(receivingMessage);
-                outputStream.write((StreamsCommand.END_READING_STREAMS + "\n").getBytes());
+                outputStream.write((StreamingSubject.END + "\n").getBytes());
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }

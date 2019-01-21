@@ -3,7 +3,15 @@ package ir.ac.aut.ceit.ap.fileserver.server;
 import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
-import ir.ac.aut.ceit.ap.fileserver.network.*;
+import ir.ac.aut.ceit.ap.fileserver.network.Message;
+import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressWriter;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.S2CRequest;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.S2CResponse;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.Subject;
+import ir.ac.aut.ceit.ap.fileserver.network.receiver.Receiver;
+import ir.ac.aut.ceit.ap.fileserver.network.receiver.ReceivingMessage;
+import ir.ac.aut.ceit.ap.fileserver.network.receiver.ResponseCallback;
+import ir.ac.aut.ceit.ap.fileserver.network.request.SendingMessage;
 import ir.ac.aut.ceit.ap.fileserver.server.security.SecurityManager;
 import ir.ac.aut.ceit.ap.fileserver.util.IOUtil;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -50,14 +58,14 @@ public class Server {
         String username = (String) request.getParameter("username");
         ClientInfo client = new ClientInfo(request.getSenderAddress(), listenPort, username);
         SendingMessage response = securityManager.loginUser(request, client);
-        if (response.getTitle().equals(Subject.LOGIN_OK))
+        if (response.getTitle().equals(S2CResponse.LOGIN_OK))
             clientManager.addClient(client);
         return response;
     }
 
     SendingMessage fetchDirectory(Message request) {
         FSDirectory directory = (FSDirectory) request.getParameter("directory");
-        SendingMessage response = new SendingMessage(Subject.FETCH_DIRECTORY_OK);
+        SendingMessage response = new SendingMessage(S2CResponse.FETCH_DIRECTORY_OK);
         response.addParameter("list", fileSystem.listSubPaths(directory));
         return response;
     }
@@ -72,7 +80,7 @@ public class Server {
             FSDirectory directory = (FSDirectory) request.getParameter("directory");
 
             if (fileSystem.pathExists(directory, fileName, false))
-                return new SendingMessage(Subject.UPLOAD_FILE_REPEATED);
+                return new SendingMessage(S2CResponse.UPLOAD_FILE_REPEATED);
 
             File downloadingFile = createTempFile();
             Long fileSize = request.getStreamSize("file");
@@ -80,7 +88,7 @@ public class Server {
             IOUtil.writeI2O(downloadOutput, request.getInputStream("file"), fileSize);
             downloadOutput.close();
 
-            SendingMessage response = new SendingMessage(Subject.UPLOAD_FILE_OK);
+            SendingMessage response = new SendingMessage(S2CResponse.UPLOAD_FILE_OK);
 
             PipedInputStream pipedInputStream = new PipedInputStream();
             response.addInputStream("status", pipedInputStream, Long.MAX_VALUE);
@@ -97,23 +105,24 @@ public class Server {
 
     SendingMessage download(ReceivingMessage request) {
         try {
-            File downloadingFile = createTempFile();
 
             FSFile file = (FSFile) request.getParameter("file");
             Long fileSize = file.getSize();
 
             Map<Long, ClientInfo> partMap = clientManager.getFileClientList(file);
 
-            SendingMessage response = new SendingMessage(Subject.DOWNLOAD_FILE_OK);
+            SendingMessage response = new SendingMessage(S2CResponse.DOWNLOAD_FILE_OK);
 
-            PipedInputStream pipedInputStream = new PipedInputStream();
+            PipedOutputStream pipedOutputStream = new PipedOutputStream();
+            PipedInputStream pipedInputStream = new PipedInputStream(pipedOutputStream);
             response.addInputStream("status", pipedInputStream, Long.MAX_VALUE);
-            PipedOutputStream pipedOutputStream = new PipedOutputStream(pipedInputStream);
 
-            ProgressWriter progressWriter = new ProgressWriter(pipedOutputStream);
+            ProgressWriter out = new ProgressWriter(pipedOutputStream);
 
+            File downloadingFile = createTempFile();
             response.addInputStream("file", new FileInputStream(downloadingFile), fileSize);
-            new Thread(() -> {
+
+            Thread thread = new Thread(() -> {
                 FileOutputStream fileOutputStream;
                 try {
                     fileOutputStream = new FileOutputStream(downloadingFile);
@@ -121,25 +130,24 @@ public class Server {
                         Long partId = entry.getKey();
                         ClientInfo client = entry.getValue();
 
-                        SRequest partRequest = new SRequest(Subject.SEND_PART);
+                        SRequest partRequest = new SRequest(S2CRequest.SEND_PART);
                         partRequest.addParameter("partId", partId);
-                        ResponseCallback responseCallback = partResponse -> {
-                            IOUtil.writeI2O(
-                                    fileOutputStream,
-                                    partResponse.getInputStream("part"),
-                                    partResponse.getStreamSize("part"),
-                                    progressWriter
-                            );
-                        };
+                        ResponseCallback responseCallback = partResponse -> IOUtil.writeI2O(
+                                fileOutputStream,
+                                partResponse.getInputStream("part"),
+                                partResponse.getStreamSize("part"),
+                                out
+                        );
                         partRequest.setResponseCallback(responseCallback);
                         partRequest.send(client).join();
                     }
-                    progressWriter.close();
+                    out.close();
                     fileOutputStream.close();
                 } catch (InterruptedException | IOException e) {
                     e.printStackTrace();
                 }
-            }).start();
+            });
+            thread.start();
 
             return response;
         } catch (IOException e) {
@@ -150,8 +158,7 @@ public class Server {
 
     private void sendParts(File downloadingFile, FSDirectory directory, String fileName, ProgressWriter progressWriter) {
         try {
-
-            List<Long> parts = fileStorage.splitFile(downloadingFile);
+            List<Long> parts = fileStorage.splitFile(downloadingFile, progressWriter);
             Long fileSize = downloadingFile.length();
             downloadingFile.delete();
             Map<ClientInfo, Set<Long>> destinations =
@@ -160,7 +167,7 @@ public class Server {
             for (ClientInfo client : destinations.keySet()) {
                 Set<Long> clientParts = destinations.get(client);
 
-                SRequest partRequest = new SRequest(Subject.RECEIVE_PART);
+                SRequest partRequest = new SRequest(S2CRequest.RECEIVE_PART);
                 Map<Long, String> hashList = new HashMap<>();
                 for (Long partId : clientParts) {
                     File partFile = fileStorage.getFileById(partId);
@@ -189,7 +196,7 @@ public class Server {
 
     private void refreshClients() {
         for (ClientInfo client : clientManager.getClientList()) {
-            SRequest partRequest = new SRequest(Subject.REFRESH_DIRECTORY);
+            SRequest partRequest = new SRequest(S2CRequest.REFRESH_DIRECTORY);
             partRequest.send(client);
         }
     }
@@ -212,9 +219,9 @@ public class Server {
         boolean result = fileSystem.renamePath(path, newName);
         if (result) {
             refreshClients();
-            return new SendingMessage(Subject.MOVE_PATH_OK);
+            return new SendingMessage(S2CResponse.MOVE_PATH_OK);
         } else
-            return new SendingMessage(Subject.MOVE_PATH_ALREADY_EXISTS);
+            return new SendingMessage(S2CResponse.MOVE_PATH_ALREADY_EXISTS);
     }
 
     SendingMessage createNewDirectory(ReceivingMessage request) {
@@ -223,9 +230,9 @@ public class Server {
         FSDirectory newDirectory = fileSystem.addDirectory(parent, name);
         if (newDirectory != null) {
             refreshClients();
-            return new SendingMessage(Subject.CREATE_NEW_DIRECTORY_OK);
+            return new SendingMessage(S2CResponse.CREATE_NEW_DIRECTORY_OK);
         } else
-            return new SendingMessage(Subject.CREATE_NEW_DIRECTORY_REPEATED);
+            return new SendingMessage(S2CResponse.CREATE_NEW_DIRECTORY_REPEATED);
     }
 
     public Runnable getFinalCallback() {

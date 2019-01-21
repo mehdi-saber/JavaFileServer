@@ -1,12 +1,12 @@
 package ir.ac.aut.ceit.ap.fileserver.client.view;
 
-import ir.ac.aut.ceit.ap.fileserver.network.ProgressCallback;
+import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressCallback;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
-class ProgressWindow extends JFrame {
+public class ProgressWindow extends JFrame {
     private ProgressCallback callback;
 
     private JLabel operationLabel;
@@ -58,7 +58,7 @@ class ProgressWindow extends JFrame {
         setVisible(true);
     }
 
-    ProgressCallback getCallback() {
+    public ProgressCallback getCallback() {
         return callback;
     }
 

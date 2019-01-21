@@ -3,8 +3,8 @@ package ir.ac.aut.ceit.ap.fileserver.server.security;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import ir.ac.aut.ceit.ap.fileserver.network.Message;
-import ir.ac.aut.ceit.ap.fileserver.network.SendingMessage;
-import ir.ac.aut.ceit.ap.fileserver.network.Subject;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.S2CResponse;
+import ir.ac.aut.ceit.ap.fileserver.network.request.SendingMessage;
 import ir.ac.aut.ceit.ap.fileserver.server.ClientInfo;
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -29,11 +29,11 @@ public class SecurityManager {
         for (User user : userList)
             if (user.getUsername().equals(username))
                 if (BCrypt.checkpw(password, user.getPassHash())) {
-                    SendingMessage tokenData = new SendingMessage(Subject.LOGIN_OK);
+                    SendingMessage tokenData = new SendingMessage(S2CResponse.LOGIN_OK);
                     tokenData.addParameter("token", getUserToken(client));
                     return tokenData;
                 }
-        return new SendingMessage(Subject.LOGIN_FAILED);
+        return new SendingMessage(S2CResponse.LOGIN_FAILED);
     }
 
     private String getUserToken(ClientInfo client) {

@@ -1,8 +1,9 @@
 package ir.ac.aut.ceit.ap.fileserver.server;
 
-import ir.ac.aut.ceit.ap.fileserver.network.ReceivingMessage;
-import ir.ac.aut.ceit.ap.fileserver.network.Router;
-import ir.ac.aut.ceit.ap.fileserver.network.SendingMessage;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.C2SRequest;
+import ir.ac.aut.ceit.ap.fileserver.network.receiver.ReceivingMessage;
+import ir.ac.aut.ceit.ap.fileserver.network.receiver.Router;
+import ir.ac.aut.ceit.ap.fileserver.network.request.SendingMessage;
 
 
 class SRouter implements Router {
@@ -13,7 +14,7 @@ class SRouter implements Router {
     }
 
     public SendingMessage route(ReceivingMessage request) {
-        switch (request.getTitle()) {
+        switch ((C2SRequest) request.getTitle()) {
             case LOGIN:
                 return server.loginUser(request);
             case FETCH_DIRECTORY:

@@ -1,10 +1,10 @@
 package ir.ac.aut.ceit.ap.fileserver.server;
 
-import ir.ac.aut.ceit.ap.fileserver.network.Request;
-import ir.ac.aut.ceit.ap.fileserver.network.Subject;
+import ir.ac.aut.ceit.ap.fileserver.network.request.Request;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.S2CRequest;
 
 class SRequest extends Request {
-    SRequest(Subject title) {
+    SRequest(S2CRequest title) {
         super(title);
     }
 

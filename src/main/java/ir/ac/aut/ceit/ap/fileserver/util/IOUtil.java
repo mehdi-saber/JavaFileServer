@@ -1,6 +1,6 @@
 package ir.ac.aut.ceit.ap.fileserver.util;
 
-import ir.ac.aut.ceit.ap.fileserver.network.ProgressCallback;
+import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressCallback;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,6 +8,7 @@ import java.io.OutputStream;
 
 public class IOUtil {
     private static final int defaultBufferSize = 16 * 1024;
+
     public static void writeI2O(OutputStream outputStream, InputStream inputStream,
                                 int bufferSize, Long size, ProgressCallback callback) {
         try {

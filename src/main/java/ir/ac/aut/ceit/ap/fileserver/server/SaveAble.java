@@ -5,22 +5,29 @@ import java.io.*;
 public interface SaveAble {
     Object getSaveObject();
 
-    File getSaveFile();
+    String getSaveFileName();
 
     default void save() {
         try {
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(getSaveFile()));
+            File saveFile = getSaveFileByName(getSaveFileName());
+            FileOutputStream fileOutputStream = new FileOutputStream(saveFile);
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
             objectOutputStream.writeObject(getSaveObject());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    default Object load() {
-        return loadFile(getSaveFile());
+    static File getSaveFileByName(String fileName) {
+        return new File("data" + File.separator + fileName);
     }
 
-    static Object loadFile(File saveFile) {
+    default Object load() {
+        return loadFile(getSaveFileName());
+    }
+
+    static Object loadFile(String fileName) {
+        File saveFile = getSaveFileByName(fileName);
         if (saveFile.exists()) {
             try {
                 ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(saveFile));

@@ -1,6 +1,6 @@
 package ir.ac.aut.ceit.ap.fileserver.client;
 
-import ir.ac.aut.ceit.ap.fileserver.network.Subject;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.C2SRequest;
 
 class CRequestFactory {
     private String serverAddress;
@@ -12,7 +12,7 @@ class CRequestFactory {
         this.port = port;
     }
 
-    CRequest create(Subject title) {
+    CRequest create(C2SRequest title) {
         return new CRequest(title, serverAddress, port, token);
     }
 

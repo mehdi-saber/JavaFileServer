@@ -2,6 +2,7 @@ package ir.ac.aut.ceit.ap.fileserver.server;
 
 import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import ir.ac.aut.ceit.ap.fileserver.file.FileStorage;
+import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressWriter;
 import ir.ac.aut.ceit.ap.fileserver.util.IOUtil;
 
 import java.io.File;
@@ -11,7 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-class SFileStorage extends FileStorage {
+class SFileStorage extends FileStorage implements SaveAble {
     private Long idCounter;
     private int splitSize;
 
@@ -30,7 +31,7 @@ class SFileStorage extends FileStorage {
         return getFileById(createId());
     }
 
-    List<Long> splitFile(File file) {
+    List<Long> splitFile(File file, ProgressWriter out) {
         try {
             List<Long> filesId = new ArrayList<>();
             FileInputStream fileInputStream = new FileInputStream(file);
@@ -44,7 +45,8 @@ class SFileStorage extends FileStorage {
                 IOUtil.writeI2O(
                         new FileOutputStream(partFile),
                         byteInputStream,
-                        (long) len
+                        (long) len,
+                        out
                 );
                 remain -= len;
                 filesId.add(Long.valueOf(partFile.getName()));
@@ -54,5 +56,15 @@ class SFileStorage extends FileStorage {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public Object getSaveObject() {
+        return idCounter;
+    }
+
+    @Override
+    public String getSaveFileName() {
+        return "fileStorage";
     }
 }

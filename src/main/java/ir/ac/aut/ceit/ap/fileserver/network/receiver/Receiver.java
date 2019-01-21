@@ -1,4 +1,8 @@
-package ir.ac.aut.ceit.ap.fileserver.network;
+package ir.ac.aut.ceit.ap.fileserver.network.receiver;
+
+import ir.ac.aut.ceit.ap.fileserver.network.request.SendingMessage;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.StreamingSubject;
+import ir.ac.aut.ceit.ap.fileserver.network.Transporter;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,7 +39,7 @@ public class Receiver extends ServerSocket implements Transporter {
             InputStream inputStream = socket.getInputStream();
             ReceivingMessage request = readMessage(socket);
             SendingMessage response = router.route(request);
-            outputStream.write((StreamsCommand.END_READING_STREAMS + "\n").getBytes());
+            outputStream.write((StreamingSubject.END + "\n").getBytes());
             writeMessage(response, outputStream);
             waitForStreamRequest(response, outputStream, inputStream);
             response.closeInputStreams();

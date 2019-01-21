@@ -7,10 +7,10 @@ import java.io.File;
 import java.util.HashSet;
 
 class SFileSystem extends FileSystem implements SaveAble {
-    private static final File saveFile = new File("data" + File.separator + "pathList");
+    private static final String saveFileName = "SFileStorage";
 
     SFileSystem() {
-        super((HashSet<FSPath>) SaveAble.loadFile(saveFile));
+        super((HashSet<FSPath>) SaveAble.loadFile(saveFileName));
     }
 
     @Override
@@ -19,7 +19,8 @@ class SFileSystem extends FileSystem implements SaveAble {
     }
 
     @Override
-    public File getSaveFile() {
-        return saveFile;
+    public String getSaveFileName() {
+        return saveFileName;
     }
+
 }

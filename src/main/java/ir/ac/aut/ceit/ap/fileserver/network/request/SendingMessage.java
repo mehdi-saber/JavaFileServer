@@ -1,4 +1,9 @@
-package ir.ac.aut.ceit.ap.fileserver.network;
+package ir.ac.aut.ceit.ap.fileserver.network.request;
+
+import ir.ac.aut.ceit.ap.fileserver.network.Message;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.Subject;
+import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressCallback;
+import ir.ac.aut.ceit.ap.fileserver.network.receiver.ResponseCallback;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,7 +23,7 @@ public class SendingMessage extends Message implements Serializable {
         progressCallbacks = new HashMap<>();
     }
 
-    InputStream getStream(String key) {
+    public InputStream getStream(String key) {
         return streams.get(key);
     }
 
@@ -27,7 +32,7 @@ public class SendingMessage extends Message implements Serializable {
         streams.put(key, inputStream);
     }
 
-    void closeInputStreams() throws IOException {
+    public void closeInputStreams() throws IOException {
         for (InputStream inputStream : streams.values())
             inputStream.close();
     }
@@ -36,7 +41,7 @@ public class SendingMessage extends Message implements Serializable {
         progressCallbacks.put(key, progressCallback);
     }
 
-    ProgressCallback getProgressCallback(String key) {
+    public ProgressCallback getProgressCallback(String key) {
         return progressCallbacks.get(key);
     }
 
