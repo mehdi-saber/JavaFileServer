@@ -166,7 +166,7 @@ public class Client {
                         new FileOutputStream(fileStorage.getFileById(key)),
                         digestInputStream, request.getStreamSize(keyStr)
                 );
-                String hash = DatatypeConverter.printHexBinary(messageDigest.digest());
+                String hash = IOUtil.printHexBinary(messageDigest.digest());
                 if (!hash.equals(hashList.get(key)))
                     return new SendingMessage(ResponseSubject.FAILED);
             }

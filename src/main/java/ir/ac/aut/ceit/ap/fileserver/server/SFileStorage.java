@@ -62,7 +62,7 @@ class SFileStorage extends FileStorage implements SaveAble {
                     //end of recent part
                     if (fileOutputStream != null) {
                         MessageDigest digest = inputStream.getMessageDigest();
-                        String hash = DatatypeConverter.printHexBinary(digest.digest());
+                        String hash = IOUtil.printHexBinary(digest.digest());
                         partsHash.put(Long.valueOf(partFile.getName()), hash);
                         digest.reset();
                         fileOutputStream.close();

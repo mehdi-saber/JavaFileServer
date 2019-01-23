@@ -2,7 +2,6 @@ package ir.ac.aut.ceit.ap.fileserver.util;
 
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressCallback;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -49,4 +48,11 @@ public class IOUtil {
         writeI2O(outputStream, inputStream, DEFAULT_BUFFER_SIZE, size, progressCallback);
     }
 
+    public static String printHexBinary(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X", b));
+        }
+        return sb.toString().toLowerCase();
+    }
 }

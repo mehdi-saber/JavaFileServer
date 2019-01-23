@@ -134,7 +134,7 @@ public class Server {
 
             //calculates downloaded file hash
             MessageDigest digest = digestInputStream.getMessageDigest();
-            String hash = DatatypeConverter.printHexBinary(digest.digest());
+            String hash = IOUtil.printHexBinary(digest.digest());
 
             SendingMessage response = new SendingMessage(ResponseSubject.OK);
 //            ProgressWriter progressWriter = new ProgressWriter();
