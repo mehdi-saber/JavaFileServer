@@ -13,13 +13,24 @@ import ir.ac.aut.ceit.ap.fileserver.network.receiver.ReceivingMessage;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.ResponseCallback;
 import ir.ac.aut.ceit.ap.fileserver.network.request.SendingMessage;
 import ir.ac.aut.ceit.ap.fileserver.server.security.SecurityManager;
+import ir.ac.aut.ceit.ap.fileserver.server.security.User;
+import ir.ac.aut.ceit.ap.fileserver.server.view.MainWindowController;
 import ir.ac.aut.ceit.ap.fileserver.util.IOUtil;
-import org.apache.commons.codec.digest.DigestUtils;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.*;
-import java.util.*;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
-
+/**
+ * Connects different sections of the server
+ */
 public class Server {
     private SFileSystem fileSystem;
     private Receiver receiver;
@@ -27,36 +38,60 @@ public class Server {
     private SFileStorage fileStorage;
     private ClientManager clientManager;
     private Runnable finalCallback;
-    private int port = 5050;
+    private MainWindowController mainWindowController;
 
+    /**
+     * Construct sections of server
+     */
     public Server()  {
-        try {
-            receiver = new Receiver(port, new SRouter(this));
-            fileSystem = new SFileSystem();
-            fileStorage = new SFileStorage(3 * 1024 * 1024);
-            clientManager = new ClientManager(2);
-            securityManager = new SecurityManager();
+        mainWindowController = new MainWindowController();
+        securityManager = new SecurityManager();
+        receiver = new Receiver(new SRouter(this, securityManager));
+        fileSystem = new SFileSystem();
+        fileStorage = new SFileStorage();
+        clientManager = new ClientManager();
 
-            finalCallback = () -> {
-                clientManager.save();
-                fileSystem.save();
-                fileStorage.save();
-            };
+        finalCallback = () -> {
+            clientManager.save();
+            fileSystem.save();
+            fileStorage.save();
+        };
+    }
+
+    public void start(int port, int splitSize, int redundancy) {
+        try {
+            fileStorage.setSplitSize(splitSize);
+            clientManager.setRedundancy(redundancy);
+            receiver.start(port);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    public void stop() {
+        receiver.stop();
+    }
+
+
+    /**
+     * Handles user's login request
+     *
+     * @param request user's request
+     * @return response
+     */
     SendingMessage loginUser(ReceivingMessage request) {
-        int listenPort = (int) request.getParameter("listenPort");
-        String username = (String) request.getParameter("username");
-        ClientInfo client = new ClientInfo(request.getSenderAddress(), listenPort, username);
-        SendingMessage response = securityManager.loginUser(request, client);
+        SendingMessage response = securityManager.loginUser(request);
         if (response.getTitle().equals(ResponseSubject.OK))
-            clientManager.addClient(client);
+            clientManager.addClient((ClientInfo) response.getParameter("client"));
         return response;
     }
 
+    /**
+     * Handles user's fetch directory request
+     *
+     * @param request user's request
+     * @return response
+     */
     SendingMessage fetchDirectory(Message request) {
         FSDirectory directory = (FSDirectory) request.getParameter("directory");
         SendingMessage response = new SendingMessage(ResponseSubject.OK);
@@ -64,10 +99,22 @@ public class Server {
         return response;
     }
 
+    /**
+     * Creates a temporary file
+     *
+     * @return The file
+     * @throws IOException Throws if fails
+     */
     private File createTempFile() throws IOException {
         return File.createTempFile("server", "dl");
     }
 
+    /**
+     * Handles upload requests
+     *
+     * @param request the request
+     * @return response
+     */
     SendingMessage upload(ReceivingMessage request) {
         try {
             String fileName = (String) request.getParameter("fileName");
@@ -76,27 +123,39 @@ public class Server {
             if (fileSystem.pathExists(directory, fileName, false))
                 return new SendingMessage(ResponseSubject.REPEATED);
 
+            //storing downloaded file
             File downloadingFile = createTempFile();
             Long fileSize = request.getStreamSize("file");
             FileOutputStream downloadOutput = new FileOutputStream(downloadingFile);
-            IOUtil.writeI2O(downloadOutput, request.getInputStream("file"), fileSize);
+            DigestInputStream digestInputStream =
+                    new DigestInputStream(request.getInputStream("file"), MessageDigest.getInstance("MD5"));
+            IOUtil.writeI2O(downloadOutput, digestInputStream, fileSize);
             downloadOutput.close();
 
+            //calculates downloaded file hash
+            MessageDigest digest = digestInputStream.getMessageDigest();
+            String hash = DatatypeConverter.printHexBinary(digest.digest());
+
             SendingMessage response = new SendingMessage(ResponseSubject.OK);
+            ProgressWriter progressWriter = new ProgressWriter();
+            //sends progress of uploading parts to clients
+            response.addInputStream("status", progressWriter.getPipedInputStream(), Long.MAX_VALUE);
 
-            PipedInputStream pipedInputStream = new PipedInputStream();
-            response.addInputStream("status", pipedInputStream, Long.MAX_VALUE);
-            ProgressWriter progressWriter = new ProgressWriter(new PipedOutputStream(pipedInputStream));
-
-            new Thread(() -> sendParts(downloadingFile, directory, fileName, progressWriter)).start();
+            new Thread(() -> sendParts(request, downloadingFile, progressWriter, hash)).start();
 
             return response;
-        } catch (IOException e) {
+        } catch (IOException | NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
         return null;
     }
 
+    /**
+     * Handles downloads requests
+     *
+     * @param request The request
+     * @return response
+     */
     SendingMessage download(ReceivingMessage request) {
         try {
 
@@ -107,11 +166,8 @@ public class Server {
 
             SendingMessage response = new SendingMessage(ResponseSubject.OK);
 
-            PipedOutputStream pipedOutputStream = new PipedOutputStream();
-            PipedInputStream pipedInputStream = new PipedInputStream(pipedOutputStream);
-            response.addInputStream("status", pipedInputStream, Long.MAX_VALUE);
-
-            ProgressWriter out = new ProgressWriter(pipedOutputStream);
+            ProgressWriter out = new ProgressWriter();
+            response.addInputStream("status", out.getPipedInputStream(), Long.MAX_VALUE);
 
             File downloadingFile = createTempFile();
             response.addInputStream("file", new FileInputStream(downloadingFile), fileSize);
@@ -150,44 +206,92 @@ public class Server {
         return null;
     }
 
-    private void sendParts(File downloadingFile, FSDirectory directory, String fileName, ProgressWriter progressWriter) {
+    /**
+     * Sends file parts to clients
+     *
+     * @param uploadRequest  upload request
+     * @param uploaded       client uploaded file
+     * @param progressWriter writes upload progress to uploading client
+     * @param hash           uploaded file hash
+     */
+    private void sendParts(ReceivingMessage uploadRequest, File uploaded, ProgressWriter progressWriter, String hash) {
         try {
-            List<Long> parts = fileStorage.splitFile(downloadingFile, progressWriter);
-            Long fileSize = downloadingFile.length();
-            downloadingFile.delete();
+            String fileName = (String) uploadRequest.getParameter("fileName");
+            FSDirectory directory = (FSDirectory) uploadRequest.getParameter("directory");
+            User user = (User) uploadRequest.getParameter("user");
+
+
+            Map<Long, String> parts = fileStorage.splitFile(uploaded, progressWriter);
+            Long fileSize = uploaded.length();
+            uploaded.delete();
+
             Map<ClientInfo, Set<Long>> destinations =
-                    clientManager.getDestinations(parts);
+                    clientManager.getDestinations(parts.keySet());
 
+            //sends parts to clients
             for (ClientInfo client : destinations.keySet()) {
-                Set<Long> clientParts = destinations.get(client);
-
-                SRequest partRequest = new SRequest(S2CRequest.RECEIVE_PART);
-                Map<Long, String> hashList = new HashMap<>();
-                for (Long partId : clientParts) {
-                    File partFile = fileStorage.getFileById(partId);
-                    String hash = DigestUtils.sha256Hex(new FileInputStream(partFile));
-                    hashList.put(partId, hash);
-                    partRequest.addInputStream(partId.toString(), new FileInputStream(partFile), partFile.length());
-                    partRequest.addProgressCallback(partId.toString(), progressWriter);
-                }
-                partRequest.addParameter("hashList", hashList);
-                partRequest.send(client).join();
+                ResponseSubject responseSubject = null;
+                //if client received parts with same hash returns OK else will keep sending parts
+                while (!ResponseSubject.OK.equals(responseSubject))
+                    responseSubject = sendAPart(client, destinations.get(client), parts, progressWriter);
             }
 
             progressWriter.close();
 
             clientManager.updateParts(destinations);
 
-            for (Long part : parts)
+            for (Long part : parts.keySet())
                 fileStorage.getFileById(part).delete();
-            fileSystem.addFile(directory, fileName, fileSize, new HashSet<>(parts));
+
+            //get now time
+            Date date = new Date();
+
+            //directory is parent directory of uploading file
+            fileSystem.addFile(directory, fileName, fileSize, parts, user.getUsername(), date, date, hash);
 
             refreshClients();
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * Sends client's parts
+     *
+     * @param client         The client
+     * @param parts          The parts
+     * @param hashes         parts hashes
+     * @param progressWriter writes progress of sending
+     * @return client response
+     * @throws InterruptedException throws if thread interrupts
+     */
+    private ResponseSubject sendAPart(ClientInfo client, Set<Long> parts,
+                                      Map<Long, String> hashes, ProgressWriter progressWriter) throws InterruptedException {
+        SRequest partRequest = new SRequest(S2CRequest.RECEIVE_PART);
+        for (Long partId : parts) {
+            File partFile = fileStorage.getFileById(partId);
+            try {
+                partRequest.addInputStream(partId.toString(), new FileInputStream(partFile), partFile.length());
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            partRequest.addProgressCallback(partId.toString(), progressWriter);
+        }
+        //adds hash of parts to request
+        partRequest.addParameter("hashList", hashes);
+
+        //locks subject when is in use
+        //subject is client's response title
+        AtomicReference<ResponseSubject> subject = new AtomicReference<>();
+        partRequest.setResponseCallback(response -> subject.set((ResponseSubject) response.getTitle()));
+        //waits to request thread ends(sends response)
+        partRequest.send(client).join();
+        return subject.get();
+    }
+
+    /**
+     * request clients to refresh their file
+     */
     private void refreshClients() {
         for (ClientInfo client : clientManager.getClientList()) {
             SRequest partRequest = new SRequest(S2CRequest.REFRESH_DIRECTORY);
@@ -229,9 +333,10 @@ public class Server {
         return finalCallback;
     }
 
-    private void removePath(FSPath path) {
+    SendingMessage remove(ReceivingMessage receivingMessage) {
+        FSPath path = (FSPath) receivingMessage.getParameter("path");
         Set<FSFile> files = fileSystem.remove(path);
-        Map<ClientInfo, Set<Long>> partMap = clientManager.getDeletingParts(files, fileSystem.getPathSet());
+        Map<ClientInfo, Set<Long>> partMap = clientManager.getDeletingParts(files, new HashSet<>(fileSystem.getPathSet()));
 
         for (Map.Entry<ClientInfo, Set<Long>> entry : partMap.entrySet()) {
             ClientInfo client = entry.getKey();
@@ -240,6 +345,8 @@ public class Server {
             request.addParameter("parts", parts);
             request.send(client);
         }
+        refreshClients();
+        return new SendingMessage(ResponseSubject.OK);
     }
 
     SendingMessage paste(ReceivingMessage request) {
@@ -255,7 +362,7 @@ public class Server {
             return new SendingMessage(ResponseSubject.SELF_PASTE);
 
         if (newPath != null)
-                return new SendingMessage(ResponseSubject.REPEATED);
+            return new SendingMessage(ResponseSubject.REPEATED);
 
         switch (operationType) {
             case CUT:
@@ -267,5 +374,12 @@ public class Server {
         }
         refreshClients();
         return new SendingMessage(ResponseSubject.OK);
+    }
+
+    SendingMessage fileDist(ReceivingMessage request) {
+        SendingMessage response = new SendingMessage(ResponseSubject.OK);
+        FSFile file = (FSFile) request.getParameter("file");
+        response.addParameter("nodes", clientManager.getDist(file));
+        return response;
     }
 }

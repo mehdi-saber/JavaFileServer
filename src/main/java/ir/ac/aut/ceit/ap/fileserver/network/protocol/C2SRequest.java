@@ -7,5 +7,7 @@ public enum  C2SRequest implements RequestSubject{
     DOWNLOAD_FILE,
     CREATE_NEW_DIRECTORY,
     FETCH_DIRECTORY,
+    DELETE_FILE,
+    FILE_DIST,
     PASTE
 }

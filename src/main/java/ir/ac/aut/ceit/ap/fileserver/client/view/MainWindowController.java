@@ -8,6 +8,7 @@ import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressCallback;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressReader;
 import ir.ac.aut.ceit.ap.fileserver.network.protocol.ResponseSubject;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.ResponseCallback;
+import ir.ac.aut.ceit.ap.fileserver.server.ClientInfo;
 
 import javax.swing.*;
 import java.awt.event.ActionListener;
@@ -15,7 +16,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -109,8 +110,8 @@ public class MainWindowController {
                 copyAL = e -> updatePasteInfo(selectedItem.getInfo(), PasteOperationType.COPY),
                 cutAL = e -> updatePasteInfo(selectedItem.getInfo(), PasteOperationType.CUT),
                 renameAL = e -> renamePath(selectedItem.getInfo()),
-                deleteAL = e -> client.delete(selectedItem.getInfo()),
-                propertiesAL = e -> new PropertiesJFrame(),
+                deleteAL = e -> delete(selectedItem.getInfo()),
+                propertiesAL = e -> properties(selectedItem.getInfo()),
                 uploadAL = e -> upload(openFileChoose(), curDir),
                 newFolderAL = e -> createNewFolder(),
                 pasteToCurAL = e -> paste(curDir),
@@ -159,6 +160,27 @@ public class MainWindowController {
                 deselectPath();
             }
         });
+    }
+
+    private void properties(FSPath path) {
+        ResponseCallback callback = response -> {
+            LinkedHashMap<Long, List<ClientInfo>> nodes =
+                    (LinkedHashMap<Long, List<ClientInfo>>) response.getParameter("nodes");
+            new PropertiesDialog(path, nodes, window);
+        };
+        if (path instanceof FSFile)
+            client.getNodeDist((FSFile) path, callback);
+        else if (path instanceof FSDirectory)
+            new PropertiesDialog(path, null, window);
+    }
+
+    private void delete(FSPath path) {
+        StringBuilder message = new StringBuilder("Do you want delete path \"");
+        message.append(path.getAbsolutePath());
+        message.append("\" ?");
+        int ans = JOptionPane.showConfirmDialog(window, message, "delete", JOptionPane.YES_NO_OPTION);
+        if (ans == JOptionPane.YES_OPTION)
+            client.delete(selectedItem.getInfo());
     }
 
     private void paste(FSDirectory directory) {
@@ -233,7 +255,8 @@ public class MainWindowController {
     public void showPathList(FSDirectory curDir, Set<FSPath> pathSet) {
         deselectPath();
         List<FSPath> pathList = new ArrayList<>(pathSet);
-        pathList.sort(Comparator.comparing(FSPath::getName));
+        //sorts file by names
+        pathList.sort((o1, o2) -> o1.getName().compareTo(o2.getName()));
         SwingUtilities.invokeLater(() -> {
             window.listPanel.removeAll();
             window.navPanel.urlField.setText(curDir.getAbsolutePath());

@@ -1,20 +1,34 @@
 package ir.ac.aut.ceit.ap.fileserver.server;
 
 import ir.ac.aut.ceit.ap.fileserver.network.protocol.C2SRequest;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.ResponseSubject;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.ReceivingMessage;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.Router;
 import ir.ac.aut.ceit.ap.fileserver.network.request.SendingMessage;
+import ir.ac.aut.ceit.ap.fileserver.server.security.SecurityManager;
+import ir.ac.aut.ceit.ap.fileserver.server.security.User;
 
 
 class SRouter implements Router {
     private Server server;
+    private SecurityManager securityManager;
 
-    SRouter(Server server) {
+    SRouter(Server server, SecurityManager securityManager) {
         this.server = server;
+        this.securityManager = securityManager;
     }
 
     public SendingMessage route(ReceivingMessage request) {
-        switch ((C2SRequest) request.getTitle()) {
+        C2SRequest title = (C2SRequest) request.getTitle();
+        if (!title.equals(C2SRequest.LOGIN)) {
+            String token = (String) request.getParameter("token");
+            if (token == null)
+                return new SendingMessage(ResponseSubject.FORBIDDEN);
+            String username = securityManager.getUsername(token);
+            User user = securityManager.getUserByUserName(username);
+            request.addParameter("user", user);
+        }
+        switch (title) {
             case LOGIN:
                 return server.loginUser(request);
             case FETCH_DIRECTORY:
@@ -29,6 +43,10 @@ class SRouter implements Router {
                 return server.createNewDirectory(request);
             case PASTE:
                 return server.paste(request);
+            case DELETE_FILE:
+                return server.remove(request);
+            case FILE_DIST:
+                return server.fileDist(request);
         }
         return null;
     }

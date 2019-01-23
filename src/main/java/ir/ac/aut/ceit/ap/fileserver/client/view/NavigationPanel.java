@@ -6,7 +6,6 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
-import java.io.IOException;
 
 class NavigationPanel extends JPanel {
     final JButton parentBtn;
@@ -45,13 +44,9 @@ class NavigationPanel extends JPanel {
         ));
         setBorder(new EmptyBorder(5, 5, 5, 5));
 
-        try {
-            parentBtn.setIcon(IconUtil.getImageIcon(20, 20, "dis-up.png"));
-            searchBtn.setIcon(IconUtil.getImageIcon(16, 16, "search.png"));
-            refreshBtn.setIcon(IconUtil.getImageIcon(16, 16, "refresh.png"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        parentBtn.setIcon(IconUtil.getImageIcon(20, 20, "dis-up.png"));
+        searchBtn.setIcon(IconUtil.getImageIcon(16, 16, "search.png"));
+        refreshBtn.setIcon(IconUtil.getImageIcon(16, 16, "refresh.png"));
         urlField.setEditable(false);
 
         GridBagConstraints c = new GridBagConstraints();
@@ -73,18 +68,10 @@ class NavigationPanel extends JPanel {
     }
 
     void disableParentBtn() {
-        try {
-            parentBtn.setIcon(IconUtil.getImageIcon(16, 16, "dis-up.png"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        parentBtn.setIcon(IconUtil.getImageIcon(16, 16, "dis-up.png"));
     }
 
     void enableParentBtn() {
-        try {
-            parentBtn.setIcon(IconUtil.getImageIcon(16, 16, "up.png"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        parentBtn.setIcon(IconUtil.getImageIcon(16, 16, "up.png"));
     }
 }

@@ -1,24 +1,34 @@
 package ir.ac.aut.ceit.ap.fileserver.util.icon;
 
+import ir.ac.aut.ceit.ap.fileserver.client.Client;
+import org.apache.commons.io.FileUtils;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
 
 public class IconUtil {
     private static Map<IconKey, ImageIcon> cacheMap = new HashMap<>();
 
-    public static ImageIcon getImageIcon(int w, int h, String iconName) throws IOException {
+    public static ImageIcon getImageIcon(int w, int h, String iconName) {
         IconKey cacheKey = new IconKey(w, h, iconName);
         ImageIcon cacheIcon = cacheMap.get(cacheKey);
         if (cacheIcon != null)
             return cacheIcon;
 
-        BufferedImage srcImg = ImageIO.read(new File("src/main/resources/icon/" + iconName));
+        BufferedImage srcImg = null;
+        try {
+            srcImg = ImageIO.read(Client.class.getResourceAsStream("/icon/" + iconName));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         BufferedImage resizedImg = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2 = resizedImg.createGraphics();

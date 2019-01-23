@@ -1,8 +1,9 @@
 package ir.ac.aut.ceit.ap.fileserver.network.receiver;
 
-import ir.ac.aut.ceit.ap.fileserver.network.request.SendingMessage;
-import ir.ac.aut.ceit.ap.fileserver.network.protocol.StreamingSubject;
 import ir.ac.aut.ceit.ap.fileserver.network.Transporter;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.ResponseSubject;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.StreamingSubject;
+import ir.ac.aut.ceit.ap.fileserver.network.request.SendingMessage;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,27 +11,28 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class Receiver extends ServerSocket implements Transporter {
+public class Receiver implements Transporter {
     private Router router;
-    private int listenPort;
     private boolean doReceive;
+    private ServerSocket serverSocket;
 
-    public Receiver(int port, Router router) throws IOException {
-        super(port);
+    public Receiver(Router router) {
         this.doReceive = true;
         this.router = router;
-        new Thread(this::waitForConnection).start();
     }
 
-    private void waitForConnection() {
-        while (doReceive) {
-            try {
-                Socket socket = accept();
-                new Thread(() -> handleReceive(socket)).start();
-            } catch (IOException e) {
-                e.printStackTrace();
+    public void start(int port) throws IOException {
+        serverSocket = new ServerSocket(port);
+        new Thread(() -> {
+            while (doReceive) {
+                try {
+                    Socket socket = serverSocket.accept();
+                    new Thread(() -> handleReceive(socket)).start();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-        }
+        }).start();
     }
 
     private void handleReceive(Socket socket) {
@@ -39,6 +41,8 @@ public class Receiver extends ServerSocket implements Transporter {
             InputStream inputStream = socket.getInputStream();
             ReceivingMessage request = readMessage(socket);
             SendingMessage response = router.route(request);
+            if (response == null)
+                response = new SendingMessage(ResponseSubject.FAILED);
             outputStream.write((StreamingSubject.END + "\n").getBytes());
             writeMessage(response, outputStream);
             waitForStreamRequest(response, outputStream, inputStream);
@@ -49,7 +53,7 @@ public class Receiver extends ServerSocket implements Transporter {
         }
     }
 
-    private void stopListener() {
+    public void stop() {
         doReceive = false;
     }
 

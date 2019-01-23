@@ -11,7 +11,6 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
-import java.io.IOException;
 
 class ListItem extends JPanel {
     private final JLabel nameLabel;
@@ -23,11 +22,7 @@ class ListItem extends JPanel {
 
         nameLabel = new JLabel(createName(true));
         JLabel image = new JLabel();
-        try {
-            image.setIcon(IconUtil.getImageIcon(32, 32, getIconPath()));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        image.setIcon(IconUtil.getImageIcon(32, 32, getIconPath()));
         image.setAlignmentX(CENTER_ALIGNMENT);
         nameLabel.setAlignmentX(CENTER_ALIGNMENT);
         add(image);
@@ -55,7 +50,7 @@ class ListItem extends JPanel {
                         return cat.getIconPath();
         } else
             return "folder.png";
-        return "files.png";
+        return "file.png";
     }
 
     void switchMode(boolean selected) {

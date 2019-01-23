@@ -5,27 +5,29 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ClientInfo implements Serializable {
-    private String username;
-    private Set<Long> parts;
-    private String address;
-    private int listenPort;
+    private final Long id;
+    private final String username;
+    private final Set<Long> parts;
+    private final String address;
+    private final int listenPort;
 
-    private ClientInfo(Set<Long> parts, String address, int listenPort, String username) {
+    private ClientInfo(Long id, Set<Long> parts, String address, int listenPort, String username) {
         this.username = username;
         this.parts = parts;
         this.address = address;
         this.listenPort = listenPort;
+        this.id = id;
     }
 
-    ClientInfo(String address, int listenPort, String username) {
-        this(new HashSet<>(), address, listenPort, username);
+    public ClientInfo(Long id, String address, int listenPort, String username) {
+        this(id, new HashSet<>(), address, listenPort, username);
     }
 
     public String getUsername() {
         return username;
     }
 
-    public Set<Long> getParts() {
+    Set<Long> getParts() {
         return parts;
     }
 
@@ -37,4 +39,7 @@ public class ClientInfo implements Serializable {
         return listenPort;
     }
 
+    public Long getId() {
+        return id;
+    }
 }

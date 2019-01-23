@@ -2,7 +2,9 @@ package ir.ac.aut.ceit.ap.fileserver.network.progress;
 
 import ir.ac.aut.ceit.ap.fileserver.network.protocol.ProgressSubject;
 
-import java.io.OutputStream;
+import java.io.IOException;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -10,13 +12,17 @@ import java.util.List;
 
 public class ProgressWriter implements ProgressCallback {
     private final List<Integer> doneList;
+    private final PipedInputStream pipedInputStream;
     private boolean close = false;
 
-    public ProgressWriter(OutputStream outputStream) {
+    public ProgressWriter() {
+        pipedInputStream = new PipedInputStream();
+
         this.doneList = new ArrayList<>();
         new Thread(() -> {
-            PrintWriter out = new PrintWriter(outputStream);
+            PrintWriter out = null;
             try {
+                out = new PrintWriter(new PipedOutputStream(pipedInputStream));
                 while (!close) {
                     synchronized (doneList) {
                         if (doneList.size() > 0) {
@@ -35,7 +41,7 @@ public class ProgressWriter implements ProgressCallback {
                     }
                     Thread.sleep(100);
                 }
-            } catch (InterruptedException e) {
+            } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
             out.println(ProgressSubject.END.name());
@@ -52,5 +58,9 @@ public class ProgressWriter implements ProgressCallback {
 
     public void close() {
         close = true;
+    }
+
+    public PipedInputStream getPipedInputStream() {
+        return pipedInputStream;
     }
 }

@@ -17,7 +17,12 @@ import ir.ac.aut.ceit.ap.fileserver.network.receiver.ResponseCallback;
 import ir.ac.aut.ceit.ap.fileserver.network.request.SendingMessage;
 import ir.ac.aut.ceit.ap.fileserver.util.IOUtil;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.*;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -33,13 +38,20 @@ public class Client {
         this.finalCallback=finalCallback;
         this.listenPort = listenPort;
         fileStorage = new CFileStorage(this.listenPort);
+        receiver = new Receiver(new CRouter(this));
         new ConnectWindowController(this);
+    }
+
+    public void getNodeDist(FSFile file, ResponseCallback callback) {
+        CRequest request = requestFactory.create(C2SRequest.FILE_DIST);
+        request.addParameter("file", (file));
+        request.setResponseCallback(callback);
+        request.send();
     }
 
     public void openMainWindow() {
         mainWindowController = new MainWindowController(this,finalCallback);
         fetchDirectory(FSDirectory.ROOT);
-//        mainWindowController.upload(new File("/Users/mehdi-saber/Desktop/1.mp4"), FSDirectory.ROOT);//todo:remove
     }
     public boolean connectToServer(String serverAddress, int serverPort, String username, String password) {
         requestFactory = new CRequestFactory(serverAddress, serverPort);
@@ -53,8 +65,8 @@ public class Client {
             try {
                 if (response.getTitle().equals(ResponseSubject.OK)) {
                     String token = (String) response.getParameter("token");
+                    receiver.start(listenPort);
                     requestFactory.setToken(token);
-                    receiver = new Receiver(listenPort, new CRouter(this));
                     connected.set(true);
                 } else if (response.getTitle().equals(ResponseSubject.FORBIDDEN))
                     connected.set(false);
@@ -102,7 +114,9 @@ public class Client {
     }
 
     public void delete(FSPath path) {
-        //        todo:implement
+        CRequest request = requestFactory.create(C2SRequest.DELETE_FILE);
+        request.addParameter("path", path);
+        request.send();
     }
 
     public void upload(File file, FSDirectory directory, ProgressCallback progressCallback, ResponseCallback uiCallback) {
@@ -142,13 +156,22 @@ public class Client {
 
     SendingMessage fetchPart(ReceivingMessage request) {
         try {
-            for (String key : request.getStreamSize().keySet())
+            Map<Long, String> hashList = (Map<Long, String>) request.getParameter("hashList");
+            for (String keyStr : request.getStreamSize().keySet()) {
+                Long key = Long.valueOf(keyStr);
+                MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+                DigestInputStream digestInputStream =
+                        new DigestInputStream(request.getInputStream(keyStr), messageDigest);
                 IOUtil.writeI2O(
-                        new FileOutputStream(fileStorage.getFileById(Long.valueOf(key))),
-                        request.getInputStream(key), request.getStreamSize(key)
+                        new FileOutputStream(fileStorage.getFileById(key)),
+                        digestInputStream, request.getStreamSize(keyStr)
                 );
+                String hash = DatatypeConverter.printHexBinary(messageDigest.digest());
+                if (!hash.equals(hashList.get(key)))
+                    return new SendingMessage(ResponseSubject.FAILED);
+            }
             return new SendingMessage(ResponseSubject.OK);
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException | NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
         return null;

@@ -5,26 +5,27 @@ import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
 import ir.ac.aut.ceit.ap.fileserver.file.SaveAble;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 class SFileSystem implements SaveAble {
-    private Set<FSPath> pathSet;
+    private List<FSPath> pathSet;
 
     SFileSystem() {
-        Set<FSPath> pathList = (Set<FSPath>) load();
+        List<FSPath> pathList = (List<FSPath>) load();
         if (pathList != null)
             this.pathSet = pathList;
         else
-            this.pathSet = new HashSet<>();
+            this.pathSet = new ArrayList<>();
     }
 
 
-    FSFile addFile(FSDirectory parent, String name, Long size, Set<Long> parts) {
+    FSFile addFile(FSDirectory parent, String name, Long size, Map<Long, String> parts,
+                   String creator, Date createdDate, Date lastAccessDate,String hash) {
         if (pathExists(parent, name, false) || !pathExists(parent))
             return null;
-        FSFile file = new FSFile(parent, name,size, parts);
+        FSFile file = new FSFile(parent, name, size, parts, creator, createdDate,hash);
+        file.setLastAccessDate(lastAccessDate);
         pathSet.add(file);
         return file;
     }
@@ -66,9 +67,10 @@ class SFileSystem implements SaveAble {
         return getPath(path.getParent(), path.getName(), path instanceof FSDirectory);
     }
 
-    void updateRefrences() {
+    void updateReferences() {
         for (FSPath path : pathSet)
             path.setParent((FSDirectory) getPath(path.getParent()));
+        pathSet = new ArrayList<>(pathSet);
     }
 
     FSPath getPath(FSDirectory parent, String name, boolean isDirectory) {
@@ -81,24 +83,29 @@ class SFileSystem implements SaveAble {
                 ).findFirst().orElse(null);
     }
 
-    Set<FSFile> remove(FSPath thePath) {
-        if (!pathExists(thePath))
+    Set<FSFile> remove(FSPath path) {
+        if (!pathExists(path))
             return null;
         Set<FSFile> deletingFiles = new HashSet<>();
-        if (thePath instanceof FSDirectory) {
-            FSDirectory directory = (FSDirectory) thePath;
-            for (FSPath path : listSubPaths(directory))
-                remove(path);
+
+        if (path instanceof FSDirectory) {
+            FSDirectory directory = (FSDirectory) path;
+            for (FSPath subPath : listSubPaths(directory))
+                remove(subPath);
         }
-        pathSet.remove(thePath);
-        if (thePath instanceof FSFile)
-            deletingFiles.add((FSFile) thePath);
+
+        updateReferences();
+        pathSet.remove(path);
+
+        if (path instanceof FSFile)
+            deletingFiles.add((FSFile) path);
         return deletingFiles;
     }
 
     boolean renamePath(FSPath thePath, String newName) {
         if (!pathExists(thePath) || pathExists(thePath.getParent(), newName, thePath instanceof FSDirectory))
             return false;
+        updateReferences();
         getPath(thePath).setName(newName);
         return true;
     }
@@ -107,7 +114,7 @@ class SFileSystem implements SaveAble {
         if (!pathExists(path) || !pathExists(newDirectory) ||
                 pathExists(newDirectory, path.getName(), path instanceof FSDirectory))
             return false;
-        updateRefrences();
+        updateReferences();
         getPath(path).setParent(newDirectory);
         return true;
     }
@@ -128,12 +135,13 @@ class SFileSystem implements SaveAble {
             return addDirectory(parent, path.getName());
         else if (path instanceof FSFile) {
             FSFile file = (FSFile) path;
-            return addFile(parent, file.getName(), file.getSize(), file.getParts());
+            return addFile(parent, file.getName(), file.getSize(), file.getParts(),
+                    file.getCreator(), file.getCreatedDate(), file.getLastAccessDate(),file.getHash());
         }
         return null;
     }
 
-    public Set<FSPath> getPathSet() {
+    List<FSPath> getPathSet() {
         return pathSet;
     }
 

@@ -70,10 +70,10 @@ import java.awt.*;
         c.gridx = 2;
         add(loginBtn, c);
 
-        setSize(250, 140);
+        setSize(250, 160);
         setResizable(false);
         setLocationRelativeTo(null);
-        setUndecorated(true);
+//        setUndecorated(true);
         setVisible(true);
     }
 }
