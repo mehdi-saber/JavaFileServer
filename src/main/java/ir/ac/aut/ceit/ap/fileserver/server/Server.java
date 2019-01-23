@@ -17,7 +17,6 @@ import ir.ac.aut.ceit.ap.fileserver.server.security.User;
 import ir.ac.aut.ceit.ap.fileserver.server.view.MainWindowController;
 import ir.ac.aut.ceit.ap.fileserver.util.IOUtil;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
@@ -137,11 +136,11 @@ public class Server {
             String hash = IOUtil.printHexBinary(digest.digest());
 
             SendingMessage response = new SendingMessage(ResponseSubject.OK);
-//            ProgressWriter progressWriter = new ProgressWriter();
+            ProgressWriter progressWriter = new ProgressWriter();
             //sends progress of uploading parts to clients
-//            response.addInputStream("status", progressWriter.getPipedInputStream(), Long.MAX_VALUE);
+            response.addInputStream("status", progressWriter.getPipedInputStream(), Long.MAX_VALUE);
 
-            new Thread(() -> sendParts(request, downloadingFile, /*progressWriter*/null, hash)).start();
+            new Thread(() -> sendParts(request, downloadingFile, progressWriter, hash)).start();
 
             return response;
         } catch (IOException | NoSuchAlgorithmException e) {
@@ -166,8 +165,8 @@ public class Server {
 
             SendingMessage response = new SendingMessage(ResponseSubject.OK);
 
-//            ProgressWriter out = new ProgressWriter();
-//            response.addInputStream("status", out.getPipedInputStream(), Long.MAX_VALUE);
+            ProgressWriter out = new ProgressWriter();
+            response.addInputStream("status", out.getPipedInputStream(), Long.MAX_VALUE);
 
             File downloadingFile = createTempFile();
             response.addInputStream("file", new FileInputStream(downloadingFile), fileSize);
@@ -186,12 +185,12 @@ public class Server {
                                 fileOutputStream,
                                 partResponse.getInputStream("part"),
                                 partResponse.getStreamSize("part"),
-                                /*out*/ null
+                                out
                         );
                         partRequest.setResponseCallback(responseCallback);
                         partRequest.send(client).join();
                     }
-//                    out.close();
+                    out.close();
                     fileOutputStream.close();
                 } catch (InterruptedException | IOException e) {
                     e.printStackTrace();

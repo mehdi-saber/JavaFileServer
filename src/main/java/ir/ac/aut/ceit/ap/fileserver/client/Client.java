@@ -17,7 +17,6 @@ import ir.ac.aut.ceit.ap.fileserver.network.receiver.ResponseCallback;
 import ir.ac.aut.ceit.ap.fileserver.network.request.SendingMessage;
 import ir.ac.aut.ceit.ap.fileserver.util.IOUtil;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;

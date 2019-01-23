@@ -5,7 +5,6 @@ import ir.ac.aut.ceit.ap.fileserver.file.SaveAble;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressCallback;
 import ir.ac.aut.ceit.ap.fileserver.util.IOUtil;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -86,7 +85,7 @@ class SFileStorage extends FileStorage implements SaveAble {
         return null;
     }
 
-    public void setSplitSize(int splitSize) {
+    void setSplitSize(int splitSize) {
         this.splitSize = splitSize;
     }
 
