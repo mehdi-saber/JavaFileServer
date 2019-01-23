@@ -10,7 +10,7 @@ class MainWindow extends JFrame {
     final JButton startBtn;
     final JButton stopBtn;
 
-    MainWindow() throws HeadlessException {
+    MainWindow() {
         setLayout(new GridBagLayout());
         GridBagConstraints c =new GridBagConstraints();
 
@@ -22,18 +22,26 @@ class MainWindow extends JFrame {
         add(portTxt,c);
 
         c.gridy=1;
-        c.gridy
-        add(new JLabel("Split size(mB):"));
+        c.gridx = 0;
+        add(new JLabel("Split size(mB):"), c);
         splitTxt = new JTextField();
-        add(splitTxt);
-        add(new JLabel("redundancy:"));
-        redundancyTxt = new JTextField();
-        add(redundancyTxt);
+        c.gridx = 1;
+        add(splitTxt, c);
 
+        c.gridy = 2;
+        c.gridx = 0;
+        add(new JLabel("redundancy:"), c);
+        c.gridx = 1;
+        redundancyTxt = new JTextField();
+        add(redundancyTxt, c);
+
+        c.gridy = 3;
+        c.gridx = 0;
         startBtn = new JButton("start");
-        add(startBtn);
+        add(startBtn, c);
         stopBtn = new JButton("stop");
-        add(stopBtn);
+        c.gridx = 1;
+        add(stopBtn, c);
 
         setupJFrame();
     }
