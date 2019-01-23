@@ -137,11 +137,11 @@ public class Server {
             String hash = DatatypeConverter.printHexBinary(digest.digest());
 
             SendingMessage response = new SendingMessage(ResponseSubject.OK);
-            ProgressWriter progressWriter = new ProgressWriter();
+//            ProgressWriter progressWriter = new ProgressWriter();
             //sends progress of uploading parts to clients
-            response.addInputStream("status", progressWriter.getPipedInputStream(), Long.MAX_VALUE);
+//            response.addInputStream("status", progressWriter.getPipedInputStream(), Long.MAX_VALUE);
 
-            new Thread(() -> sendParts(request, downloadingFile, progressWriter, hash)).start();
+            new Thread(() -> sendParts(request, downloadingFile, /*progressWriter*/null, hash)).start();
 
             return response;
         } catch (IOException | NoSuchAlgorithmException e) {
@@ -166,8 +166,8 @@ public class Server {
 
             SendingMessage response = new SendingMessage(ResponseSubject.OK);
 
-            ProgressWriter out = new ProgressWriter();
-            response.addInputStream("status", out.getPipedInputStream(), Long.MAX_VALUE);
+//            ProgressWriter out = new ProgressWriter();
+//            response.addInputStream("status", out.getPipedInputStream(), Long.MAX_VALUE);
 
             File downloadingFile = createTempFile();
             response.addInputStream("file", new FileInputStream(downloadingFile), fileSize);
@@ -186,12 +186,12 @@ public class Server {
                                 fileOutputStream,
                                 partResponse.getInputStream("part"),
                                 partResponse.getStreamSize("part"),
-                                out
+                                /*out*/ null
                         );
                         partRequest.setResponseCallback(responseCallback);
                         partRequest.send(client).join();
                     }
-                    out.close();
+//                    out.close();
                     fileOutputStream.close();
                 } catch (InterruptedException | IOException e) {
                     e.printStackTrace();
