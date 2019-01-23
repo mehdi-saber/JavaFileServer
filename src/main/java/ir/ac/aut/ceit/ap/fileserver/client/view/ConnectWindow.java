@@ -12,6 +12,7 @@ import java.awt.*;
     JButton loginBtn;
 
     public ConnectWindow() {
+        super("Connect to server");
         setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         c.anchor = GridBagConstraints.LINE_START;
