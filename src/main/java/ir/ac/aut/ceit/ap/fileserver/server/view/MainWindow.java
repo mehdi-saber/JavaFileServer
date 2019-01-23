@@ -25,6 +25,7 @@ class MainWindow extends JFrame {
         c.gridx=0;
         add(new JLabel("Server port:"),c);
         portTxt = new JTextField(10);
+        portTxt.setText("5050");
         c.gridx=1;
         add(portTxt,c);
 
@@ -32,6 +33,7 @@ class MainWindow extends JFrame {
         c.gridx = 0;
         add(new JLabel("Split size(mB):"), c);
         splitTxt = new JTextField(10);
+        splitTxt.setText("3.5");
         c.gridx = 1;
         add(splitTxt, c);
 
@@ -40,6 +42,7 @@ class MainWindow extends JFrame {
         add(new JLabel("redundancy:"), c);
         c.gridx = 1;
         redundancyTxt = new JTextField(10);
+        redundancyTxt.setText("2");
         add(redundancyTxt, c);
 
         c.gridy = 3;

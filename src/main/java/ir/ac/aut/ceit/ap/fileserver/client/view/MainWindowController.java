@@ -5,7 +5,6 @@ import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressCallback;
-import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressReader;
 import ir.ac.aut.ceit.ap.fileserver.network.protocol.ResponseSubject;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.ResponseCallback;
 import ir.ac.aut.ceit.ap.fileserver.server.ClientInfo;
@@ -212,11 +211,7 @@ public class MainWindowController {
                 closeProgressWindow(progressWindow);
             } else {
                 SwingUtilities.invokeLater(() -> progressWindow.setOperationName("Server Distributing File"));
-                try {
-                    new ProgressReader(response.getInputStream("status"), progressWindow.getCallback()).start().join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                //                    new ProgressReader(response.getInputStream("status"), progressWindow.getCallback()).start().join();
                 closeProgressWindow(progressWindow);
             }
         };
@@ -232,11 +227,7 @@ public class MainWindowController {
         ProgressCallback progressCallback = progressWindow.getCallback();
         window.setEnabled(false);
         ResponseCallback responseCallback = response -> {
-            try {
-                new ProgressReader(response.getInputStream("status"), progressCallback).start().join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            //                new ProgressReader(response.getInputStream("status"), progressCallback).start().join();
             SwingUtilities.invokeLater(() -> {
                 progressWindow.setOperationName("Downloading");
             });

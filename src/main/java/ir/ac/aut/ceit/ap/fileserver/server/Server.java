@@ -44,7 +44,7 @@ public class Server {
      * Construct sections of server
      */
     public Server()  {
-        mainWindowController = new MainWindowController();
+        mainWindowController = new MainWindowController(this);
         securityManager = new SecurityManager();
         receiver = new Receiver(new SRouter(this, securityManager));
         fileSystem = new SFileSystem();

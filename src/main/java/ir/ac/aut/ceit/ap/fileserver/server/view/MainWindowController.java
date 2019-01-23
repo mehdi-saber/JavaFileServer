@@ -6,12 +6,13 @@ public class MainWindowController {
     private MainWindow window;
     private Server server;
 
-    public MainWindowController() {
+    public MainWindowController(Server server) {
         window = new MainWindow();
+        this.server = server;
 
         window.startBtn.addActionListener(e -> {
             int port = Integer.valueOf(window.portTxt.getText());
-            int splitSize = Integer.valueOf(window.splitTxt.getText()) * 1024 * 1024;
+            int splitSize = ((Double) (Double.valueOf(window.splitTxt.getText()) * 1024 * 1024)).intValue();
             int redundancy = Integer.valueOf(window.redundancyTxt.getText());
             server.start(port, splitSize, redundancy);
         });
