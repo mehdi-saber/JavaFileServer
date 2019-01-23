@@ -48,17 +48,4 @@ public class IOUtil {
     public static void writeI2O(OutputStream outputStream, InputStream inputStream, Long size,ProgressCallback progressCallback) {
         writeI2O(outputStream, inputStream, DEFAULT_BUFFER_SIZE, size, progressCallback);
     }
-
-    public static String readLineNoBuffer(InputStream inputStream) {
-        try {
-            StringBuilder keyBuilder = new StringBuilder();
-            int c;
-            while ((c = inputStream.read()) != -1 && c != '\n')
-                keyBuilder.append((char) c);
-            return keyBuilder.toString();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 }
