@@ -26,8 +26,8 @@ public interface Transporter {
     default void waitForStreamRequest(SendingMessage request,
                                       OutputStream outputStream,
                                       InputStream inputStream) {
+        Scanner scanner = new Scanner(inputStream);
         while (true) {
-            Scanner scanner = new Scanner(inputStream);
             StreamingSubject command = StreamingSubject.valueOf(scanner.nextLine());
             if (command.equals(StreamingSubject.END))
                 break;
