@@ -1,10 +1,11 @@
 package ir.ac.aut.ceit.ap.fileserver.network.request;
 
+import ir.ac.aut.ceit.ap.fileserver.network.Transporter;
 import ir.ac.aut.ceit.ap.fileserver.network.protocol.RequestSubject;
 import ir.ac.aut.ceit.ap.fileserver.network.protocol.StreamingSubject;
-import ir.ac.aut.ceit.ap.fileserver.network.Transporter;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.ReceivingMessage;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -21,10 +22,11 @@ abstract public class Request extends SendingMessage implements Transporter {
                 Socket socket = new Socket(address, port);
                 OutputStream outputStream = socket.getOutputStream();
                 InputStream inputStream = socket.getInputStream();
+
                 writeMessage(this, outputStream);
                 waitForStreamRequest(this, outputStream, inputStream);
                 closeInputStreams();
-                ReceivingMessage receivingMessage = readMessage(socket);
+                ReceivingMessage receivingMessage = readMessage(outputStream, inputStream, socket.getInetAddress().getHostAddress());
                 if (responseCallback != null)
                     responseCallback.call(receivingMessage);
                 outputStream.write((StreamingSubject.END + "\n").getBytes());

@@ -24,13 +24,14 @@ public class Receiver implements Transporter {
     public void start(int port) throws IOException {
         serverSocket = new ServerSocket(port);
         new Thread(() -> {
-            while (doReceive) {
-                try {
+            try {
+                while (doReceive) {
                     Socket socket = serverSocket.accept();
                     new Thread(() -> handleReceive(socket)).start();
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
+                serverSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }).start();
     }
@@ -39,7 +40,8 @@ public class Receiver implements Transporter {
         try {
             OutputStream outputStream = socket.getOutputStream();
             InputStream inputStream = socket.getInputStream();
-            ReceivingMessage request = readMessage(socket);
+
+            ReceivingMessage request = readMessage(outputStream, inputStream, socket.getInetAddress().getHostAddress());
             SendingMessage response = router.route(request);
             if (response == null)
                 response = new SendingMessage(ResponseSubject.FAILED);

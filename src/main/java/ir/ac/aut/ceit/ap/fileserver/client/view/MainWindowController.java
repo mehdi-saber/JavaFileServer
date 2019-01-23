@@ -273,7 +273,7 @@ public class MainWindowController {
                     @Override
                     public void mousePressed(MouseEvent e) {
                         super.mousePressed(e);
-                        if (e.isPopupTrigger())
+                        if (e.isMetaDown())
                             window.pathPopupMenu.show(e.getComponent(), e.getX(), e.getY());
                         selectPath(item);
                     }

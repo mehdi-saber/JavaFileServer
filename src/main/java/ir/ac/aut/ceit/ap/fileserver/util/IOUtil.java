@@ -2,6 +2,7 @@ package ir.ac.aut.ceit.ap.fileserver.util;
 
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressCallback;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -54,5 +55,19 @@ public class IOUtil {
             sb.append(String.format("%02X", b));
         }
         return sb.toString().toLowerCase();
+    }
+
+    public static String readLineNoBuffer(InputStream inputStream) {
+        try {
+            StringBuilder keyBuilder = new StringBuilder();
+            int c;
+            while ((c = inputStream.read()) != -1 && c != '\n')
+                if (c != '\r')
+                    keyBuilder.append((char) c);
+            return keyBuilder.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
