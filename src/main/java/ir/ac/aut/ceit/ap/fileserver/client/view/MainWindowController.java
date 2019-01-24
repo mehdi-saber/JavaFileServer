@@ -145,8 +145,16 @@ public class MainWindowController {
         window.listPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                super.mouseClicked(e);
+                super.mousePressed(e);
                 if (e.isPopupTrigger())
+                    window.dirPopupMenu.show(e.getComponent(), e.getX(), e.getY());
+                deselectPath();
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e){
+                super.mouseReleased(e);
+                if(e.isPopupTrigger())
                     window.dirPopupMenu.show(e.getComponent(), e.getX(), e.getY());
                 deselectPath();
             }
