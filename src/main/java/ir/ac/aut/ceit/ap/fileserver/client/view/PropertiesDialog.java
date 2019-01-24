@@ -59,7 +59,6 @@ class PropertiesDialog extends JDialog {
         }
         setSize(300, 250);
         setLocationRelativeTo(null);
-        setResizable(false);
         setVisible(true);
     }
 

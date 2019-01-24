@@ -91,7 +91,7 @@ public class Client {
             request.addParameter("password", password);
             request.addParameter("listenPort", listenPort);
             //free space in GB
-            int space = (int) (new File("data/").getUsableSpace() / 1024 / 1024);
+            int space = (int) (new File("data/").getUsableSpace() / 1024 / 1024/1024);
             request.addParameter("space", space);
 
             AtomicBoolean connected = new AtomicBoolean(false);
@@ -288,7 +288,7 @@ public class Client {
      * @param directory the directory
      */
     public void search(FSDirectory directory) {
-        //        todo:implement
+
     }
 
     /**
