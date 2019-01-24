@@ -18,11 +18,11 @@
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
-                    <finalName>Server</finalName>
+                    <finalName>Client</finalName>
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>ir.ac.aut.ceit.ap.fileserver.server.Server</mainClass>
+                            <mainClass>ir.ac.aut.ceit.ap.fileserver.client.Client</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -75,15 +75,15 @@
             <artifactId>jbcrypt</artifactId>
             <version>0.3m</version>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>uk.co.caprica</groupId>
             <artifactId>vlcj</artifactId>
             <version>3.6.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.icepdf.os</groupId>
-            <artifactId>icepdf-viewer</artifactId>
-            <version>6.2.2</version>
-        </dependency>
+        </dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>org.icepdf.os</groupId>-->
+            <!--<artifactId>icepdf-viewer</artifactId>-->
+            <!--<version>6.2.2</version>-->
+        <!--</dependency>-->
     </dependencies>
 </project>

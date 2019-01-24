@@ -4,15 +4,10 @@ import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FileCategory;
 import ir.ac.aut.ceit.ap.fileserver.util.icon.IconUtil;
 import org.apache.commons.io.FileUtils;
-import org.icepdf.ri.common.SwingController;
-import org.icepdf.ri.common.SwingViewBuilder;
-import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -51,19 +46,19 @@ class PreviewDialog extends JDialog {
                 c.weightx = c.weighty = 1;
                 add(imageBox);
             } else if (isMp4) {
-                EmbeddedMediaPlayerComponent mediaPlayerComponent;
-                mediaPlayerComponent = new EmbeddedMediaPlayerComponent();
-                setContentPane(mediaPlayerComponent);
-                mediaPlayerComponent.getMediaPlayer().playMedia(previewFile.getAbsolutePath());
-//                mediaPlayerComponent.getVideoSurface().getSize()
-                setBounds(100, 100, 600, 400);
-                addWindowListener(new WindowAdapter() {
-                    @Override
-                    public void windowClosing(WindowEvent e) {
-                        mediaPlayerComponent.release();
-                        System.exit(0);
-                    }
-                });
+//                EmbeddedMediaPlayerComponent mediaPlayerComponent;
+//                mediaPlayerComponent = new EmbeddedMediaPlayerComponent();
+//                setContentPane(mediaPlayerComponent);
+//                mediaPlayerComponent.getMediaPlayer().playMedia(previewFile.getAbsolutePath());
+////                mediaPlayerComponent.getVideoSurface().getSize()
+//                setBounds(100, 100, 600, 400);
+//                addWindowListener(new WindowAdapter() {
+//                    @Override
+//                    public void windowClosing(WindowEvent e) {
+//                        mediaPlayerComponent.release();
+//                        System.exit(0);
+//                    }
+//                });
             }
 
 
