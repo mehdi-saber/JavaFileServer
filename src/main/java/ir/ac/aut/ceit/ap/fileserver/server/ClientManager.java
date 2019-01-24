@@ -38,29 +38,35 @@ class ClientManager implements SaveAble {
     /**
      * Decide about distribution of parts
      *
-     * @param parts Parts
+     * @param partSet Parts
      * @return Distribution
      */
-    Map<ClientInfo, Set<Long>> getDestinations(Set<Long> parts) {
+    Map<ClientInfo, Set<Long>> getDestinations(Set<Long> partSet) {
         Map<ClientInfo, Set<Long>> distribution = new HashMap<>();
 
-        int sum = clientList.stream().mapToInt(ClientInfo::getSpace).sum();
-        int chosenIndex = 0;
-        int clientRemain = 0;
-        for (int i = 0; i < redundancy; i++)
-            for (Long partId : parts) {
-                chosenIndex = clientList.size() == chosenIndex ? 0 : chosenIndex;
-                ClientInfo clientInfo = clientList.get(chosenIndex);
-                if (clientRemain == 0) {
-                    clientRemain = ((Double) Math.ceil((double) clientInfo.getSpace() / sum)).intValue();
-                    clientRemain = Math.min(clientRemain, parts.size());
-                }
+        List<Long> parts = new ArrayList<>(partSet);
+        parts.addAll(new ArrayList<>(parts));
 
-                //add a Hash set for client list if doesn't exists
-                distribution.computeIfAbsent(clientInfo, key -> new HashSet<>());
-                distribution.get(clientInfo).add(partId);
-                clientRemain--;
+        int sum = clientList.stream().mapToInt(ClientInfo::getSpace).sum();
+        int chosenIndex = -1;
+        int clientRemain = 0;
+        ClientInfo clientInfo=null;
+        for (Long partId : parts) {
+            if (clientRemain == 0) {
+                chosenIndex++;
+                chosenIndex = clientList.size() == chosenIndex ? 0 : chosenIndex;
+                clientInfo = clientList.get(chosenIndex);
+                if (redundancy >= clientList.size())
+                    clientRemain = ((Double) Math.ceil((double) clientInfo.getSpace() / sum * partSet.size())).intValue();
+                else
+                    clientRemain = parts.size();
             }
+
+            //add a Hash set for client list if doesn't exists
+            distribution.computeIfAbsent(clientInfo, key -> new HashSet<>());
+            distribution.get(clientInfo).add(partId);
+            clientRemain--;
+        }
         return distribution;
     }
 

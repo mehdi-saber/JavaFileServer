@@ -4,6 +4,7 @@ import ir.ac.aut.ceit.ap.fileserver.client.Client;
 
 import javax.swing.*;
 import java.awt.event.ActionListener;
+import java.util.Random;
 
 /**
  * connects connection window to client
@@ -16,7 +17,8 @@ public class ConnectWindowController {
         this.client = client;
         dialog = new ConnectWindow();
         setupListener();
-//        connectToServer();//todo:remove
+        connectToServer();//todo:remove
+        dialog.listenPortTxt.setText(String.valueOf(new Random().nextInt(8000 + 1) + 1025));
     }
 
     private void setupListener() {

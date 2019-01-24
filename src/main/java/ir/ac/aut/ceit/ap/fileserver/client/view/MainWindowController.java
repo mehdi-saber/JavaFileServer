@@ -412,6 +412,14 @@ public class MainWindowController {
                             window.pathPopupMenu.show(e.getComponent(), e.getX(), e.getY());
                         selectPath(item);
                     }
+
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        super.mouseClicked(e);
+                        if (e.getClickCount() == 2)
+                            if (path instanceof FSDirectory)
+                                client.fetchDirectory((FSDirectory) path);
+                    }
                 });
                 window.listPanel.add(item);
             }
