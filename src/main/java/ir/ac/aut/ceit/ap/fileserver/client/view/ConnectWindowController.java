@@ -13,7 +13,7 @@ public class ConnectWindowController {
         this.client = client;
         dialog = new ConnectWindow();
         setupListener();
-//        connectToServer();//todo:remove
+        connectToServer();//todo:remove
     }
 
     private void setupListener() {
@@ -21,6 +21,7 @@ public class ConnectWindowController {
         ActionListener connectAL = e -> connectToServer();
         dialog.loginBtn.addActionListener(connectAL);
         dialog.addressTxt.addActionListener(connectAL);
+        dialog.listenPortTxt.addActionListener(connectAL);
         dialog.portTxt.addActionListener(connectAL);
         dialog.usernameTxt.addActionListener(connectAL);
         dialog.passwordTxt.addActionListener(connectAL);
@@ -29,9 +30,10 @@ public class ConnectWindowController {
     private void connectToServer() {
         String serverAddress = dialog.addressTxt.getText();
         int serverPort = Integer.valueOf(dialog.portTxt.getText());
+        int listenPort = Integer.valueOf(dialog.listenPortTxt.getText());
         String username = dialog.usernameTxt.getText();
         String password = String.valueOf(dialog.passwordTxt.getPassword());
-        boolean connected = client.connectToServer(serverAddress, serverPort, username, password);
+        boolean connected = client.connectToServer(serverAddress, serverPort, username, password, listenPort);
         if (connected) {
             dialog.setVisible(false);
             dialog.dispose();

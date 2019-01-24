@@ -24,7 +24,7 @@ class SFileStorage extends FileStorage implements SaveAble {
     }
 
     SFileStorage() {
-        super("data"+File.separator+"temp");
+        setDirectory("data"+File.separator+"temp");
         Long idCounter = (Long) load();
         this.idCounter = idCounter == null ? 0 : idCounter;
     }

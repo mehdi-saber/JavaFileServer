@@ -22,7 +22,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>ir.ac.aut.ceit.ap.fileserver.FileServerApplication</mainClass>
+                            <mainClass>ir.ac.aut.ceit.ap.fileserver.server.Server</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -74,6 +74,16 @@
             <groupId>org.mindrot</groupId>
             <artifactId>jbcrypt</artifactId>
             <version>0.3m</version>
+        </dependency>
+        <dependency>
+            <groupId>uk.co.caprica</groupId>
+            <artifactId>vlcj</artifactId>
+            <version>3.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.icepdf.os</groupId>
+            <artifactId>icepdf-viewer</artifactId>
+            <version>6.2.2</version>
         </dependency>
     </dependencies>
 </project>

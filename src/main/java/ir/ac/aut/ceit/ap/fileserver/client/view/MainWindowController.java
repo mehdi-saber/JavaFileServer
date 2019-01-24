@@ -4,21 +4,24 @@ import ir.ac.aut.ceit.ap.fileserver.client.Client;
 import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
+import ir.ac.aut.ceit.ap.fileserver.file.FileCategory;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressCallback;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressReader;
 import ir.ac.aut.ceit.ap.fileserver.network.protocol.ResponseSubject;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.ResponseCallback;
 import ir.ac.aut.ceit.ap.fileserver.server.ClientInfo;
+import org.icepdf.ri.common.SwingController;
+import org.icepdf.ri.common.SwingViewBuilder;
 
 import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Set;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class MainWindowController {
     private MainWindowView window;
@@ -30,24 +33,14 @@ public class MainWindowController {
     private File desktopDir;
     private File downloadDir;
 
-    public MainWindowController(Client client, Runnable finalCallback) {
+    public MainWindowController(Client client) {
         this.client = client;
         window = new MainWindowView();
         String homePath = System.getProperty("user.home") + File.separator;
         desktopDir = new File(homePath + "Desktop" + File.separator);
         downloadDir = new File(homePath + "Downloads" + File.separator);
-        setupFinalizeCallback(finalCallback);
         setMouseListeners();
         updatePasteBtn();
-    }
-
-    private void setupFinalizeCallback(Runnable finalCallback) {
-        window.addWindowListener(new java.awt.event.WindowAdapter() {
-            @Override
-            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-                finalCallback.run();
-            }
-        });
     }
 
     private File openFileChoose() {
@@ -106,7 +99,7 @@ public class MainWindowController {
     private void setMouseListeners() {
         ActionListener
                 downloadAL = e -> download((FSFile) selectedItem.getInfo(), saveFileChoose((FSFile) selectedItem.getInfo())),
-                previewAL = e -> new PreviewJFrame(),
+                previewAL = e -> preview((FSFile) selectedItem.getInfo()),
                 copyAL = e -> updatePasteInfo(selectedItem.getInfo(), PasteOperationType.COPY),
                 cutAL = e -> updatePasteInfo(selectedItem.getInfo(), PasteOperationType.CUT),
                 renameAL = e -> renamePath(selectedItem.getInfo()),
@@ -160,6 +153,36 @@ public class MainWindowController {
                 deselectPath();
             }
         });
+    }
+
+    private void preview(FSFile info) {
+        try {
+            File previewFile = File.createTempFile("thePreviewTemp", "." + info.getExtension());
+            ResponseCallback callback = response -> SwingUtilities.invokeLater(() -> {
+                if (info.getExtension().equals("pdf")) {
+                    SwingController controller = new SwingController();
+                    SwingViewBuilder factory = new SwingViewBuilder(controller);
+                    JPanel viewerComponentPanel = factory.buildViewerPanel();
+                    // add interactive mouse link annotation support via callback
+                    controller.getDocumentViewController().setAnnotationCallback(
+                            new org.icepdf.ri.common.MyAnnotationCallback(
+                                    controller.getDocumentViewController()));
+                    JFrame applicationFrame = new JFrame();
+                    applicationFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+                    applicationFrame.getContentPane().add(viewerComponentPanel);
+                    // Now that the GUI is all in place, we can try opening a PDF
+                    controller.openDocument(previewFile.getAbsolutePath());
+                    // show the component
+                    applicationFrame.pack();
+                    applicationFrame.setVisible(true);
+                } else
+                    new PreviewDialog(window, info, previewFile);
+                previewFile.delete();
+            });
+            new Thread(() -> client.preview(info, previewFile, callback)).start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void properties(FSPath path) {
@@ -312,6 +335,16 @@ public class MainWindowController {
         window.menuBar.switchMode(true);
         window.menuBar.downloadMI.setEnabled(path instanceof FSFile);
         window.pathPopupMenu.downloadMI.setEnabled(path instanceof FSFile);
+
+        boolean preview = false;
+        if (path instanceof FSFile) {
+            FSFile file = (FSFile) path;
+            Set<String> previewAbleExtensions = Stream.of(FileCategory.DOCUMENT, FileCategory.IMAGE, FileCategory.VIDEO)
+                    .flatMap(fileCategory -> Arrays.stream(fileCategory.getExtensions()))
+                    .collect(Collectors.toSet());
+            preview = previewAbleExtensions.contains(file.getExtension());
+        }
+        window.pathPopupMenu.previewMI.setEnabled(preview);
 
         updatePasteBtn();
     }

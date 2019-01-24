@@ -9,6 +9,7 @@ import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
 import ir.ac.aut.ceit.ap.fileserver.network.Message;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressCallback;
+import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressReader;
 import ir.ac.aut.ceit.ap.fileserver.network.protocol.C2SRequest;
 import ir.ac.aut.ceit.ap.fileserver.network.protocol.ResponseSubject;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.Receiver;
@@ -30,13 +31,13 @@ public class Client {
     private CRequestFactory requestFactory;
     private MainWindowController mainWindowController;
     private CFileStorage fileStorage;
-    private Runnable finalCallback;
-    private int listenPort;
 
-    public Client(Runnable finalCallback, int listenPort)  {
-        this.finalCallback=finalCallback;
-        this.listenPort = listenPort;
-        fileStorage = new CFileStorage(this.listenPort);
+    public static void main(String[] args) {
+        new Client();
+    }
+
+    public Client() {
+        fileStorage = new CFileStorage();
         receiver = new Receiver(new CRouter(this));
         new ConnectWindowController(this);
     }
@@ -49,10 +50,11 @@ public class Client {
     }
 
     public void openMainWindow() {
-        mainWindowController = new MainWindowController(this,finalCallback);
+        mainWindowController = new MainWindowController(this);
         fetchDirectory(FSDirectory.ROOT);
     }
-    public boolean connectToServer(String serverAddress, int serverPort, String username, String password) {
+
+    public boolean connectToServer(String serverAddress, int serverPort, String username, String password, int listenPort) {
         requestFactory = new CRequestFactory(serverAddress, serverPort);
         CRequest request = requestFactory.create(C2SRequest.LOGIN);
         request.addParameter("username", username);
@@ -65,6 +67,7 @@ public class Client {
                 if (response.getTitle().equals(ResponseSubject.OK)) {
                     String token = (String) response.getParameter("token");
                     receiver.start(listenPort);
+                    fileStorage.setPort(listenPort);
                     requestFactory.setToken(token);
                     connected.set(true);
                 } else if (response.getTitle().equals(ResponseSubject.FORBIDDEN))
@@ -133,19 +136,44 @@ public class Client {
     }
 
     public void download(FSFile file, File downloadFile, ProgressWindow progressWindow, ResponseCallback uiResponseCallback) {
-        CRequest request = requestFactory.create(C2SRequest.DOWNLOAD_FILE);
+        CRequest request = requestFactory.create(C2SRequest.Preview);
         request.addParameter("file", file);
         ResponseCallback responseCallback = response -> {
             try {
                 uiResponseCallback.call(response);
+                FileOutputStream fileOutputStream = new FileOutputStream(downloadFile);
                 IOUtil.writeI2O(
-                        new FileOutputStream(downloadFile),
+                        fileOutputStream,
                         response.getInputStream("file"),
                         response.getStreamSize("file"),
-                        progressWindow.getCallback()
+                        progressWindow != null ? progressWindow.getCallback() : null
                 );
-                mainWindowController.closeProgressWindow(progressWindow);
-            } catch (FileNotFoundException e) {
+                fileOutputStream.close();
+                if (progressWindow != null)
+                    mainWindowController.closeProgressWindow(progressWindow);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        };
+        request.setResponseCallback(responseCallback);
+        request.send();
+    }
+
+    public void preview(FSFile file, File downloadFile, ResponseCallback uiResponseCallback) {
+        CRequest request = requestFactory.create(C2SRequest.Preview);
+        request.addParameter("file", file);
+        ResponseCallback responseCallback = response -> {
+            try {
+                new ProgressReader(response.getInputStream("status"), doneDelta -> {}).start().join();
+                FileOutputStream fileOutputStream = new FileOutputStream(downloadFile);
+                IOUtil.writeI2O(
+                        fileOutputStream,
+                        response.getInputStream("file"),
+                        response.getStreamSize("file")
+                );
+                fileOutputStream.close();
+                uiResponseCallback.call(response);
+            } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
         };

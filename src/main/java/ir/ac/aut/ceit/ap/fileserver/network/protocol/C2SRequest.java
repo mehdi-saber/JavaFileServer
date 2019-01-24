@@ -4,7 +4,7 @@ public enum  C2SRequest implements RequestSubject{
     LOGIN,
     RENAME_FILE,
     UPLOAD_FILE,
-    DOWNLOAD_FILE,
+    Preview,
     CREATE_NEW_DIRECTORY,
     FETCH_DIRECTORY,
     DELETE_FILE,

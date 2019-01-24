@@ -7,7 +7,7 @@ public class FileServerApplication {
 
     public static void main(String[] args) {
         Server server = new Server();
-        new Client(server.getFinalCallback(), 6161);
+        new Client();
 //        new Client();
 //        new Client();
     }

@@ -33,7 +33,7 @@ class SRouter implements Router {
                 return server.loginUser(request);
             case FETCH_DIRECTORY:
                 return server.fetchDirectory(request);
-            case DOWNLOAD_FILE:
+            case Preview:
                 return server.download(request);
             case RENAME_FILE:
                 return server.renameFile(request);

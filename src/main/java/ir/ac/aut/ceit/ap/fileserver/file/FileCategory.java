@@ -8,11 +8,11 @@ public enum FileCategory {
     EXECUTABLE("file.png",
             "apk", "bat", "bin", "cgi", "com", "exe", "gadget", "jar", "py", "wsf"),
     IMAGE("file.png",
-            "ai", "bmp", "gif", "ico", "jpeg", "jpg", "png", "ps", "psd", "svg", "tif"),
+            "bmp", "gif", "jpeg", "jpg", "png", "tif"),
     VIDEO("file.png",
-            "3g2", "3gp", "avi", "flv", "h264", "m4v", "mkv", "mov", "mp4", "mpg", "rm", "swf", "vob", "wmv"),
+            "avi", "h264", "mkv", "mov", "mp4", "mpg", "wmv"),
     DOCUMENT("file.png",
-            "doc", "odt", "pdf", "rtf", "tex", "txt", "wks", "wpd");
+            "rtf", "tex", "txt", "pdf");
     String[] extensions;
     String iconPath;
 

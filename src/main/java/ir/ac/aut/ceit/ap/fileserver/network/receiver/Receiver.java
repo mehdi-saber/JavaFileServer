@@ -15,6 +15,7 @@ public class Receiver implements Transporter {
     private Router router;
     private boolean doReceive;
     private ServerSocket serverSocket;
+    private Thread receiveThread;
 
     public Receiver(Router router) {
         this.doReceive = true;
@@ -23,17 +24,15 @@ public class Receiver implements Transporter {
 
     public void start(int port) throws IOException {
         serverSocket = new ServerSocket(port);
-        new Thread(() -> {
+        receiveThread = new Thread(() -> {
             try {
                 while (doReceive) {
                     Socket socket = serverSocket.accept();
                     new Thread(() -> handleReceive(socket)).start();
                 }
-                serverSocket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }).start();
+            } catch (IOException ignored) { }
+        });
+        receiveThread.start();
     }
 
     private void handleReceive(Socket socket) {
@@ -56,7 +55,12 @@ public class Receiver implements Transporter {
     }
 
     public void stop() {
-        doReceive = false;
+        try {
+            doReceive = false;
+            serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

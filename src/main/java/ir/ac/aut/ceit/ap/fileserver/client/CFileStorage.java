@@ -5,7 +5,7 @@ import ir.ac.aut.ceit.ap.fileserver.file.FileStorage;
 import java.io.File;
 
 class CFileStorage extends FileStorage {
-    CFileStorage(long listenPort) {
-        super("data" + File.separator + listenPort);
+    public void setPort(int listenPort) {
+        super.setDirectory("data" + File.separator + listenPort);
     }
 }

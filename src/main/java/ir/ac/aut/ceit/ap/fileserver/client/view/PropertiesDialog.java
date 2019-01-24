@@ -14,7 +14,7 @@ import java.util.Map;
 class PropertiesDialog extends JDialog {
 
     PropertiesDialog(FSPath path, LinkedHashMap<Long, List<ClientInfo>> nodes, MainWindowView window) {
-        super(window);
+        super(window,"Properties");
         setModal(true);
 
         if (path instanceof FSFile) {

@@ -36,25 +36,28 @@ public class Server {
     private SecurityManager securityManager;
     private SFileStorage fileStorage;
     private ClientManager clientManager;
-    private Runnable finalCallback;
-    private MainWindowController mainWindowController;
+
+    public static void main(String[] args) {
+        new Server();
+    }
 
     /**
      * Construct sections of server
      */
     public Server()  {
-        mainWindowController = new MainWindowController(this);
         securityManager = new SecurityManager();
         receiver = new Receiver(new SRouter(this, securityManager));
         fileSystem = new SFileSystem();
         fileStorage = new SFileStorage();
         clientManager = new ClientManager();
 
-        finalCallback = () -> {
+        Runnable finalCallback = () -> {
             clientManager.save();
             fileSystem.save();
             fileStorage.save();
         };
+
+        new MainWindowController(this, finalCallback);
     }
 
     public void start(int port, int splitSize, int redundancy) {
@@ -326,10 +329,6 @@ public class Server {
             return new SendingMessage(ResponseSubject.OK);
         } else
             return new SendingMessage(ResponseSubject.REPEATED);
-    }
-
-    public Runnable getFinalCallback() {
-        return finalCallback;
     }
 
     SendingMessage remove(ReceivingMessage receivingMessage) {

@@ -25,7 +25,7 @@ public class FSFile extends FSPath {
     public String getExtension() {
         int dotIndex = name.lastIndexOf(".");
         if (dotIndex != -1)
-            return name.substring(dotIndex, name.length());
+            return name.substring(dotIndex+1, name.length());
         return "";
     }
 

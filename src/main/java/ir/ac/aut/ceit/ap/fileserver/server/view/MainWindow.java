@@ -2,8 +2,6 @@ package ir.ac.aut.ceit.ap.fileserver.server.view;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 
 class MainWindow extends JFrame {
     final JTextField portTxt;
@@ -24,14 +22,15 @@ class MainWindow extends JFrame {
         c.gridy=0;
         c.gridx=0;
         add(new JLabel("Server port:"),c);
+        c.fill = GridBagConstraints.HORIZONTAL;
         portTxt = new JTextField(10);
         portTxt.setText("5050");
         c.gridx=1;
         add(portTxt,c);
 
-        c.gridy=1;
+        c.gridy = 1;
         c.gridx = 0;
-        add(new JLabel("Split size(mB):"), c);
+        add(new JLabel("Split size(MB):"), c);
         splitTxt = new JTextField(10);
         splitTxt.setText("3.5");
         c.gridx = 1;
@@ -48,6 +47,7 @@ class MainWindow extends JFrame {
         c.gridy = 3;
         c.gridx = 0;
         stopBtn = new JButton("stop");
+        stopBtn.setEnabled(false);
         add(stopBtn, c);
         c.gridx = 1;
         startBtn = new JButton("start");
