@@ -13,6 +13,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.stream.Stream;
 
+/**
+ * preview window
+ */
 class PreviewDialog extends JDialog {
 
     PreviewDialog(JFrame window, FSFile file, File previewFile) {

@@ -1,6 +1,6 @@
 package ir.ac.aut.ceit.ap.fileserver.server;
 
-import ir.ac.aut.ceit.ap.fileserver.client.view.PasteOperationType;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.PasteOperationType;
 import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;

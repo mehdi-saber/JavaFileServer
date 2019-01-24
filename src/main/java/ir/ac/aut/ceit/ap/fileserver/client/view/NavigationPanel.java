@@ -7,6 +7,9 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 
+/**
+ * client main window top panel
+ */
 class NavigationPanel extends JPanel {
     final JButton parentBtn;
     final JButton refreshBtn;

@@ -3,6 +3,9 @@ package ir.ac.aut.ceit.ap.fileserver.client.view;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * client main window view
+ */
 class MainWindowView extends JFrame {
     MainMenuBar menuBar;
     JPanel listPanel;

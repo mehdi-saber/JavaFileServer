@@ -5,6 +5,9 @@ import ir.ac.aut.ceit.ap.fileserver.client.Client;
 import javax.swing.*;
 import java.awt.event.ActionListener;
 
+/**
+ * connects connection window to client
+ */
 public class ConnectWindowController {
     private ConnectWindow dialog;
     private Client client;
@@ -13,7 +16,7 @@ public class ConnectWindowController {
         this.client = client;
         dialog = new ConnectWindow();
         setupListener();
-        connectToServer();//todo:remove
+//        connectToServer();//todo:remove
     }
 
     private void setupListener() {

@@ -3,14 +3,17 @@ package ir.ac.aut.ceit.ap.fileserver.client.view;
 import javax.swing.*;
 import java.awt.*;
 
- class ConnectWindow extends JFrame {
-     JTextField addressTxt;
-     JTextField portTxt;
-     JTextField usernameTxt;
-     JTextField listenPortTxt;
-     JPasswordField passwordTxt;
-     JButton exitBtn;
-     JButton loginBtn;
+/**
+ * client connection window
+ */
+class ConnectWindow extends JFrame {
+    JTextField addressTxt;
+    JTextField portTxt;
+    JTextField usernameTxt;
+    JTextField listenPortTxt;
+    JPasswordField passwordTxt;
+    JButton exitBtn;
+    JButton loginBtn;
 
     public ConnectWindow() {
         super("Connect to server");

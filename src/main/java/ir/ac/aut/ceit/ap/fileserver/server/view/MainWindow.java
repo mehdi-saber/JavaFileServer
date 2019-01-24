@@ -3,6 +3,9 @@ package ir.ac.aut.ceit.ap.fileserver.server.view;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * server main window
+ */
 class MainWindow extends JFrame {
     final JTextField portTxt;
     final JTextField splitTxt;

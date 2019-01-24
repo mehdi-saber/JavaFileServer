@@ -11,6 +11,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * properties window
+ */
 class PropertiesDialog extends JDialog {
 
     PropertiesDialog(FSPath path, LinkedHashMap<Long, List<ClientInfo>> nodes, MainWindowView window) {

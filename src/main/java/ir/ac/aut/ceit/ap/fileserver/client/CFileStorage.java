@@ -11,7 +11,7 @@ class CFileStorage extends FileStorage {
     /**
      * sets directory name by port number
      *
-     * @param listenPort
+     * @param listenPort the port number
      */
     public void setPort(int listenPort) {
         super.setDirectory("data" + File.separator + listenPort);

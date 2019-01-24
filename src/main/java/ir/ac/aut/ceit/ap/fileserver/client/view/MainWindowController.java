@@ -7,6 +7,7 @@ import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
 import ir.ac.aut.ceit.ap.fileserver.file.FileCategory;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressCallback;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressReader;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.PasteOperationType;
 import ir.ac.aut.ceit.ap.fileserver.network.protocol.ResponseSubject;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.ResponseCallback;
 import ir.ac.aut.ceit.ap.fileserver.server.ClientInfo;
@@ -21,6 +22,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * connects main window to client
+ */
 public class MainWindowController {
     private MainWindowView window;
     private Client client;
@@ -31,6 +35,11 @@ public class MainWindowController {
     private File desktopDir;
     private File downloadDir;
 
+    /**
+     * creates new controller object for client
+     *
+     * @param client the client
+     */
     public MainWindowController(Client client) {
         this.client = client;
         window = new MainWindowView();
@@ -41,6 +50,11 @@ public class MainWindowController {
         updatePasteBtn();
     }
 
+    /**
+     * choose a file
+     *
+     * @return the file
+     */
     private File openFileChoose() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setCurrentDirectory(desktopDir);
@@ -50,7 +64,12 @@ public class MainWindowController {
             return null;
     }
 
-
+    /**
+     * choose a path to save
+     *
+     * @param file origibal file
+     * @return the file path
+     */
     private File saveFileChoose(FSFile file) {
         JFileChooser fileChooser = new JFileChooser();
         File defaultFile = new File(downloadDir + File.separator + file.getName());
@@ -61,12 +80,22 @@ public class MainWindowController {
             return null;
     }
 
+    /**
+     * creates new folder
+     */
     public void createNewFolder() {
         String name = getNotEmptyString("Enter folder name:", "untitled folder");
         if (name != null)
             client.createNewFolder(curDir, name);
     }
 
+    /**
+     * get a non empty string
+     *
+     * @param message    input message
+     * @param initialStr initial string
+     * @return the string
+     */
     private String getNotEmptyString(String message, String initialStr) {
         while (true) {
             String name = JOptionPane.showInputDialog(window, message, initialStr);
@@ -79,14 +108,29 @@ public class MainWindowController {
         }
     }
 
+    /**
+     * repeated error
+     *
+     * @param path the path
+     */
     public void showPathRepeatedError(String path) {
         showError("path \"" + path + "\"already exists.");
     }
 
+    /**
+     * shows a error
+     *
+     * @param message message
+     */
     public void showError(String message) {
         JOptionPane.showMessageDialog(window, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
+    /**
+     * rename a path
+     *
+     * @param path the path
+     */
     public void renamePath(FSPath path) {
         String newName = getNotEmptyString("Enter new name:", path.getName());
         if (newName != null) {
@@ -94,6 +138,9 @@ public class MainWindowController {
         }
     }
 
+    /**
+     * set mouse listeners
+     */
     private void setMouseListeners() {
         ActionListener
                 downloadAL = e -> download((FSFile) selectedItem.getInfo(), saveFileChoose((FSFile) selectedItem.getInfo())),
@@ -161,6 +208,11 @@ public class MainWindowController {
         });
     }
 
+    /**
+     * preview a file
+     *
+     * @param info file info
+     */
     private void preview(FSFile info) {
         try {
             File previewFile = File.createTempFile("thePreviewTemp", "." + info.getExtension());
@@ -191,6 +243,11 @@ public class MainWindowController {
         }
     }
 
+    /**
+     * show properties
+     *
+     * @param path the path
+     */
     private void properties(FSPath path) {
         ResponseCallback callback = response -> {
             LinkedHashMap<Long, List<ClientInfo>> nodes =
@@ -203,6 +260,11 @@ public class MainWindowController {
             new PropertiesDialog(path, null, window);
     }
 
+    /**
+     * delete a path
+     *
+     * @param path the path
+     */
     private void delete(FSPath path) {
         StringBuilder message = new StringBuilder("Do you want delete path \"");
         message.append(path.getAbsolutePath());
@@ -212,6 +274,11 @@ public class MainWindowController {
             client.delete(selectedItem.getInfo());
     }
 
+    /**
+     * paste files in clipboard
+     *
+     * @param directory to parent
+     */
     private void paste(FSDirectory directory) {
         FSPath path = pastePath;
         PasteOperationType operationType = this.pasteOperation;
@@ -223,12 +290,24 @@ public class MainWindowController {
         client.paste(path, directory, operationType);
     }
 
+    /**
+     * update paste operation info
+     *
+     * @param path the path
+     * @param type the operation type
+     */
     private void updatePasteInfo(FSPath path, PasteOperationType type) {
         pastePath = path;
         pasteOperation = type;
         updatePasteBtn();
     }
 
+    /**
+     * upload a file
+     *
+     * @param file      file
+     * @param directory directory
+     */
     private void upload(File file, FSDirectory directory) {
         if (file == null)
             return;
@@ -253,6 +332,12 @@ public class MainWindowController {
     }
 
 
+    /**
+     * download a file
+     *
+     * @param file    the file
+     * @param newFile to new HDD location
+     */
     private void download(FSFile file, File newFile) {
         if (newFile == null)
             return;
@@ -273,6 +358,11 @@ public class MainWindowController {
         client.download(file, newFile, progressWindow, responseCallback);
     }
 
+    /**
+     * closes progress window
+     *
+     * @param progressWindow ther progress
+     */
     public void closeProgressWindow(ProgressWindow progressWindow) {
         SwingUtilities.invokeLater(() -> {
             progressWindow.setVisible(false);
@@ -281,6 +371,12 @@ public class MainWindowController {
         });
     }
 
+    /**
+     * show files and folders
+     *
+     * @param curDir  directory
+     * @param pathSet paths
+     */
     public void showPathList(FSDirectory curDir, Set<FSPath> pathSet) {
         deselectPath();
         List<FSPath> pathList = new ArrayList<>(pathSet);
@@ -322,6 +418,11 @@ public class MainWindowController {
         });
     }
 
+    /**
+     * update selected item
+     *
+     * @param item list item
+     */
     private void setNewSelectedItem(ListItem item) {
         if (selectedItem != null) {
             selectedItem.switchMode(false);
@@ -333,6 +434,11 @@ public class MainWindowController {
         }
     }
 
+    /**
+     * update selected item
+     *
+     * @param item list item
+     */
     private void selectPath(ListItem item) {
         setNewSelectedItem(item);
 
@@ -355,11 +461,17 @@ public class MainWindowController {
         updatePasteBtn();
     }
 
+    /**
+     * update selected item
+     */
     private void deselectPath() {
         setNewSelectedItem(null);
         window.menuBar.switchMode(false);
     }
 
+    /**
+     * update save buttons
+     */
     private void updatePasteBtn() {
         boolean pasteEnable = pasteOperation != null && pastePath != null;
         window.menuBar.pasteMI.setEnabled(pasteEnable);
@@ -368,6 +480,9 @@ public class MainWindowController {
             window.pathPopupMenu.pasteMI.setEnabled(pasteEnable && selectedItem.getInfo() instanceof FSDirectory);
     }
 
+    /**
+     * @return current directory
+     */
     public FSDirectory getCurDir() {
         return curDir;
     }

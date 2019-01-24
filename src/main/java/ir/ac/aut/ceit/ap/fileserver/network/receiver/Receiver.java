@@ -11,17 +11,31 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+/**
+ * receives requests
+ */
 public class Receiver implements Transporter {
     private Router router;
     private boolean doReceive;
     private ServerSocket serverSocket;
     private Thread receiveThread;
 
+    /**
+     * creates a new object
+     *
+     * @param router request router
+     */
     public Receiver(Router router) {
         this.doReceive = true;
         this.router = router;
     }
 
+    /**
+     * start receiving
+     *
+     * @param port the listen port
+     * @throws IOException if cannot open port
+     */
     public void start(int port) throws IOException {
         serverSocket = new ServerSocket(port);
         receiveThread = new Thread(() -> {
@@ -35,6 +49,11 @@ public class Receiver implements Transporter {
         receiveThread.start();
     }
 
+    /**
+     * handles a receiving socket
+     *
+     * @param socket the socket
+     */
     private void handleReceive(Socket socket) {
         try {
             OutputStream outputStream = socket.getOutputStream();
@@ -54,6 +73,9 @@ public class Receiver implements Transporter {
         }
     }
 
+    /**
+     * stops receiving
+     */
     public void stop() {
         try {
             doReceive = false;

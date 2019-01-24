@@ -6,6 +6,9 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 
+/**
+ * button with padding
+ */
 class CustomButton extends JButton {
 
     CustomButton(int padding, boolean hasBorder) {

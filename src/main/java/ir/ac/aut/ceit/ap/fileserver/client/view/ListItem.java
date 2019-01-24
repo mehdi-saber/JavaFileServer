@@ -12,6 +12,9 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 
+/**
+ * item of files view list
+ */
 class ListItem extends JPanel {
     private final JLabel nameLabel;
     private FSPath info;

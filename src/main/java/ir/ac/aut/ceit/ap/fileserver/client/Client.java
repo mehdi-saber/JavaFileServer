@@ -2,12 +2,11 @@ package ir.ac.aut.ceit.ap.fileserver.client;
 
 import ir.ac.aut.ceit.ap.fileserver.client.view.ConnectWindowController;
 import ir.ac.aut.ceit.ap.fileserver.client.view.MainWindowController;
-import ir.ac.aut.ceit.ap.fileserver.client.view.PasteOperationType;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.PasteOperationType;
 import ir.ac.aut.ceit.ap.fileserver.client.view.ProgressWindow;
 import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
-import ir.ac.aut.ceit.ap.fileserver.network.Message;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressCallback;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressReader;
 import ir.ac.aut.ceit.ap.fileserver.network.protocol.C2SRequest;
@@ -26,22 +25,39 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * Connects different sections of the client
+ */
 public class Client {
     private Receiver receiver;
     private CRequestFactory requestFactory;
     private MainWindowController mainWindowController;
     private CFileStorage fileStorage;
 
+    /**
+     * Lunches client
+     *
+     * @param args user passed parameter
+     */
     public static void main(String[] args) {
         new Client();
     }
 
+    /**
+     * creates a client object
+     */
     public Client() {
         fileStorage = new CFileStorage();
         receiver = new Receiver(new CRouter(this));
         new ConnectWindowController(this);
     }
 
+    /**
+     * get file nodes distribution from server
+     *
+     * @param file     the file
+     * @param callback response callback
+     */
     public void getNodeDist(FSFile file, ResponseCallback callback) {
         CRequest request = requestFactory.create(C2SRequest.FILE_DIST);
         request.addParameter("file", (file));
@@ -49,11 +65,24 @@ public class Client {
         request.send();
     }
 
+    /**
+     * open client main window
+     */
     public void openMainWindow() {
         mainWindowController = new MainWindowController(this);
         fetchDirectory(FSDirectory.ROOT);
     }
 
+    /**
+     * connects to server
+     *
+     * @param serverAddress server address
+     * @param serverPort    server port number
+     * @param username      client username
+     * @param password      client password
+     * @param listenPort    client receive port
+     * @return
+     */
     public boolean connectToServer(String serverAddress, int serverPort, String username, String password, int listenPort) {
         requestFactory = new CRequestFactory(serverAddress, serverPort);
         CRequest request = requestFactory.create(C2SRequest.LOGIN);
@@ -87,6 +116,11 @@ public class Client {
         return connected.get();
     }
 
+    /**
+     * gets directory info
+     *
+     * @param directory the directory
+     */
     public void fetchDirectory(FSDirectory directory) {
         CRequest request = requestFactory.create(C2SRequest.FETCH_DIRECTORY);
         request.addParameter("directory", directory);
@@ -97,6 +131,13 @@ public class Client {
         request.send();
     }
 
+    /**
+     * apply cut and copy operations
+     *
+     * @param path           the path
+     * @param directory      to new directory
+     * @param pasteOperation operations type
+     */
     public void paste(FSPath path, FSDirectory directory, PasteOperationType pasteOperation) {
         CRequest request = requestFactory.create(C2SRequest.PASTE);
         request.addParameter("path", path);
@@ -115,12 +156,25 @@ public class Client {
         request.send();
     }
 
+    /**
+     * request to delete a path from server
+     *
+     * @param path the path
+     */
     public void delete(FSPath path) {
         CRequest request = requestFactory.create(C2SRequest.DELETE_FILE);
         request.addParameter("path", path);
         request.send();
     }
 
+    /**
+     * uploads a file to server
+     *
+     * @param file             the file
+     * @param directory        the directory
+     * @param progressCallback the progress callback
+     * @param uiCallback       the ui response callback
+     */
     public void upload(File file, FSDirectory directory, ProgressCallback progressCallback, ResponseCallback uiCallback) {
         try {
             CRequest request = requestFactory.create(C2SRequest.UPLOAD_FILE);
@@ -135,6 +189,14 @@ public class Client {
         }
     }
 
+    /**
+     * downloads a file to client
+     *
+     * @param file               the file info form file system
+     * @param downloadFile       the file address
+     * @param progressWindow     progress window
+     * @param uiResponseCallback ui response callback
+     */
     public void download(FSFile file, File downloadFile, ProgressWindow progressWindow, ResponseCallback uiResponseCallback) {
         CRequest request = requestFactory.create(C2SRequest.Preview);
         request.addParameter("file", file);
@@ -159,6 +221,13 @@ public class Client {
         request.send();
     }
 
+    /**
+     * download file to preview it
+     *
+     * @param file               the file info
+     * @param downloadFile       the file address
+     * @param uiResponseCallback ui response callback
+     */
     public void preview(FSFile file, File downloadFile, ResponseCallback uiResponseCallback) {
         CRequest request = requestFactory.create(C2SRequest.Preview);
         request.addParameter("file", file);
@@ -181,6 +250,12 @@ public class Client {
         request.send();
     }
 
+    /**
+     * gets and stores a part to client
+     *
+     * @param request the server request
+     * @return responses Ok if hashes be same else FAILED
+     */
     SendingMessage fetchPart(ReceivingMessage request) {
         try {
             Map<Long, String> hashList = (Map<Long, String>) request.getParameter("hashList");
@@ -204,19 +279,32 @@ public class Client {
         return null;
     }
 
-    Message getFilePart(Message request) {
-        return null;
-    }
-
+    /**
+     * request to search
+     *
+     * @param directory the directory
+     */
     public void search(FSDirectory directory) {
         //        todo:implement
     }
 
+    /**
+     * handles server refresh notify
+     *
+     * @param request server request
+     * @return OK
+     */
     SendingMessage refreshDirectory(ReceivingMessage request) {
         fetchDirectory(mainWindowController.getCurDir());
         return new SendingMessage(ResponseSubject.OK);
     }
 
+    /**
+     * creates a new folder in the parent
+     *
+     * @param parent the parent directory
+     * @param name   the directory name
+     */
     public void createNewFolder(FSDirectory parent, String name) {
         CRequest request = requestFactory.create(C2SRequest.CREATE_NEW_DIRECTORY);
         request.addParameter("parent", parent);
@@ -231,6 +319,12 @@ public class Client {
         request.send();
     }
 
+    /**
+     * rename a path
+     *
+     * @param path    the path
+     * @param newName new name
+     */
     public void rename(FSPath path, String newName) {
         CRequest request = requestFactory.create(C2SRequest.RENAME_FILE);
         request.addParameter("path", path);
@@ -248,6 +342,12 @@ public class Client {
         request.send();
     }
 
+    /**
+     * handles server get part request
+     *
+     * @param request server request
+     * @return Ok if success
+     */
     SendingMessage sendPart(ReceivingMessage request) {
         try {
             SendingMessage response = new SendingMessage(ResponseSubject.OK);
@@ -262,6 +362,12 @@ public class Client {
         return null;
     }
 
+    /**
+     * handles server delete parts request
+     *
+     * @param request server request
+     * @return OK
+     */
     SendingMessage deleteParts(ReceivingMessage request) {
         Set<Long> parts = (Set<Long>) request.getParameter("parts");
         for (Long partId : parts)

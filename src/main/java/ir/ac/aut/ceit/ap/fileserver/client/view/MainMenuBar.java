@@ -2,21 +2,24 @@ package ir.ac.aut.ceit.ap.fileserver.client.view;
 
 import javax.swing.*;
 
+/**
+ * main window menu bar
+ */
 class MainMenuBar extends JMenuBar {
-   final JMenuItem uploadMI;
-   final JMenuItem downloadMI;
-   final JMenuItem newFolderMI;
-   final JMenuItem searchMI;
-   final JMenuItem renameMI;
-   final JMenuItem deleteMI;
+    final JMenuItem uploadMI;
+    final JMenuItem downloadMI;
+    final JMenuItem newFolderMI;
+    final JMenuItem searchMI;
+    final JMenuItem renameMI;
+    final JMenuItem deleteMI;
     final JMenuItem propertiesMI;
-   final JMenuItem exitMI;
+    final JMenuItem exitMI;
 
-   final JMenuItem copyMI;
-   final JMenuItem cutMI;
-   final JMenuItem pasteMI;
+    final JMenuItem copyMI;
+    final JMenuItem cutMI;
+    final JMenuItem pasteMI;
 
-   final private JComponent[] justSelected;
+    final private JComponent[] justSelected;
 
     MainMenuBar() {
         JMenu fileMenu = new JMenu("File");
@@ -54,10 +57,10 @@ class MainMenuBar extends JMenuBar {
         };
 
         switchMode(false);
-     }
+    }
 
-   void switchMode(boolean fileSelected) {
-      for (JComponent component : justSelected)
-         component.setEnabled(fileSelected);
-   }
+    void switchMode(boolean fileSelected) {
+        for (JComponent component : justSelected)
+            component.setEnabled(fileSelected);
+    }
 }

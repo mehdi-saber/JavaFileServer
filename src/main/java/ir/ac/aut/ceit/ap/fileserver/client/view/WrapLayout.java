@@ -1,8 +1,7 @@
 package ir.ac.aut.ceit.ap.fileserver.client.view;
 
+import javax.swing.*;
 import java.awt.*;
-import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
 
 /**
  *  FlowLayout subclass that fully supports wrapping of components.

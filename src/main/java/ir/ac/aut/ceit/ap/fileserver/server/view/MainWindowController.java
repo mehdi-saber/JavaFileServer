@@ -2,6 +2,9 @@ package ir.ac.aut.ceit.ap.fileserver.server.view;
 
 import ir.ac.aut.ceit.ap.fileserver.server.Server;
 
+/**
+ * connects main window to server
+ */
 public class MainWindowController {
     private MainWindow window;
     private Server server;
