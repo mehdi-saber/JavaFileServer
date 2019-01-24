@@ -289,6 +289,8 @@ public class Client {
      * @param directory the directory
      */
     public void search(FSDirectory directory) {
+        CRequest request = requestFactory.create(C2SRequest.SEARCH);
+        request.addParameter("directory", directory);
 
     }
 

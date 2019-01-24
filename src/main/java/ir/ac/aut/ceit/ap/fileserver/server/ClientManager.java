@@ -56,10 +56,7 @@ class ClientManager implements SaveAble {
                 chosenIndex++;
                 chosenIndex = clientList.size() == chosenIndex ? 0 : chosenIndex;
                 clientInfo = clientList.get(chosenIndex);
-                if (redundancy >= clientList.size())
-                    clientRemain = ((Double) Math.ceil((double) clientInfo.getSpace() / sum * partSet.size())).intValue();
-                else
-                    clientRemain = parts.size();
+                clientRemain = ((Double) Math.ceil((double) clientInfo.getSpace() / sum * partSet.size())).intValue();
             }
 
             //add a Hash set for client list if doesn't exists

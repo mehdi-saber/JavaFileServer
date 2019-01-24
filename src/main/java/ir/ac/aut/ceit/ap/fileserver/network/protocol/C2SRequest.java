@@ -12,5 +12,5 @@ public enum C2SRequest implements RequestSubject {
     FETCH_DIRECTORY,
     DELETE_FILE,
     FILE_DIST,
-    PASTE
+    SEARCH, PASTE
 }

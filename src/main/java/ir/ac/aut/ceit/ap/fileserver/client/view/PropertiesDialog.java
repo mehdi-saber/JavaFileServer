@@ -36,15 +36,10 @@ class PropertiesDialog extends JDialog {
             add(new JLabel(file.getParts().size() + ""));
             add(new JLabel("Distribution:"));
             StringBuilder dist = new StringBuilder("[");
-            boolean first = true;
             for (Map.Entry<Long, List<ClientInfo>> entry : nodes.entrySet()) {
                 String partId = entry.getKey() + "";
-                if (first)
-                    first = false;
-                else
-                    dist.append(",");
                 for (ClientInfo client : entry.getValue())
-                    dist.append(partId).append(":").append(client.getId());
+                    dist.append(partId).append(":").append(client.getId()).append(",");
             }
             dist.append("]");
             add(new JLabel(dist.toString()));
