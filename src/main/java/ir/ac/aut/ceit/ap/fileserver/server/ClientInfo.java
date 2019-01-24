@@ -13,17 +13,19 @@ public class ClientInfo implements Serializable {
     private final Set<Long> parts;
     private final String address;
     private final int listenPort;
+    private Integer space;
 
     /**
      * Construct a new client info
-     *
-     * @param id         The assigned ID
-     * @param address    The client IP address
-     * @param listenPort The client receive port number
-     * @param username   The client username
+     * @param id           assigned ID
+     * @param address      client IP address
+     * @param listenPort   client receive port number
+     * @param username     client username
+     * @param space    client HDD space Left
      */
-    public ClientInfo(Long id, String address, int listenPort, String username) {
+    public ClientInfo(Long id, String address, int listenPort, String username, Integer space) {
         this.username = username;
+        this.space = space;
         this.parts = new HashSet<>();
         this.address = address;
         this.listenPort = listenPort;
@@ -68,5 +70,13 @@ public class ClientInfo implements Serializable {
      */
     public Long getId() {
         return id;
+    }
+
+    /**
+     *
+     * @return free space
+     */
+    public Integer getSpace() {
+        return space;
     }
 }

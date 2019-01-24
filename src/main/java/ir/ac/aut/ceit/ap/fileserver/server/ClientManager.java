@@ -44,15 +44,20 @@ class ClientManager implements SaveAble {
     Map<ClientInfo, Set<Long>> getDestinations(Set<Long> parts) {
         Map<ClientInfo, Set<Long>> distribution = new HashMap<>();
 
+        int sum = clientList.stream().mapToInt(ClientInfo::getSpace).sum();
         int chosenIndex = 0;
-        for (Long partId : parts)
-            for (int i = 0; i < redundancy; i++, chosenIndex++) {
+        int clientRemain = 0;
+        for (int i = 0; i < redundancy; i++)
+            for (Long partId : parts) {
                 chosenIndex = clientList.size() == chosenIndex ? 0 : chosenIndex;
                 ClientInfo clientInfo = clientList.get(chosenIndex);
+                if (clientRemain == 0) {
+                    clientRemain = ((Double) Math.ceil((double) clientInfo.getSpace() / sum)).intValue();
+                    clientRemain=m
+                }
 
                 //add a Hash set for client list if doesn't exists
                 distribution.computeIfAbsent(clientInfo, key -> new HashSet<>());
-
                 distribution.get(clientInfo).add(partId);
             }
         return distribution;

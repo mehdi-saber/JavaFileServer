@@ -11,6 +11,8 @@ import ir.ac.aut.ceit.ap.fileserver.network.protocol.PasteOperationType;
 import ir.ac.aut.ceit.ap.fileserver.network.protocol.ResponseSubject;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.ResponseCallback;
 import ir.ac.aut.ceit.ap.fileserver.server.ClientInfo;
+import org.icepdf.ri.common.SwingController;
+import org.icepdf.ri.common.SwingViewBuilder;
 
 import javax.swing.*;
 import java.awt.event.ActionListener;
@@ -218,21 +220,21 @@ public class MainWindowController {
             File previewFile = File.createTempFile("thePreviewTemp", "." + info.getExtension());
             ResponseCallback callback = response -> SwingUtilities.invokeLater(() -> {
                 if (info.getExtension().equals("pdf")) {
-//                    SwingController controller = new SwingController();
-//                    SwingViewBuilder factory = new SwingViewBuilder(controller);
-//                    JPanel viewerComponentPanel = factory.buildViewerPanel();
-//                    // add interactive mouse link annotation support via callback
-//                    controller.getDocumentViewController().setAnnotationCallback(
-//                            new org.icepdf.ri.common.MyAnnotationCallback(
-//                                    controller.getDocumentViewController()));
-//                    JFrame applicationFrame = new JFrame();
-//                    applicationFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-//                    applicationFrame.getContentPane().add(viewerComponentPanel);
-//                    // Now that the GUI is all in place, we can try opening a PDF
-//                    controller.openDocument(previewFile.getAbsolutePath());
-//                    // show the component
-//                    applicationFrame.pack();
-//                    applicationFrame.setVisible(true);
+                    SwingController controller = new SwingController();
+                    SwingViewBuilder factory = new SwingViewBuilder(controller);
+                    JPanel viewerComponentPanel = factory.buildViewerPanel();
+                    // add interactive mouse link annotation support via callback
+                    controller.getDocumentViewController().setAnnotationCallback(
+                            new org.icepdf.ri.common.MyAnnotationCallback(
+                                    controller.getDocumentViewController()));
+                    JFrame applicationFrame = new JFrame();
+                    applicationFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+                    applicationFrame.getContentPane().add(viewerComponentPanel);
+                    // Now that the GUI is all in place, we can try opening a PDF
+                    controller.openDocument(previewFile.getAbsolutePath());
+                    // show the component
+                    applicationFrame.pack();
+                    applicationFrame.setVisible(true);
                 } else
                     new PreviewDialog(window, info, previewFile);
                 previewFile.delete();

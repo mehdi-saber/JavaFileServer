@@ -2,7 +2,6 @@ package ir.ac.aut.ceit.ap.fileserver.client;
 
 import ir.ac.aut.ceit.ap.fileserver.client.view.ConnectWindowController;
 import ir.ac.aut.ceit.ap.fileserver.client.view.MainWindowController;
-import ir.ac.aut.ceit.ap.fileserver.network.protocol.PasteOperationType;
 import ir.ac.aut.ceit.ap.fileserver.client.view.ProgressWindow;
 import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
@@ -10,6 +9,7 @@ import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressCallback;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressReader;
 import ir.ac.aut.ceit.ap.fileserver.network.protocol.C2SRequest;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.PasteOperationType;
 import ir.ac.aut.ceit.ap.fileserver.network.protocol.ResponseSubject;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.Receiver;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.ReceivingMessage;
@@ -84,36 +84,39 @@ public class Client {
      * @return
      */
     public boolean connectToServer(String serverAddress, int serverPort, String username, String password, int listenPort) {
-        requestFactory = new CRequestFactory(serverAddress, serverPort);
-        CRequest request = requestFactory.create(C2SRequest.LOGIN);
-        request.addParameter("username", username);
-        request.addParameter("password", password);
-        request.addParameter("listenPort", listenPort);
-
-        AtomicBoolean connected = new AtomicBoolean(false);
-        request.setResponseCallback(response -> {
-            try {
-                if (response.getTitle().equals(ResponseSubject.OK)) {
-                    String token = (String) response.getParameter("token");
-                    receiver.start(listenPort);
-                    fileStorage.setPort(listenPort);
-                    requestFactory.setToken(token);
-                    connected.set(true);
-                } else if (response.getTitle().equals(ResponseSubject.FORBIDDEN))
-                    connected.set(false);
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-
         try {
+            requestFactory = new CRequestFactory(serverAddress, serverPort);
+            CRequest request = requestFactory.create(C2SRequest.LOGIN);
+            request.addParameter("username", username);
+            request.addParameter("password", password);
+            request.addParameter("listenPort", listenPort);
+            //free space in GB
+            int space = (int) (new File("data/").getUsableSpace() / 1024 / 1024);
+            request.addParameter("space", space);
+
+            AtomicBoolean connected = new AtomicBoolean(false);
+            request.setResponseCallback(response -> {
+                try {
+                    if (response.getTitle().equals(ResponseSubject.OK)) {
+                        String token = (String) response.getParameter("token");
+                        receiver.start(listenPort);
+                        fileStorage.setPort(listenPort);
+                        requestFactory.setToken(token);
+                        connected.set(true);
+                    } else if (response.getTitle().equals(ResponseSubject.FORBIDDEN))
+                        connected.set(false);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
             request.send(serverAddress, serverPort).join();
-        } catch (InterruptedException e) {
+
+            return connected.get();
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
-
-        return connected.get();
+        return false;
     }
 
     /**

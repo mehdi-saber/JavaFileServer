@@ -51,11 +51,12 @@ public class SecurityManager implements SaveAble {
         int listenPort = (int) request.getParameter("listenPort");
         String username = (String) request.getParameter("username");
         String password = (String) request.getParameter("password");
+        int space = (int) request.getParameter("space");
         for (User user : userList)
             if (user.getUsername().equals(username))
                 if (BCrypt.checkpw(password, user.getPassHash())) {
                     SendingMessage tokenResponse = new SendingMessage(ResponseSubject.OK);
-                    ClientInfo client = new ClientInfo(createClientId(), request.getSenderAddress(), listenPort, username);
+                    ClientInfo client = new ClientInfo(createClientId(), request.getSenderAddress(), listenPort, username, space);
                     tokenResponse.addParameter("client", client);
                     tokenResponse.addParameter("token", getUserToken(client));
                     return tokenResponse;
