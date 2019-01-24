@@ -8,9 +8,9 @@ import java.util.Objects;
  * keeps file system paths info
  */
 abstract public class FSPath implements Serializable {
+    public static final String SEPARATOR = "/";
     protected FSDirectory parent;
     protected String name;
-    public static final String SEPARATOR = "/";
 
     /**
      * Create new object
@@ -28,6 +28,13 @@ abstract public class FSPath implements Serializable {
      */
     public FSDirectory getParent() {
         return parent;
+    }
+
+    /**
+     * @param parent path parent
+     */
+    public void setParent(FSDirectory parent) {
+        this.parent = parent;
     }
 
     /**
@@ -57,13 +64,6 @@ abstract public class FSPath implements Serializable {
     }
 
     /**
-     * @param parent path parent
-     */
-    public void setParent(FSDirectory parent) {
-        this.parent = parent;
-    }
-
-    /**
      * sets path name
      *
      * @param name name
@@ -89,6 +89,7 @@ abstract public class FSPath implements Serializable {
 
     /**
      * calculates hash
+     *
      * @return The hash
      */
     @Override

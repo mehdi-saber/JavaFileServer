@@ -45,7 +45,7 @@ public class IOUtil {
     /**
      * Calls writeI2O with default buffer size
      */
-    public static void writeI2O(OutputStream outputStream, InputStream inputStream, Long size,ProgressCallback progressCallback) {
+    public static void writeI2O(OutputStream outputStream, InputStream inputStream, Long size, ProgressCallback progressCallback) {
         writeI2O(outputStream, inputStream, DEFAULT_BUFFER_SIZE, size, progressCallback);
     }
 

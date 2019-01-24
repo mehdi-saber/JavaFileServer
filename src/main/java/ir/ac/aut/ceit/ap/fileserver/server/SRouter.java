@@ -17,7 +17,8 @@ class SRouter implements Router {
 
     /**
      * Construct a router for servers
-     * @param server The server
+     *
+     * @param server          The server
      * @param securityManager The server security manager
      */
     SRouter(Server server, SecurityManager securityManager) {
@@ -27,6 +28,7 @@ class SRouter implements Router {
 
     /**
      * Routes receiving requests to sending responses
+     *
      * @param request The receiving request
      * @return response
      */
@@ -50,7 +52,7 @@ class SRouter implements Router {
             case RENAME_FILE:
                 return server.renameFile(request);
             case UPLOAD_FILE:
-                    return server.upload(request);
+                return server.upload(request);
             case CREATE_NEW_DIRECTORY:
                 return server.createNewDirectory(request);
             case PASTE:

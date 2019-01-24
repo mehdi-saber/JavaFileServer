@@ -53,7 +53,7 @@ class MainMenuBar extends JMenuBar {
         add(editMenu);
 
         justSelected = new JComponent[]{
-                propertiesMI,downloadMI, renameMI, deleteMI, cutMI, copyMI
+                propertiesMI, downloadMI, renameMI, deleteMI, cutMI, copyMI
         };
 
         switchMode(false);

@@ -1,11 +1,11 @@
 package ir.ac.aut.ceit.ap.fileserver.server;
 
-import ir.ac.aut.ceit.ap.fileserver.network.protocol.PasteOperationType;
 import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
 import ir.ac.aut.ceit.ap.fileserver.network.Message;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressWriter;
+import ir.ac.aut.ceit.ap.fileserver.network.protocol.PasteOperationType;
 import ir.ac.aut.ceit.ap.fileserver.network.protocol.ResponseSubject;
 import ir.ac.aut.ceit.ap.fileserver.network.protocol.S2CRequest;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.Receiver;
@@ -38,18 +38,9 @@ public class Server {
     private ClientManager clientManager;
 
     /**
-     * Lunches server
-     *
-     * @param args User passed arguments
-     */
-    public static void main(String[] args) {
-        new Server();
-    }
-
-    /**
      * Construct sections of server
      */
-    public Server()  {
+    public Server() {
         securityManager = new SecurityManager();
         receiver = new Receiver(new SRouter(this, securityManager));
         fileSystem = new SFileSystem();
@@ -63,6 +54,15 @@ public class Server {
         };
 
         new MainWindowController(this, finalCallback);
+    }
+
+    /**
+     * Lunches server
+     *
+     * @param args User passed arguments
+     */
+    public static void main(String[] args) {
+        new Server();
     }
 
     /**
@@ -335,6 +335,7 @@ public class Server {
 
     /**
      * Handles create directory requests
+     *
      * @param request The request
      * @return REPEATED if new path is exists else OK
      */
@@ -373,6 +374,7 @@ public class Server {
 
     /**
      * Handles cut&copy requests
+     *
      * @param request The request
      * @return REPEATED if new path is exists else OK
      */
@@ -405,6 +407,7 @@ public class Server {
 
     /**
      * Handles get file distribution info requests
+     *
      * @param request The request
      * @return Distribution info in the response
      */

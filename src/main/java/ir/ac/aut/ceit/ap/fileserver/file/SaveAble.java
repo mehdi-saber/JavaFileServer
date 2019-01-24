@@ -7,6 +7,35 @@ import java.io.*;
  */
 public interface SaveAble {
     /**
+     * get save file address by file name
+     *
+     * @param fileName file name
+     * @return stored data
+     */
+    static File getSaveFileByName(String fileName) {
+        return new File("data" + File.separator + fileName);
+    }
+
+    /**
+     * loads from file
+     *
+     * @param fileName save file name
+     * @return stored data
+     */
+    static Object loadFile(String fileName) {
+        File saveFile = getSaveFileByName(fileName);
+        if (saveFile.exists()) {
+            try {
+                ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(saveFile));
+                return objectInputStream.readObject();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    /**
      * @return data to save
      */
     Object getSaveObject();
@@ -31,40 +60,11 @@ public interface SaveAble {
     }
 
     /**
-     * get save file address by file name
-     *
-     * @param fileName file name
-     * @return stored data
-     */
-    static File getSaveFileByName(String fileName) {
-        return new File("data" + File.separator + fileName);
-    }
-
-    /**
      * loads from file
      *
      * @return stored data
      */
     default Object load() {
         return loadFile(getSaveFileName());
-    }
-
-    /**
-     * loads from file
-     *
-     * @param fileName save file name
-     * @return stored data
-     */
-    static Object loadFile(String fileName) {
-        File saveFile = getSaveFileByName(fileName);
-        if (saveFile.exists()) {
-            try {
-                ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(saveFile));
-                return objectInputStream.readObject();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return null;
     }
 }

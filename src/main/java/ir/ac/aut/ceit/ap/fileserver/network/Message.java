@@ -11,10 +11,9 @@ import java.util.Map;
  * a transportable message
  */
 public abstract class Message implements Serializable {
-    private Map<String, Object> parameters;
-    protected Map<String, Long> streamSize;
-
     private static final String TITLE_MAP_KEY = "TITLE_MAP_KEY";
+    protected Map<String, Long> streamSize;
+    private Map<String, Object> parameters;
 
     /**
      * creates new message
@@ -33,7 +32,7 @@ public abstract class Message implements Serializable {
      */
     public Message(Message message) {
         this.parameters = message.parameters;
-        this.streamSize=message.streamSize;
+        this.streamSize = message.streamSize;
     }
 
     /**
@@ -69,7 +68,7 @@ public abstract class Message implements Serializable {
      * @param key key
      * @return size
      */
-    public Long getStreamSize(String key){
+    public Long getStreamSize(String key) {
         return streamSize.get(key);
     }
 

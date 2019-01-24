@@ -13,8 +13,9 @@ public class ProgressReader {
 
     /**
      * Get new instance
+     *
      * @param inputStream The input stream
-     * @param callback The progress callback
+     * @param callback    The progress callback
      */
     public ProgressReader(InputStream inputStream, ProgressCallback callback) {
         this.inputStream = inputStream;
@@ -23,6 +24,7 @@ public class ProgressReader {
 
     /**
      * Start reading
+     *
      * @return Readign thread
      */
     public Thread start() {

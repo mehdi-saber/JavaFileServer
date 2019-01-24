@@ -16,20 +16,20 @@ class MainWindow extends JFrame {
     MainWindow() {
         super("server");
         setLayout(new GridBagLayout());
-        GridBagConstraints c =new GridBagConstraints();
+        GridBagConstraints c = new GridBagConstraints();
 
-        c.anchor=GridBagConstraints.LINE_START;
-        c.weightx=1;
+        c.anchor = GridBagConstraints.LINE_START;
+        c.weightx = 1;
 
 
-        c.gridy=0;
-        c.gridx=0;
-        add(new JLabel("Server port:"),c);
+        c.gridy = 0;
+        c.gridx = 0;
+        add(new JLabel("Server port:"), c);
         c.fill = GridBagConstraints.HORIZONTAL;
         portTxt = new JTextField(10);
         portTxt.setText("5050");
-        c.gridx=1;
-        add(portTxt,c);
+        c.gridx = 1;
+        add(portTxt, c);
 
         c.gridy = 1;
         c.gridx = 0;
@@ -69,6 +69,6 @@ class MainWindow extends JFrame {
 
     @Override
     public Insets getInsets() {
-        return new Insets(20,20,20,20);
+        return new Insets(20, 20, 20, 20);
     }
 }

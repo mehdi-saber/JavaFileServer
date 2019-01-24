@@ -35,21 +35,21 @@ public class Client {
     private CFileStorage fileStorage;
 
     /**
-     * Lunches client
-     *
-     * @param args user passed parameter
-     */
-    public static void main(String[] args) {
-        new Client();
-    }
-
-    /**
      * creates a client object
      */
     public Client() {
         fileStorage = new CFileStorage();
         receiver = new Receiver(new CRouter(this));
         new ConnectWindowController(this);
+    }
+
+    /**
+     * Lunches client
+     *
+     * @param args user passed parameter
+     */
+    public static void main(String[] args) {
+        new Client();
     }
 
     /**
@@ -91,7 +91,7 @@ public class Client {
             request.addParameter("password", password);
             request.addParameter("listenPort", listenPort);
             //free space in GB
-            int space = (int) (new File("data/").getUsableSpace() / 1024 / 1024/1024);
+            int space = (int) (new File("data/").getUsableSpace() / 1024 / 1024 / 1024);
             request.addParameter("space", space);
 
             AtomicBoolean connected = new AtomicBoolean(false);
@@ -183,7 +183,7 @@ public class Client {
             CRequest request = requestFactory.create(C2SRequest.UPLOAD_FILE);
             request.addInputStream("file", new FileInputStream(file), file.length());
             request.addProgressCallback("file", progressCallback);
-            request.addParameter("fileName",file.getName());
+            request.addParameter("fileName", file.getName());
             request.addParameter("directory", directory);
             request.setResponseCallback(uiCallback);
             request.send();
@@ -236,7 +236,8 @@ public class Client {
         request.addParameter("file", file);
         ResponseCallback responseCallback = response -> {
             try {
-                new ProgressReader(response.getInputStream("status"), doneDelta -> {}).start().join();
+                new ProgressReader(response.getInputStream("status"), doneDelta -> {
+                }).start().join();
                 FileOutputStream fileOutputStream = new FileOutputStream(downloadFile);
                 IOUtil.writeI2O(
                         fileOutputStream,

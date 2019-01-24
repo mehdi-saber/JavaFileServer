@@ -17,7 +17,7 @@ import java.util.Map;
 class PropertiesDialog extends JDialog {
 
     PropertiesDialog(FSPath path, LinkedHashMap<Long, List<ClientInfo>> nodes, MainWindowView window) {
-        super(window,"Properties");
+        super(window, "Properties");
         setModal(true);
 
         if (path instanceof FSFile) {
@@ -62,16 +62,16 @@ class PropertiesDialog extends JDialog {
         setVisible(true);
     }
 
-    @Override
-    public Insets getInsets() {
-        return new Insets(20, 20, 20, 20);
-    }
-
     private static String humanReadableByteCount(long bytes, boolean si) {
         int unit = si ? 1000 : 1024;
         if (bytes < unit) return bytes + " B";
         int exp = (int) (Math.log(bytes) / Math.log(unit));
         String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
         return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
+    }
+
+    @Override
+    public Insets getInsets() {
+        return new Insets(20, 20, 20, 20);
     }
 }

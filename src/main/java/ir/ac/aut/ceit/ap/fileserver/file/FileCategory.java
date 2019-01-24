@@ -32,7 +32,6 @@ public enum FileCategory {
     }
 
     /**
-     *
      * @return The category icon path
      */
     public String getIconPath() {
@@ -40,7 +39,6 @@ public enum FileCategory {
     }
 
     /**
-     *
      * @return The category Extension
      */
     public String[] getExtensions() {

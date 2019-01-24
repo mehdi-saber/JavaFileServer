@@ -20,7 +20,7 @@ class MainWindowView extends JFrame {
         menuBar = new MainMenuBar();
         setJMenuBar(menuBar);
 
-        navPanel=new NavigationPanel();
+        navPanel = new NavigationPanel();
         add(navPanel);
 
         setupListPanel();
@@ -32,7 +32,7 @@ class MainWindowView extends JFrame {
     }
 
     private void setupJFrame() {
-        setLayout(new BoxLayout(getContentPane(),BoxLayout.Y_AXIS));
+        setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
         setSize(700, 500);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);

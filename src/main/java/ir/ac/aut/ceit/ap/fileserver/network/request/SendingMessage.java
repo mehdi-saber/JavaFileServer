@@ -12,8 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SendingMessage extends Message implements Serializable {
-    private transient Map<String, InputStream> streams;
     transient ResponseCallback responseCallback;
+    private transient Map<String, InputStream> streams;
     private transient Map<String, ProgressCallback> progressCallbacks;
 
     public SendingMessage(Subject title) {

@@ -16,7 +16,7 @@ class CustomButton extends JButton {
         if (!hasBorder)
             paddingBorder = new EmptyBorder(0, padding / 2, 0, padding / 2);
         else
-            paddingBorder=new LineBorder(Color.BLACK,padding);
+            paddingBorder = new LineBorder(Color.BLACK, padding);
         setBorder(paddingBorder);
     }
 }

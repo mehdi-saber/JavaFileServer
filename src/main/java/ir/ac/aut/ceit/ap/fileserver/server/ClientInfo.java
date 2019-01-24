@@ -17,11 +17,12 @@ public class ClientInfo implements Serializable {
 
     /**
      * Construct a new client info
-     * @param id           assigned ID
-     * @param address      client IP address
-     * @param listenPort   client receive port number
-     * @param username     client username
-     * @param space    client HDD space Left
+     *
+     * @param id         assigned ID
+     * @param address    client IP address
+     * @param listenPort client receive port number
+     * @param username   client username
+     * @param space      client HDD space Left
      */
     public ClientInfo(Long id, String address, int listenPort, String username, Integer space) {
         this.username = username;
@@ -41,7 +42,6 @@ public class ClientInfo implements Serializable {
     }
 
     /**
-     *
      * @return The client parts ID set
      */
     Set<Long> getParts() {
@@ -49,7 +49,6 @@ public class ClientInfo implements Serializable {
     }
 
     /**
-     *
      * @return The Client IP address
      */
     String getAddress() {
@@ -57,7 +56,6 @@ public class ClientInfo implements Serializable {
     }
 
     /**
-     *
      * @return The Client receive port number
      */
     int getListenPort() {
@@ -65,7 +63,6 @@ public class ClientInfo implements Serializable {
     }
 
     /**
-     *
      * @return The Client assigned ID
      */
     public Long getId() {
@@ -73,7 +70,6 @@ public class ClientInfo implements Serializable {
     }
 
     /**
-     *
      * @return free space
      */
     public Integer getSpace() {

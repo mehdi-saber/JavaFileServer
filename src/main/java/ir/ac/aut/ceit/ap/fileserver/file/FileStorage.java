@@ -24,7 +24,7 @@ abstract public class FileStorage {
      * @param directoryName The directory name
      */
     protected void setDirectory(String directoryName) {
-        this.directory =  new File(directoryName);
+        this.directory = new File(directoryName);
         this.directory.mkdirs();
     }
 }

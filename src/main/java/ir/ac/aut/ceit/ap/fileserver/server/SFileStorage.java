@@ -23,6 +23,15 @@ class SFileStorage extends FileStorage implements SaveAble {
     private int splitSize;
 
     /**
+     * Constructs a storage manager
+     */
+    SFileStorage() {
+        setDirectory("data" + File.separator + "temp");
+        Long idCounter = (Long) load();
+        this.idCounter = idCounter == null ? 0 : idCounter;
+    }
+
+    /**
      * Creates a new unique ID for the part
      *
      * @return The part ID
@@ -32,16 +41,6 @@ class SFileStorage extends FileStorage implements SaveAble {
     }
 
     /**
-     * Constructs a storage manager
-     */
-    SFileStorage() {
-        setDirectory("data"+File.separator+"temp");
-        Long idCounter = (Long) load();
-        this.idCounter = idCounter == null ? 0 : idCounter;
-    }
-
-    /**
-     *
      * @return New file named with new part ID
      */
     File getNewFile() {
@@ -102,6 +101,7 @@ class SFileStorage extends FileStorage implements SaveAble {
 
     /**
      * Sets maximum size of each part
+     *
      * @param splitSize
      */
     void setSplitSize(int splitSize) {
@@ -110,6 +110,7 @@ class SFileStorage extends FileStorage implements SaveAble {
 
     /**
      * Represents data should be saved
+     *
      * @return The data
      */
     @Override
@@ -119,6 +120,7 @@ class SFileStorage extends FileStorage implements SaveAble {
 
     /**
      * Represents save file name
+     *
      * @return
      */
     @Override

@@ -22,15 +22,6 @@ public class SecurityManager implements SaveAble {
     private long clientIdCounter;
 
     /**
-     * Creates new ID for clients
-     *
-     * @return A new ID
-     */
-    private synchronized Long createClientId() {
-        return clientIdCounter++;
-    }
-
-    /**
      * Constructs a new security manager
      */
     public SecurityManager() {
@@ -43,7 +34,17 @@ public class SecurityManager implements SaveAble {
     }
 
     /**
+     * Creates new ID for clients
+     *
+     * @return A new ID
+     */
+    private synchronized Long createClientId() {
+        return clientIdCounter++;
+    }
+
+    /**
      * Authenticates user
+     *
      * @param request The auth request
      * @return OK if successful else FORBIDDEN
      */
@@ -66,6 +67,7 @@ public class SecurityManager implements SaveAble {
 
     /**
      * Create and sign a  Json Web Token
+     *
      * @param client the client
      * @return The user token
      */
@@ -78,6 +80,7 @@ public class SecurityManager implements SaveAble {
 
     /**
      * Decodes a token
+     *
      * @param token The token
      * @return The username
      */
@@ -92,6 +95,7 @@ public class SecurityManager implements SaveAble {
 
     /**
      * Finds user with specific username
+     *
      * @param username The username
      * @return The User
      */
@@ -103,7 +107,6 @@ public class SecurityManager implements SaveAble {
     }
 
     /**
-     *
      * @return Saving data
      */
     @Override
@@ -112,7 +115,6 @@ public class SecurityManager implements SaveAble {
     }
 
     /**
-     *
      * @return Save file name
      */
     @Override

@@ -97,7 +97,6 @@ class ClientManager implements SaveAble {
     }
 
     /**
-     *
      * @return The clients List
      */
     List<ClientInfo> getClientList() {
@@ -106,6 +105,7 @@ class ClientManager implements SaveAble {
 
     /**
      * Represents which data should be saved
+     *
      * @return The data
      */
     @Override
@@ -114,7 +114,6 @@ class ClientManager implements SaveAble {
     }
 
     /**
-     *
      * @return Save file name
      */
     @Override
@@ -124,7 +123,8 @@ class ClientManager implements SaveAble {
 
     /**
      * Decides which part need to be deleted during delete process
-     * @param files Deleting files
+     *
+     * @param files      Deleting files
      * @param remainPath Remaining path (their parts should not be removed)
      * @return Each client deleting parts
      */
@@ -153,6 +153,7 @@ class ClientManager implements SaveAble {
 
     /**
      * Return the file parts distribution on all of nodes
+     *
      * @param file The file
      * @return Each node list for each part
      */

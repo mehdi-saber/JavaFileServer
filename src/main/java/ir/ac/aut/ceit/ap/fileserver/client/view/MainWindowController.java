@@ -201,9 +201,9 @@ public class MainWindowController {
             }
 
             @Override
-            public void mouseReleased(MouseEvent e){
+            public void mouseReleased(MouseEvent e) {
                 super.mouseReleased(e);
-                if(e.isPopupTrigger())
+                if (e.isPopupTrigger())
                     window.dirPopupMenu.show(e.getComponent(), e.getX(), e.getY());
                 deselectPath();
             }
@@ -406,9 +406,9 @@ public class MainWindowController {
                     }
 
                     @Override
-                    public void mouseReleased(MouseEvent e){
+                    public void mouseReleased(MouseEvent e) {
                         super.mouseReleased(e);
-                        if(e.isPopupTrigger())
+                        if (e.isPopupTrigger())
                             window.pathPopupMenu.show(e.getComponent(), e.getX(), e.getY());
                         selectPath(item);
                     }

@@ -5,7 +5,6 @@ import ir.ac.aut.ceit.ap.fileserver.network.protocol.RequestSubject;
 import ir.ac.aut.ceit.ap.fileserver.network.protocol.StreamingSubject;
 import ir.ac.aut.ceit.ap.fileserver.network.receiver.ReceivingMessage;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

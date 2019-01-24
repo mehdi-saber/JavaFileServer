@@ -44,7 +44,8 @@ public class Receiver implements Transporter {
                     Socket socket = serverSocket.accept();
                     new Thread(() -> handleReceive(socket)).start();
                 }
-            } catch (IOException ignored) { }
+            } catch (IOException ignored) {
+            }
         });
         receiveThread.start();
     }

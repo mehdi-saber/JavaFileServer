@@ -30,26 +30,24 @@ public class FSFile extends FSPath {
                   String creator, Date createdDate, String hash) {
         super(parent, name);
         this.parts = parts;
-        this.size=size;
+        this.size = size;
         this.creator = creator;
         this.createdDate = createdDate;
         this.hash = hash;
     }
 
     /**
-     *
      * @return File extention
      */
     public String getExtension() {
         int dotIndex = name.lastIndexOf(".");
         if (dotIndex != -1)
-            return name.substring(dotIndex+1, name.length());
+            return name.substring(dotIndex + 1, name.length());
         return "";
     }
 
 
     /**
-     *
      * @return File size
      */
     public Long getSize() {
@@ -57,7 +55,6 @@ public class FSFile extends FSPath {
     }
 
     /**
-     *
      * @return file uploader
      */
     public String getCreator() {
@@ -65,7 +62,6 @@ public class FSFile extends FSPath {
     }
 
     /**
-     *
      * @return upload date
      */
     public Date getCreatedDate() {
@@ -73,7 +69,6 @@ public class FSFile extends FSPath {
     }
 
     /**
-     *
      * @return last access date
      */
     public Date getLastAccessDate() {
@@ -81,15 +76,8 @@ public class FSFile extends FSPath {
     }
 
     /**
-     *
-     * @return parts hashes
-     */
-    public Map<Long, String> getParts() {
-        return parts;
-    }
-
-    /**
      * Sets last access date
+     *
      * @param lastAccessDate the last access time
      */
     public void setLastAccessDate(Date lastAccessDate) {
@@ -97,7 +85,13 @@ public class FSFile extends FSPath {
     }
 
     /**
-     *
+     * @return parts hashes
+     */
+    public Map<Long, String> getParts() {
+        return parts;
+    }
+
+    /**
      * @return file hash
      */
     public String getHash() {

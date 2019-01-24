@@ -8,7 +8,7 @@ import ir.ac.aut.ceit.ap.fileserver.network.protocol.C2SRequest;
 class CRequestFactory {
     private String serverAddress;
     private int port;
-    private String token=null;
+    private String token = null;
 
     /**
      * creates an object of factory

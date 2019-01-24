@@ -43,7 +43,7 @@ class SFileSystem implements SaveAble {
                    String creator, Date createdDate, Date lastAccessDate, String hash) {
         if (pathExists(parent, name, false) || !pathExists(parent))
             return null;
-        FSFile file = new FSFile(parent, name, size, parts, creator, createdDate,hash);
+        FSFile file = new FSFile(parent, name, size, parts, creator, createdDate, hash);
         file.setLastAccessDate(lastAccessDate);
         pathSet.add(file);
         return file;
@@ -142,8 +142,9 @@ class SFileSystem implements SaveAble {
 
     /**
      * Finds a path from path list by following info
-     * @param parent The path parent
-     * @param name The path name
+     *
+     * @param parent      The path parent
+     * @param name        The path name
      * @param isDirectory Whether the path is directory or not
      * @return A path from path list
      */
@@ -159,6 +160,7 @@ class SFileSystem implements SaveAble {
 
     /**
      * Removes a path and it's sub path if exists from foldering system
+     *
      * @param path The path
      * @return path and it's deleting sub paths
      */
@@ -183,6 +185,7 @@ class SFileSystem implements SaveAble {
 
     /**
      * renames a path
+     *
      * @param thePath The path
      * @param newName The new name
      * @return true if success or false
@@ -197,7 +200,8 @@ class SFileSystem implements SaveAble {
 
     /**
      * Moves a path to a new directory
-     * @param path The path
+     *
+     * @param path         The path
      * @param newDirectory The new Directory
      * @return whether the operation was successful or not
      */
@@ -212,7 +216,8 @@ class SFileSystem implements SaveAble {
 
     /**
      * Copies a path to a new directory
-     * @param path The path
+     *
+     * @param path         The path
      * @param newDirectory The new Directory
      * @return whether the operation was successful or not
      */
@@ -233,13 +238,12 @@ class SFileSystem implements SaveAble {
         else if (path instanceof FSFile) {
             FSFile file = (FSFile) path;
             return addFile(parent, file.getName(), file.getSize(), file.getParts(),
-                    file.getCreator(), file.getCreatedDate(), file.getLastAccessDate(),file.getHash());
+                    file.getCreator(), file.getCreatedDate(), file.getLastAccessDate(), file.getHash());
         }
         return null;
     }
 
     /**
-     *
      * @return The path set
      */
     List<FSPath> getPathSet() {
@@ -248,6 +252,7 @@ class SFileSystem implements SaveAble {
 
     /**
      * Represents the saving data
+     *
      * @return The data
      */
     @Override
@@ -257,6 +262,7 @@ class SFileSystem implements SaveAble {
 
     /**
      * Represents the save file name
+     *
      * @return The file name
      */
     @Override

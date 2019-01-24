@@ -9,6 +9,7 @@ import ir.ac.aut.ceit.ap.fileserver.network.request.Request;
 class SRequest extends Request {
     /**
      * Constructs a request
+     *
      * @param title The request title
      */
     SRequest(S2CRequest title) {
@@ -17,6 +18,7 @@ class SRequest extends Request {
 
     /**
      * Sends server request to a client
+     *
      * @param client The client
      * @return Thread request Thread
      */
