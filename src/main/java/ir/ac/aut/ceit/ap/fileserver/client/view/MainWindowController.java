@@ -408,7 +408,7 @@ public class MainWindowController {
                         super.mouseReleased(e);
                         if(e.isPopupTrigger())
                             window.pathPopupMenu.show(e.getComponent(), e.getX(), e.getY());
-                        deselectPath();
+                        selectPath(item);
                     }
                 });
                 window.listPanel.add(item);
