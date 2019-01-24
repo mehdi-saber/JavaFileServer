@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Holds clients info
+ */
 public class ClientInfo implements Serializable {
     private final Long id;
     private final String username;
@@ -11,34 +14,58 @@ public class ClientInfo implements Serializable {
     private final String address;
     private final int listenPort;
 
-    private ClientInfo(Long id, Set<Long> parts, String address, int listenPort, String username) {
+    /**
+     * Construct a new client info
+     *
+     * @param id         The assigned ID
+     * @param address    The client IP address
+     * @param listenPort The client receive port number
+     * @param username   The client username
+     */
+    public ClientInfo(Long id, String address, int listenPort, String username) {
         this.username = username;
-        this.parts = parts;
+        this.parts = new HashSet<>();
         this.address = address;
         this.listenPort = listenPort;
         this.id = id;
     }
 
-    public ClientInfo(Long id, String address, int listenPort, String username) {
-        this(id, new HashSet<>(), address, listenPort, username);
-    }
 
+    /**
+     * @return The client username
+     */
     public String getUsername() {
         return username;
     }
 
+    /**
+     *
+     * @return The client parts ID set
+     */
     Set<Long> getParts() {
         return parts;
     }
 
-    public String getAddress() {
+    /**
+     *
+     * @return The Client IP address
+     */
+    String getAddress() {
         return address;
     }
 
-    public int getListenPort() {
+    /**
+     *
+     * @return The Client receive port number
+     */
+    int getListenPort() {
         return listenPort;
     }
 
+    /**
+     *
+     * @return The Client assigned ID
+     */
     public Long getId() {
         return id;
     }

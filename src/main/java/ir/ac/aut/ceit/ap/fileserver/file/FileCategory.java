@@ -1,5 +1,8 @@
 package ir.ac.aut.ceit.ap.fileserver.file;
 
+/**
+ * Extensions categories
+ */
 public enum FileCategory {
     AUDIO("file.png",
             "aif", "cda", "mid", "mp3", "mpa", "ogg", "wav", "wma", "wpl"),
@@ -16,16 +19,30 @@ public enum FileCategory {
     String[] extensions;
     String iconPath;
 
+    /**
+     * Construct a category
+     *
+     * @param iconPath   The category icon
+     * @param extensions The category extensions
+     */
     FileCategory(String iconPath, String... extensions) {
         this.extensions = extensions;
         this.iconPath = iconPath;
 
     }
 
+    /**
+     *
+     * @return The category icon path
+     */
     public String getIconPath() {
         return iconPath;
     }
 
+    /**
+     *
+     * @return The category Extension
+     */
     public String[] getExtensions() {
         return extensions;
     }

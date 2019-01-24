@@ -8,16 +8,28 @@ import ir.ac.aut.ceit.ap.fileserver.network.request.SendingMessage;
 import ir.ac.aut.ceit.ap.fileserver.server.security.SecurityManager;
 import ir.ac.aut.ceit.ap.fileserver.server.security.User;
 
-
+/**
+ * Server receiving requests router
+ */
 class SRouter implements Router {
     private Server server;
     private SecurityManager securityManager;
 
+    /**
+     * Construct a router for servers
+     * @param server The server
+     * @param securityManager The server security manager
+     */
     SRouter(Server server, SecurityManager securityManager) {
         this.server = server;
         this.securityManager = securityManager;
     }
 
+    /**
+     * Routes receiving requests to sending responses
+     * @param request The receiving request
+     * @return response
+     */
     public SendingMessage route(ReceivingMessage request) {
         C2SRequest title = (C2SRequest) request.getTitle();
         if (!title.equals(C2SRequest.LOGIN)) {

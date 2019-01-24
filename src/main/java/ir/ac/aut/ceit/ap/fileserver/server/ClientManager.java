@@ -8,11 +8,16 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Handles server behaviors based on clients info
+ */
 class ClientManager implements SaveAble {
-
     private List<ClientInfo> clientList;
     private int redundancy;
 
+    /**
+     * Constructs a new client manager
+     */
     ClientManager() {
         List<ClientInfo> clientList = (List<ClientInfo>) load();
         if (clientList != null)
@@ -21,6 +26,11 @@ class ClientManager implements SaveAble {
             this.clientList = new ArrayList<>();
     }
 
+    /**
+     * Adds a client to the List
+     *
+     * @param clientInfo The Client
+     */
     void addClient(ClientInfo clientInfo) {
         clientList.add(clientInfo);
     }
@@ -48,6 +58,12 @@ class ClientManager implements SaveAble {
         return distribution;
     }
 
+    /**
+     * Decide download each part from which node
+     *
+     * @param file The File
+     * @return The parts sender nodes
+     */
     LinkedHashMap<Long, ClientInfo> getFileClientList(FSFile file) {
         LinkedHashMap<Long, ClientInfo> partMap = new LinkedHashMap<>();
 
@@ -74,24 +90,38 @@ class ClientManager implements SaveAble {
             client.getParts().addAll(sentParts.get(client));
     }
 
-    public void setClientList(List<ClientInfo> clientList) {
-        this.clientList = clientList;
-    }
-
+    /**
+     *
+     * @return The clients List
+     */
     List<ClientInfo> getClientList() {
         return clientList;
     }
 
+    /**
+     * Represents which data should be saved
+     * @return The data
+     */
     @Override
     public Object getSaveObject() {
         return clientList;
     }
 
+    /**
+     *
+     * @return Save file name
+     */
     @Override
     public String getSaveFileName() {
         return "clientManager";
     }
 
+    /**
+     * Decides which part need to be deleted during delete process
+     * @param files Deleting files
+     * @param remainPath Remaining path (their parts should not be removed)
+     * @return Each client deleting parts
+     */
     Map<ClientInfo, Set<Long>> getDeletingParts(Set<FSFile> files, Set<FSPath> remainPath) {
         Map<ClientInfo, Set<Long>> partsMap = new HashMap<>();
 
@@ -115,6 +145,11 @@ class ClientManager implements SaveAble {
         return partsMap;
     }
 
+    /**
+     * Return the file parts distribution on all of nodes
+     * @param file The file
+     * @return Each node list for each part
+     */
     LinkedHashMap<Long, List<ClientInfo>> getDist(FSFile file) {
         LinkedHashMap<Long, List<ClientInfo>> nodes = new LinkedHashMap<>();
         for (Long partId : file.getParts().keySet()) {
@@ -127,7 +162,12 @@ class ClientManager implements SaveAble {
         return nodes;
     }
 
-    public void setRedundancy(int redundancy) {
+    /**
+     * set redundancy count
+     *
+     * @param redundancy Redundancy count
+     */
+    void setRedundancy(int redundancy) {
         this.redundancy = redundancy;
     }
 }

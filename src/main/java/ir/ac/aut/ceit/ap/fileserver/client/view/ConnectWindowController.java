@@ -13,7 +13,7 @@ public class ConnectWindowController {
         this.client = client;
         dialog = new ConnectWindow();
         setupListener();
-//        connectToServer();//todo:remove
+        connectToServer();//todo:remove
     }
 
     private void setupListener() {

@@ -37,6 +37,11 @@ public class Server {
     private SFileStorage fileStorage;
     private ClientManager clientManager;
 
+    /**
+     * Lunches server
+     *
+     * @param args User passed arguments
+     */
     public static void main(String[] args) {
         new Server();
     }
@@ -60,6 +65,13 @@ public class Server {
         new MainWindowController(this, finalCallback);
     }
 
+    /**
+     * Start server
+     *
+     * @param port       The receiving port
+     * @param splitSize  The maximum part size
+     * @param redundancy The redundancy count
+     */
     public void start(int port, int splitSize, int redundancy) {
         try {
             fileStorage.setSplitSize(splitSize);
@@ -70,6 +82,9 @@ public class Server {
         }
     }
 
+    /**
+     * Stops server
+     */
     public void stop() {
         receiver.stop();
     }
@@ -79,7 +94,7 @@ public class Server {
      * Handles user's login request
      *
      * @param request user's request
-     * @return response
+     * @return FORBIDDEN if fail and OK if success
      */
     SendingMessage loginUser(ReceivingMessage request) {
         SendingMessage response = securityManager.loginUser(request);
@@ -92,7 +107,7 @@ public class Server {
      * Handles user's fetch directory request
      *
      * @param request user's request
-     * @return response
+     * @return sub-path list in response
      */
     SendingMessage fetchDirectory(Message request) {
         FSDirectory directory = (FSDirectory) request.getParameter("directory");
@@ -115,7 +130,7 @@ public class Server {
      * Handles upload requests
      *
      * @param request the request
-     * @return response
+     * @return REPEATED if the new path exists else OK
      */
     SendingMessage upload(ReceivingMessage request) {
         try {
@@ -156,7 +171,7 @@ public class Server {
      * Handles downloads requests
      *
      * @param request The request
-     * @return response
+     * @return OK if doesn't fail
      */
     SendingMessage download(ReceivingMessage request) {
         try {
@@ -264,7 +279,7 @@ public class Server {
      * @param parts          The parts
      * @param hashes         parts hashes
      * @param progressWriter writes progress of sending
-     * @return client response
+     * @return OK if everything do well
      * @throws InterruptedException throws if thread interrupts
      */
     private ResponseSubject sendAPart(ClientInfo client, Set<Long> parts,
@@ -292,7 +307,7 @@ public class Server {
     }
 
     /**
-     * request clients to refresh their file
+     * Request clients to refresh their file
      */
     private void refreshClients() {
         for (ClientInfo client : clientManager.getClientList()) {
@@ -301,14 +316,12 @@ public class Server {
         }
     }
 
-    public void addFile(FSFile info, byte[] data) {
-
-    }
-
-    public void fetchFile(FSFile info) {
-
-    }
-
+    /**
+     * Handles file renames requests
+     *
+     * @param request The request
+     * @return REPEATED if new path is exists else OK
+     */
     SendingMessage renameFile(ReceivingMessage request) {
         FSPath path = (FSPath) request.getParameter("path");
         String newName = (String) request.getParameter("newName");
@@ -320,6 +333,11 @@ public class Server {
             return new SendingMessage(ResponseSubject.REPEATED);
     }
 
+    /**
+     * Handles create directory requests
+     * @param request The request
+     * @return REPEATED if new path is exists else OK
+     */
     SendingMessage createNewDirectory(ReceivingMessage request) {
         FSDirectory parent = (FSDirectory) request.getParameter("parent");
         String name = (String) request.getParameter("name");
@@ -331,22 +349,33 @@ public class Server {
             return new SendingMessage(ResponseSubject.REPEATED);
     }
 
-    SendingMessage remove(ReceivingMessage receivingMessage) {
-        FSPath path = (FSPath) receivingMessage.getParameter("path");
+    /**
+     * Handles file remove requests
+     *
+     * @param request The request
+     * @return return OK if no error occurs
+     */
+    SendingMessage remove(ReceivingMessage request) {
+        FSPath path = (FSPath) request.getParameter("path");
         Set<FSFile> files = fileSystem.remove(path);
         Map<ClientInfo, Set<Long>> partMap = clientManager.getDeletingParts(files, new HashSet<>(fileSystem.getPathSet()));
 
         for (Map.Entry<ClientInfo, Set<Long>> entry : partMap.entrySet()) {
             ClientInfo client = entry.getKey();
             Set<Long> parts = entry.getValue();
-            SRequest request = new SRequest(S2CRequest.DELETE_PART);
-            request.addParameter("parts", parts);
-            request.send(client);
+            SRequest remiveRequest = new SRequest(S2CRequest.DELETE_PART);
+            remiveRequest.addParameter("parts", parts);
+            remiveRequest.send(client);
         }
         refreshClients();
         return new SendingMessage(ResponseSubject.OK);
     }
 
+    /**
+     * Handles cut&copy requests
+     * @param request The request
+     * @return REPEATED if new path is exists else OK
+     */
     SendingMessage paste(ReceivingMessage request) {
         FSPath path = (FSPath) request.getParameter("path");
         FSDirectory directory = (FSDirectory) request.getParameter("directory");
@@ -374,6 +403,11 @@ public class Server {
         return new SendingMessage(ResponseSubject.OK);
     }
 
+    /**
+     * Handles get file distribution info requests
+     * @param request The request
+     * @return Distribution info in the response
+     */
     SendingMessage fileDist(ReceivingMessage request) {
         SendingMessage response = new SendingMessage(ResponseSubject.OK);
         FSFile file = (FSFile) request.getParameter("file");

@@ -15,20 +15,35 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Handles server behaviors based on file management
+ */
 class SFileStorage extends FileStorage implements SaveAble {
     private Long idCounter;
     private int splitSize;
 
+    /**
+     * Creates a new unique ID for the part
+     *
+     * @return The part ID
+     */
     private synchronized Long createId() {
         return idCounter++;
     }
 
+    /**
+     * Constructs a storage manager
+     */
     SFileStorage() {
         setDirectory("data"+File.separator+"temp");
         Long idCounter = (Long) load();
         this.idCounter = idCounter == null ? 0 : idCounter;
     }
 
+    /**
+     *
+     * @return New file named with new part ID
+     */
     File getNewFile() {
         return getFileById(createId());
     }
@@ -85,15 +100,27 @@ class SFileStorage extends FileStorage implements SaveAble {
         return null;
     }
 
+    /**
+     * Sets maximum size of each part
+     * @param splitSize
+     */
     void setSplitSize(int splitSize) {
         this.splitSize = splitSize;
     }
 
+    /**
+     * Represents data should be saved
+     * @return The data
+     */
     @Override
     public Object getSaveObject() {
         return idCounter;
     }
 
+    /**
+     * Represents save file name
+     * @return
+     */
     @Override
     public String getSaveFileName() {
         return "fileStorage";

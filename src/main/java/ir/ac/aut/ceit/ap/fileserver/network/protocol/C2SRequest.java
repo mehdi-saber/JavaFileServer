@@ -1,5 +1,8 @@
 package ir.ac.aut.ceit.ap.fileserver.network.protocol;
 
+/**
+ * Client to server requests types
+ */
 public enum  C2SRequest implements RequestSubject{
     LOGIN,
     RENAME_FILE,

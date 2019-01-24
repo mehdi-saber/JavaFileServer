@@ -1,7 +1,5 @@
 package ir.ac.aut.ceit.ap.fileserver.network.progress;
 
-import ir.ac.aut.ceit.ap.fileserver.network.protocol.ProgressSubject;
-
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
@@ -10,11 +8,17 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * Writes progress status
+ */
 public class ProgressWriter implements ProgressCallback {
     private final List<Integer> doneList;
     private final PipedInputStream pipedInputStream;
     private boolean close = false;
 
+    /**
+     * get a new object
+     */
     public ProgressWriter() {
         pipedInputStream = new PipedInputStream();
 
@@ -49,6 +53,11 @@ public class ProgressWriter implements ProgressCallback {
         }).start();
     }
 
+    /**
+     * calls when progress happen
+     *
+     * @param doneDelta Bytes done length
+     */
     @Override
     public void call(int doneDelta) {
         synchronized (doneList) {
@@ -56,6 +65,9 @@ public class ProgressWriter implements ProgressCallback {
         }
     }
 
+    /**
+     * End writing
+     */
     public void close() {
         close = true;
     }

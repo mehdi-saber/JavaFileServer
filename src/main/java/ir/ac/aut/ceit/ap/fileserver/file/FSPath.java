@@ -4,20 +4,35 @@ package ir.ac.aut.ceit.ap.fileserver.file;
 import java.io.Serializable;
 import java.util.Objects;
 
+/**
+ * keeps file system paths info
+ */
 abstract public class FSPath implements Serializable {
     protected FSDirectory parent;
     protected String name;
     public static final String SEPARATOR = "/";
 
+    /**
+     * Create new object
+     *
+     * @param parent parent directory
+     * @param name   path name
+     */
     FSPath(FSDirectory parent, String name) {
         this.parent = parent;
         this.name = name;
     }
 
+    /**
+     * @return parent directory
+     */
     public FSDirectory getParent() {
         return parent;
     }
 
+    /**
+     * @return path form root
+     */
     public String getAbsolutePath() {
         if (this.equals(FSDirectory.ROOT))
             return SEPARATOR;
@@ -34,18 +49,35 @@ abstract public class FSPath implements Serializable {
         return absolute.toString();
     }
 
+    /**
+     * @return path name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * @param parent path parent
+     */
     public void setParent(FSDirectory parent) {
         this.parent = parent;
     }
 
+    /**
+     * sets path name
+     *
+     * @param name name
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Checks other object equality
+     *
+     * @param o other Object
+     * @return True if two object are equal
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -55,6 +87,10 @@ abstract public class FSPath implements Serializable {
                 Objects.equals(name, path.name);
     }
 
+    /**
+     * calculates hash
+     * @return The hash
+     */
     @Override
     public int hashCode() {
         return Objects.hash(parent, name);
