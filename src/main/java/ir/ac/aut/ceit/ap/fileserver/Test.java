@@ -6,7 +6,7 @@ import ir.ac.aut.ceit.ap.fileserver.server.Server;
 public class Test {
 
     public static void main(String[] args) {
-        Server server = new Server();
+        new Server();
         new Client();
     }
 }
