@@ -53,12 +53,13 @@ class ClientManager implements SaveAble {
                 ClientInfo clientInfo = clientList.get(chosenIndex);
                 if (clientRemain == 0) {
                     clientRemain = ((Double) Math.ceil((double) clientInfo.getSpace() / sum)).intValue();
-                    clientRemain=m
+                    clientRemain = Math.min(clientRemain, parts.size());
                 }
 
                 //add a Hash set for client list if doesn't exists
                 distribution.computeIfAbsent(clientInfo, key -> new HashSet<>());
                 distribution.get(clientInfo).add(partId);
+                clientRemain--;
             }
         return distribution;
     }

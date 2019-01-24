@@ -113,7 +113,7 @@ public class Client {
             request.send(serverAddress, serverPort).join();
 
             return connected.get();
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
         return false;
