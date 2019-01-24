@@ -61,6 +61,8 @@ class SRouter implements Router {
                 return server.remove(request);
             case FILE_DIST:
                 return server.fileDist(request);
+            case SEARCH:
+                return server.search(request);
         }
         return null;
     }

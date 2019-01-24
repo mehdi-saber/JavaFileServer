@@ -3,9 +3,11 @@ package ir.ac.aut.ceit.ap.fileserver.client;
 import ir.ac.aut.ceit.ap.fileserver.client.view.ConnectWindowController;
 import ir.ac.aut.ceit.ap.fileserver.client.view.MainWindowController;
 import ir.ac.aut.ceit.ap.fileserver.client.view.ProgressWindow;
+import ir.ac.aut.ceit.ap.fileserver.client.view.SearchDialog;
 import ir.ac.aut.ceit.ap.fileserver.file.FSDirectory;
 import ir.ac.aut.ceit.ap.fileserver.file.FSFile;
 import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
+import ir.ac.aut.ceit.ap.fileserver.file.FileCategory;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressCallback;
 import ir.ac.aut.ceit.ap.fileserver.network.progress.ProgressReader;
 import ir.ac.aut.ceit.ap.fileserver.network.protocol.C2SRequest;
@@ -18,11 +20,11 @@ import ir.ac.aut.ceit.ap.fileserver.network.request.SendingMessage;
 import ir.ac.aut.ceit.ap.fileserver.util.IOUtil;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -288,10 +290,40 @@ public class Client {
      *
      * @param directory the directory
      */
-    public void search(FSDirectory directory) {
+    public void search(FSDirectory directory, String str) {
         CRequest request = requestFactory.create(C2SRequest.SEARCH);
         request.addParameter("directory", directory);
-
+        request.setResponseCallback(response -> {
+            Map<FSPath, String> found = new HashMap<>();
+            try {
+                Set<FSPath> subPath = (Set<FSPath>) response.getParameter("subPath");
+                for (FSPath path : subPath) {
+                    if (path.getName().contains(str))
+                        found.put(path, "name");
+                    if (path instanceof FSFile) {
+                        FSFile file = (FSFile) path;
+                        if (new HashSet<>(Arrays.asList(FileCategory.DOCUMENT.getExtensions())).contains((file).getExtension())) {
+                            File downloadFile = File.createTempFile("document", "preview");
+                            ResponseCallback callback = response1 -> {
+                                try {
+                                    List<String> lines = Files.readAllLines(downloadFile.toPath());
+                                    for (String line : lines)
+                                        if (line.contains(str))
+                                            found.put(path, "contents");
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            };
+                            preview(file, downloadFile, callback);
+                        }
+                    }
+                }
+                new SearchDialog(found);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        request.send();
     }
 
     /**

@@ -156,7 +156,7 @@ public class MainWindowController {
                 newFolderAL = e -> createNewFolder(),
                 pasteToCurAL = e -> paste(curDir),
                 pasteToSelectedAL = e -> paste((FSDirectory) selectedItem.getInfo()),
-                searchAL = e -> client.search(curDir),
+                searchAL = e -> client.search(curDir,window.navPanel.searchBtn.getText()),
                 exitAL = e -> System.exit(0);
 
         window.pathPopupMenu.previewMI.addActionListener(previewAL);

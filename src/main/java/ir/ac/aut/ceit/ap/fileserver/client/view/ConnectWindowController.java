@@ -18,7 +18,7 @@ public class ConnectWindowController {
         dialog = new ConnectWindow();
         setupListener();
         dialog.listenPortTxt.setText(String.valueOf(new Random().nextInt(8000 + 1) + 1025));
-//        connectToServer();//todo:remove
+        connectToServer();//todo:remove
     }
 
     private void setupListener() {

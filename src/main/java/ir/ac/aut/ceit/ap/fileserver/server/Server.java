@@ -417,4 +417,11 @@ public class Server {
         response.addParameter("nodes", clientManager.getDist(file));
         return response;
     }
+
+    SendingMessage search(ReceivingMessage request) {
+        SendingMessage response = new SendingMessage(ResponseSubject.OK);
+        FSDirectory directory = (FSDirectory) request.getParameter("directory");
+        response.addParameter("subPath", fileSystem.listRecurSubPaths(directory));
+        return response;
+    }
 }

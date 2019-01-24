@@ -1,28 +1,24 @@
 package ir.ac.aut.ceit.ap.fileserver.client.view;
 
+import ir.ac.aut.ceit.ap.fileserver.file.FSPath;
+
 import javax.swing.*;
 import java.awt.*;
+import java.util.Map;
 
 public class SearchDialog extends JDialog {
-    private final JTextField searchTxt;
+    public SearchDialog(Map<FSPath, String> found) {
+        setModal(true);
+        setTitle("Search");
+        setLayout(new GridLayout(0, 2));
 
-    public SearchDialog(Frame owner) {
-        super(owner, "Search");
-        setLayout(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
+        for (Map.Entry<FSPath, String> entry : found.entrySet()) {
+            add(new JLabel(entry.getKey().getAbsolutePath()));
+            add(new JLabel(entry.getValue()));
+        }
 
-        c.gridy = 0;
-        c.gridx = 1;
-        searchTxt = new JTextField();
-        add(searchTxt, c);
-
-        c.gridy = 1;
-
-        JList<JPanel> searchList = new JList<>();
-        JScrollPane scrollPane = new JScrollPane(searchList);
-        scrollPane.setHorizontalScrollBar(null);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-
-
+        setSize(300, 250);
+        setLocationRelativeTo(null);
+        setVisible(true);
     }
 }
