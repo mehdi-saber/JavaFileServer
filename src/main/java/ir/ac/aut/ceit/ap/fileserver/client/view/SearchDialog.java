@@ -21,4 +21,9 @@ public class SearchDialog extends JDialog {
         setLocationRelativeTo(null);
         setVisible(true);
     }
+
+    @Override
+    public Insets getInsets() {
+        return new Insets(10, 10, 10, 10);
+    }
 }
