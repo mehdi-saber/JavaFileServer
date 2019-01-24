@@ -404,11 +404,11 @@ public class MainWindowController {
                     }
 
                     @Override
-                    public void mouseClicked(MouseEvent e) {
-                        super.mouseClicked(e);
-                        if (e.getClickCount() == 2)
-                            if (path instanceof FSDirectory)
-                                client.fetchDirectory((FSDirectory) path);
+                    public void mouseReleased(MouseEvent e){
+                        super.mouseReleased(e);
+                        if(e.isPopupTrigger())
+                            window.pathPopupMenu.show(e.getComponent(), e.getX(), e.getY());
+                        deselectPath();
                     }
                 });
                 window.listPanel.add(item);
